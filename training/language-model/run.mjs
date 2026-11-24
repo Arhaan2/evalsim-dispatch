@@ -1,28 +1,24 @@
 import { createHash } from 'node:crypto';
-import { createReadStream } from 'node:fs';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
-import { spawn } from 'node:child_process';
-import { resolve, join } from 'node:path';
-import { createInterface } from 'node:readline';
+import { join } from 'node:path';
 import { arch, cpus, platform, release } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createWorld, dispatcher, makeScenario, observe, step, verify, WORLD_VERSION } from '../../docs/lib/world.js';
 import { choose, distribution, initAdapter, project, randomStream, update, LABELS } from './adapter.mjs';
 import { promptFor, toolMenu } from './menu.mjs';
+import { openEncoder } from './worker.mjs';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const protocol = JSON.parse(await readFile(join(here, 'protocol.json'), 'utf8'));
-const [binary, model, work, destination] = process.argv.slice(2);
+const [binary, model, work, destination, schedule = 'balanced'] = process.argv.slice(2);
 if (!binary || !model || !work || !destination) {
   throw new Error('Usage: node training/language-model/run.mjs <encoder> <model.gguf> <private-run-directory> <public-result-directory>');
 }
 await mkdir(work, { recursive: true });
 await mkdir(destination, { recursive: true });
-const digest = createHash('sha256');
-for await (const chunk of createReadStream(model)) digest.update(chunk);
-if (digest.digest('hex') !== protocol.sha256) throw new Error('Model checksum differs from protocol');
+if (!Object.hasOwn(protocol.schedules, schedule)) throw new Error('Unknown training schedule');
 const sourceDigest = createHash('sha256');
-for (const name of ['protocol.json', 'run.mjs', 'menu.mjs', 'adapter.mjs', 'encode.cpp', '../../docs/lib/world.js']) {
+for (const name of ['protocol.json', 'run.mjs', 'menu.mjs', 'adapter.mjs', 'worker.mjs', 'encode.cpp', '../../docs/lib/world.js']) {
   sourceDigest.update(await readFile(join(here, name)));
 }
 const signature = sourceDigest.digest('hex');
@@ -34,26 +30,18 @@ const save = async (path, value) => {
 let state;
 try { state = JSON.parse(await readFile(progressPath, 'utf8')); }
 catch (error) { if (error.code !== 'ENOENT') throw error; }
-if (state && state.signature !== signature) throw new Error('Progress belongs to a different protocol or implementation');
-state ??= { signature, adapter: null, optimizer: { steps: 0 }, training: [], cases: [], trainingMs: 0, evaluationMs: 0,
+if (state && (state.signature !== signature || state.schedule !== schedule)) throw new Error('Progress belongs to a different protocol or implementation');
+state ??= { signature, schedule, adapter: null, optimizer: { steps: 0 }, training: [], cases: [], validation: [], trainingMs: 0, evaluationMs: 0, validationMs: 0,
   calls: 0, evaluatedTokens: 0, promptedTokens: 0 };
-const child = spawn(resolve(binary), [resolve(model)], { stdio: ['pipe', 'pipe', 'inherit'] });
-const lines = createInterface({ input: child.stdout })[Symbol.asyncIterator]();
-child.stdin.on('error', () => {});
-const stopChild = () => child.kill();
-process.once('exit', stopChild);
+const worker = await openEncoder(binary, model, protocol.sha256);
 process.once('SIGTERM', () => process.exit(143));
 process.once('SIGINT', () => process.exit(130));
 const cache = new Map();
 async function encode(prompt) {
   const existing = cache.get(prompt);
   if (existing) return existing;
-  child.stdin.write(Buffer.byteLength(prompt) + '\n' + prompt);
-  const line = await lines.next();
-  if (line.done) throw new Error('Local model worker exited before returning logits');
-  const data = JSON.parse(line.value);
-  if (!data.logits.every(Number.isFinite) || !data.hidden.every(Number.isFinite)) throw new Error('Invalid model output');
-  const result = { logits: data.logits, h: Float32Array.from(data.hidden) };
+  const data = await worker.encode(prompt);
+  const result = { logits: data.logits, h: data.h };
   if (cache.size > 3000) cache.delete(cache.keys().next().value);
   cache.set(prompt, result);
   state.calls++;
@@ -98,10 +86,41 @@ async function episode(seed, family, mode, random, capture = false) {
   return { records, reward, metrics, trace, actions };
 }
 
+function nextFamily(groupIndex) {
+  if (schedule === 'balanced') return protocol.trainFamilies[groupIndex % protocol.trainFamilies.length];
+  const estimates = new Map(protocol.trainFamilies.map(family => [family, 0.5]));
+  for (const group of state.training) {
+    const success = group.episodes.filter(e => e.success).length / group.episodes.length;
+    estimates.set(group.family, 0.8 * estimates.get(group.family) + 0.2 * success);
+  }
+  const weights = [...estimates.values()].map(p => (1.2 - p) ** 2);
+  const sum = weights.reduce((a,b) => a+b, 0);
+  const probs = weights.map(w => 0.2 / weights.length + 0.8 * w / sum);
+  return protocol.trainFamilies[choose(probs, randomStream(protocol.trainingSeed + (groupIndex + 1) * 2654435761))];
+}
+
+async function recordValidation(group) {
+  if (!protocol.validationGroups.includes(group) || state.validation.some(v => v.group === group)) return;
+  const start = performance.now();
+  const metrics = [];
+  for (let i = 0; i < protocol.trainFamilies.length * protocol.validationSeedsPerFamily; i++) {
+    const run = await episode(protocol.validationSeedStart + i, protocol.trainFamilies[i % protocol.trainFamilies.length], 'trained');
+    metrics.push(run.metrics);
+  }
+  state.validationMs += performance.now() - start;
+  const observed = { group, successes: metrics.filter(r => r.success).length, episodes: metrics.length,
+    toolCalls: metrics.reduce((s,r) => s+r.toolCalls, 0), trainingCalls: state.training.flatMap(g => g.episodes).reduce((s,r) => s+r.toolCalls,0),
+    trainingSeconds: state.trainingMs/1000, metrics };
+  state.validation.push(observed);
+  await save(progressPath, state);
+  console.log('Fixed validation at group', group, observed.successes, '/', observed.episodes);
+}
+
 try {
+  await recordValidation(state.training.length);
   for (let i = state.training.length; i < protocol.groups; i++) {
     const began = performance.now();
-    const family = protocol.trainFamilies[i % protocol.trainFamilies.length];
+    const family = nextFamily(i);
     const seed = protocol.trainSeedStart + i;
     const group = [];
     for (let j = 0; j < protocol.rolloutsPerGroup; j++) {
@@ -113,6 +132,7 @@ try {
     state.trainingMs += performance.now() - began;
     await save(progressPath, state);
     console.log('Training group', i + 1, '/', protocol.groups, 'verified', group.map(s => s.metrics.fulfilled+'/'+s.metrics.totalDemand).join(' '));
+    await recordValidation(i + 1);
   }
   const total = protocol.testFamilies.length * protocol.testSeedsPerFamily;
   for (let i = state.cases.length; i < total; i++) {
@@ -140,10 +160,10 @@ try {
       spend: sum('spend'), toolCalls: sum('toolCalls'), rejections: sum('rejectedActions') };
   }
   await save(join(destination, 'adapter.json'), { modelSha256: protocol.sha256, sourceSha256: signature, ...state.adapter });
-  await save(join(destination, 'results.json'), { protocol, signature, worldVersion: WORLD_VERSION, summary,
-    training: state.training, cases: state.cases,
+  await save(join(destination, 'results.json'), { protocol, signature, schedule, worldVersion: WORLD_VERSION, summary,
+    training: state.training, validation: state.validation, cases: state.cases,
     compute: { platform: platform(), osRelease: release(), architecture: arch(), processor: cpus()[0].model,
-      node: process.version, trainingSeconds: state.trainingMs / 1000, evaluationSeconds: state.evaluationMs / 1000,
+      node: process.version, trainingSeconds: state.trainingMs / 1000, validationSeconds: state.validationMs / 1000, evaluationSeconds: state.evaluationMs / 1000,
       uncachedForwards: state.calls, promptTokens: state.promptedTokens, evaluatedTokens: state.evaluatedTokens } });
   console.log(JSON.stringify(summary));
-} finally { child.stdin.end(); }
+} finally { worker.close(); }

@@ -12,13 +12,38 @@
   "rolloutsPerGroup": 3,
   "temperature": 1.6,
   "trainSeedStart": 41000000,
-  "trainFamilies": ["normal", "route-closure", "capacity-cut", "supplier-delay", "demand-surge"],
+  "trainFamilies": [
+    "normal",
+    "route-closure",
+    "capacity-cut",
+    "supplier-delay",
+    "demand-surge"
+  ],
   "testSeedStart": 42000000,
   "testSeedsPerFamily": 4,
-  "testFamilies": ["route-closure", "supplier-delay", "demand-surge", "compound", "network-shift"],
+  "testFamilies": [
+    "route-closure",
+    "supplier-delay",
+    "demand-surge",
+    "compound",
+    "network-shift"
+  ],
   "checkpointSelection": "Use the final update for all comparisons.",
   "primaryMetric": "Strict episode success on all twenty paired test scenarios.",
   "secondaryMetric": "Total verified on-time units divided by total committed units.",
   "reward": "On-time unit fraction plus 0.5 for strict success, less 0.02 times budget fraction spent and 0.002 per rejected action.",
-  "menu": "Up to two booking choices per yard, a stock inquiry, a route or supplier inquiry, one purchase and a clock advance. Quantities come from observable stock, capacity, uncommitted demand and budget."
+  "menu": "Up to two booking choices per yard, a stock inquiry, a route or supplier inquiry, one purchase and a clock advance. Quantities come from observable stock, capacity, uncommitted demand and budget.",
+  "validationSeedStart": 41500000,
+  "validationSeedsPerFamily": 2,
+  "validationGroups": [
+    0,
+    8,
+    16,
+    24
+  ],
+  "threshold": 0.85,
+  "schedules": {
+    "balanced": "Cycle the five training families in protocol order.",
+    "adaptive": "Start each family at success estimate 0.5. Sample with 20% uniform coverage and 80% proportional to (0.2 + 1 - success estimate) squared. Update selected family after each group with smoothing 0.2 and the three sampled terminal successes."
+  }
 }

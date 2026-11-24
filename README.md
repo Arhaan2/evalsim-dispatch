@@ -19,7 +19,11 @@ We trained a 34-feature linear action policy with REINFORCE in a partially obser
 
 “All orders on time” requires every committed unit to reach the correct destination by its deadline and all resource checks to pass. The two trained rows average three runs over the same 168 scenarios. The unfamiliar cases combine closure with demand surge, or change supplier connections while delaying inbound freight and cutting carrier capacity. The dispatcher handled those combinations most reliably.
 
-The adaptive sampler uses recent operator failures to change how frequently each scenario family appears. Both mean validation curves first crossed the prespecified 85% all-orders threshold at 1,728 episodes. Adaptive practice crossed earlier in two individual seed pairs and tied the third. This experiment establishes learning in this world. A general training-speed advantage remains an open question. [Protocol and reproduction](training/README.md) · [Experiment record](docs/data/experiment.json) · [Every held-out outcome](docs/data/test-outcomes.json)
+The adaptive sampler uses recent operator failures to change how frequently each scenario family appears. Both mean validation curves first crossed the prespecified 85% all-orders threshold at 1,728 episodes. Adaptive practice crossed earlier in two individual seed pairs and tied the third. This experiment establishes learning in this world. A general training-speed advantage remains an open question. [Technical report](training/RESULTS.md) · [Protocol and reproduction](training/README.md) · [Every held-out outcome](docs/data/test-outcomes.json)
+
+## A second agent selects the challenge
+
+We also trained a scenario-selection policy to choose feasible disruptions and opening demand levels that exposed weaknesses in its operator. Each of six runs had a budget of exactly 32,768 operator calls. The learned challenger's operators achieved 75.2% complete success on a fresh test suite, compared with 77.4% under matched uniform sampling. Visitors can sample a scenario from the saved challenger. [Protocol, results and reproduction](training/challenger/README.md)
 
 ## Inside the harbor
 
@@ -40,7 +44,7 @@ npm run audit:results
 npm start
 ```
 
-The result audit replays 1,344 policy/scenario pairs and checks a feasible solution for each of 228 validation or final cases. It compares measured outcomes to the public artifacts. See the [separate Qwen training instructions](training/language-model/README.md) to reproduce the language-model track.
+The first result audit replays 1,344 policy/scenario pairs and checks a feasible solution for each of 228 validation or final cases. The second audits the learned challenger and its 1,176 held-out outcomes. Both compare measured outcomes to public artifacts. See the [Qwen training and inference instructions](training/language-model/README.md) to reproduce the language-model track.
 
 ## Link from EvalSim
 

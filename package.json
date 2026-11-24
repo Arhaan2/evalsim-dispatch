@@ -8,6 +8,6 @@
   "scripts": {
     "start": "node tools/serve.mjs",
     "test": "node --test test/*.test.mjs",
-    "audit:results": "node training/audit.mjs"
+    "audit:results": "node training/audit.mjs && node training/challenger/audit.mjs"
   }
 }
