@@ -1,0 +1,20 @@
+.paid #net-offer { font-size: clamp(2rem, 3.2vw, 2.5rem); }
+.paid #received { margin-bottom: 1rem; }
+.paid #received-reading { margin: .3rem 0 0; }
+.paid #reading-marks { display: flex; gap: .3rem; }
+.paid #reading-marks span { width: .85rem; height: .85rem; border-radius: 50%; border: 1px solid var(--soft); }
+.paid #reading-marks .high { background: var(--lime); border-color: var(--lime); }
+.paid .actions button:active:enabled { transform: scale(.98); }
+.paid #session button:disabled { opacity: .62; }
+.paid :is(#acquisition,#report-result,#comparison) h3 { margin-top: 1.05rem; }
+.paid #acquisition table { min-width: 31rem; }
+.paid .example-links { display: flex; gap: 0 1.25rem; flex-wrap: wrap; }
+.paid .example-links a { display: inline-flex; align-items: center; min-height: 44px; }
+.paid [hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .paid .actions button:active:enabled { transform: none; } }
+.paid #advice { margin-bottom: .75rem; }
+.paid #live-estimates { margin-bottom: .55rem; }
+.paid #live-estimates .result-note { color: var(--soft); }
+.paid #live-estimates table, .paid #live-estimates table :is(th,td) { color: var(--white); }
+.paid #live-estimates table tbody :is(th,td) { font-size: .9rem; }
+.paid #live-estimates .grid-scroll:focus-visible { outline-color: var(--white); }
