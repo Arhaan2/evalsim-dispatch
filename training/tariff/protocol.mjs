@@ -1,0 +1,14 @@
+import { RESERVE_BOOTSTRAP } from "../../docs/lib/reserve-policy.js";
+import { PRICE_CENTS } from "../../docs/lib/tariff.js";
+
+export const SPEC=Object.freeze({
+  trainingSeeds:[13,37,73,101,211],releaseSeed:13,priceCents:PRICE_CENTS,margin:1,bootstrap:RESERVE_BOOTSTRAP,
+  environment:"Show the price from the start. Before seeing the sixth signed price, buy or skip six noisy samples of current demand. Accept prices of zero through 100 whole cents. On the public benchmark, cross every tape with all seven fixed prices and reuse all freight and survey uniforms. Every entrant and reference pays the same posted tariff.",
+  fitting:"Use separate seeds to fit later freight returns and the acquisition/early freight returns, then select on separate training families and seeds. Compute paired signed-freight returns with and without the reading. Integrate over potential sample counts using the training simulator. Fit the early freight heads at the seven tariffs and interpolate early continuation values between them. Baseline uses the training-family Bayesian prior and exact lookahead at the fee displayed.",
+  selection:"Compare equal training-tape weights with seven profiles reweighting hot drops, cold reversals and recovery analogues. Maximize the smallest training-only counterpart of the three outcome margins, then mean margin, then fixed order. Freeze every fitted policy before scoring held-out markets. Publish seed 13 irrespective of performance.",
+  primary:"Uniform mean net credits over all seven prices. Require positive lower paired 95% bounds against the price-aware Bayesian planner on fresh hot-ending interrupted drops and separately on fresh cold-ending reversals.",
+  original:"Keep original interrupted-drop gains on new draws. Require positive lower bounds against the legacy stochastic planner, Booking and Survey. Require lower bounds above minus one credit against each of Rally, Trust, Drift, Turns and the repriced previous Paid agent. Report the new planner gap separately.",
+  joint:"Require hot superiority, cold superiority and original retention. Price-specific intervals and the previous Paid market bank are secondary and do not select prices or models for a primary claim.",
+  acquisition:"On all fresh shifts with a positive price, compare optional purchases with forcing buy and forcing skip at that same gate. Selective acquisition improvement requires both lower paired bounds above zero and actual buys and skips in this subset. Report counts, charges and conditional realized acquisition value by price. Distinguish recognizing a tariff from profitable information use.",
+  uncertainty:"Bootstrap whole seeds with all sibling families and all tariff versions together, 2,000 replicates. Intervals describe freight and survey draws on fixed schedules for the prespecified policy."
+});
