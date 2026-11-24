@@ -4,13 +4,13 @@ Three advisers recommend whether to book the current freight offer. The distribu
 
 ## Which targets did it meet?
 
-The three-adviser gate recovered the original interrupted-drop performance within the prespecified one-credit margin. It also preserved the planner lead on the previous reversal patterns with new seeds. Its 0.83-credit gain over Closes RL on fresh hot-ending drops left a 0.66-credit gap to the planner. The lower confidence bound reached −1.16, missing the one-credit margin. On fresh reversals the gap to the planner was −0.02 and its interval included zero. The combined target was unmet.
+The three-adviser gate recovered the original interrupted-drop performance within the prespecified one-credit margin. It also preserved the previous agent’s lead over the planner on the earlier reversal patterns with new seeds. Its 0.83-credit gain over Closes RL on fresh hot-ending drops left a 0.66-credit gap to the planner. The lower confidence bound reached −1.16, missing the one-credit margin. On fresh reversals the gap to the planner was −0.02 and its interval included zero. The combined target was unmet.
 
 | Matched shifts | Number | Gate mean | Gate minus distribution planner [95% interval] | Gate minus Closes RL [95% interval] | Prespecified outcome |
 | --- | ---: | ---: | ---: | ---: | --- |
 | Fresh hot-ending drops | 2,048 | 55.65 | −0.66 [−1.16, −0.15] | +0.83 [+0.61, +1.03] | Missed planner tolerance |
 | Original interrupted drop, new seeds | 1,024 | 48.18 | +11.61 [+10.71, +12.49] | +2.54 [+2.05, +3.03] | Recovered |
-| Fresh reversals, both endings | 4,096 | 50.84 | −0.02 [−0.23, +0.19] | +0.05 [−0.09, +0.20] | Planner lead unestablished |
+| Fresh reversals, both endings | 4,096 | 50.84 | −0.02 [−0.23, +0.19] | +0.05 [−0.09, +0.20] | No clear winner against the planner |
 | Previous Closes hot-ending drops, new seeds | 2,048 | 55.85 | −2.46 [−2.90, −1.99] | +1.20 [+0.97, +1.42] | Missed planner tolerance |
 | Previous Closes reversals, new seeds | 4,096 | 49.64 | +0.69 [+0.49, +0.89] | −0.16 [−0.28, −0.03] | Retained |
 | All fresh shifts | 8,192 | 50.62 | +2.15 [+1.92, +2.39] | +0.15 [+0.01, +0.29] | Descriptive |
