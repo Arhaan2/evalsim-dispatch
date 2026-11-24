@@ -6,19 +6,40 @@ import { basename, resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
-import { benchmarkReserve, verifyReserveReport } from "../docs/lib/reserve-benchmark.js";
-import { chooseReserve, reserveCases, RESERVE_SUITE } from "../docs/lib/reserve-policy.js";
-import { pointPlanner, stochasticPlanner } from "../docs/lib/reserve.js";
+import { benchmarkReserve, reserveReferences, verifyReserveReport } from "../docs/lib/reserve-benchmark.js";
+import { reserveCases, RESERVE_SUITE } from "../docs/lib/reserve-policy.js";
+import { benchmarkDrift, driftReferences, verifyDriftReport } from "../docs/lib/drift-benchmark.js";
+import { DRIFT_SUITE, driftCases } from "../docs/lib/drift.js";
+
+const labs = {
+  reserve: { id: RESERVE_SUITE.id, cases: reserveCases, references: reserveReferences, benchmark: benchmarkReserve, verify: verifyReserveReport },
+  drift: { id: DRIFT_SUITE.id, cases: driftCases, references: driftReferences, benchmark: benchmarkDrift, verify: verifyDriftReport },
+};
+
+async function loadCheckpoint(name) {
+  const url = new URL("../docs/data/" + name + "/results.json", import.meta.url);
+  return JSON.parse(await readFile(url, "utf8")).checkpoint.weights;
+}
+
+async function loadWeights(lab) {
+  if (lab === labs.reserve) return loadCheckpoint("reserve");
+  const [drift, legacy] = await Promise.all([loadCheckpoint("drift"), loadCheckpoint("reserve")]);
+  return { drift, legacy };
+}
 
 const usage = `Benchmark an agent on the fixed DISPATCH Reserve shifts (Node.js 22+).
   node tools/reserve.mjs --policy ./examples/reserve-agent.mjs --out my-result.json
   node tools/reserve.mjs --split validation --policy planner
+  node tools/reserve.mjs --suite drift --policy ./examples/reserve-agent.mjs --out drift.json
+  node tools/reserve.mjs --suite drift --policy adaptive
   node tools/reserve.mjs --out python-result.json -- python3 examples/reserve_agent.py
   node tools/reserve.mjs --manifest
   node tools/reserve.mjs --verify my-result.json
 
---split test|validation    Use test for the released scorecard, validation for development.
---policy NAME|PATH        rl (default), planner, stochastic, or a local ES module.
+--suite reserve|drift     Original accurate forecasts (default), or unseen demand shifts.
+--split test|validation   Use test for the released scorecard, validation for development.
+--policy NAME|PATH        Local ES module, or a reference. Both suites offer rl and stochastic.
+                          Reserve also has planner. Drift also has adaptive and legacy.
 --name LABEL              Set the display name stored in the report.
 --out PATH                Save the full replayable JSON report.
 -- PROGRAM [ARG ...]      Run a local agent using one JSON request and response per line.
@@ -63,9 +84,9 @@ async function programAgent(command, timeout) {
   return { createPolicy: () => decide, close };
 }
 
-async function moduleAgent(policy, weights) {
-  const builtins = { rl: obs => chooseReserve(obs, weights), planner: pointPlanner, stochastic: stochasticPlanner };
+async function moduleAgent(policy, builtins) {
   if (Object.hasOwn(builtins, policy)) return { createPolicy: () => builtins[policy] };
+  if (["planner", "adaptive", "legacy"].includes(policy)) throw new Error("References in this suite: " + Object.keys(builtins).join(", "));
   const module = await import(pathToFileURL(resolve(policy)).href);
   if (typeof module.createPolicy === "function") return { createPolicy: module.createPolicy };
   if (typeof module.default === "function") return { createPolicy: () => module.default };
@@ -84,11 +105,12 @@ async function saveReport(path, report) {
 
 function display(report) {
   const number = n => n.toFixed(2);
+  const labels = { rl: "RL", planner: "point planner", stochastic: "stochastic planner", adaptive: "adaptive planner", legacy: "original RL" };
   console.log(report.suite + " / " + report.split + " / " + report.policy);
   console.log("Mean net credits per shift");
   console.table(Object.entries({ all: report.summary.all, ...report.summary.byFamily }).map(([family, group]) => ({
-    family, shifts: group.shifts, agent: number(group.mean), RL: number(group.references.rl.mean),
-    "point planner": number(group.references.planner.mean), "stochastic planner": number(group.references.stochastic.mean),
+    family, shifts: group.shifts, agent: number(group.mean),
+    ...Object.fromEntries(Object.entries(group.references).map(([key, ref]) => [labels[key], number(ref.mean)])),
   })));
   console.log("Paired differences for your agent across all shifts");
   for (const [reference, result] of Object.entries(report.summary.all.references)) {
@@ -103,33 +125,38 @@ async function main() {
   const separator = args.indexOf("--");
   const command = separator < 0 ? [] : args.slice(separator + 1);
   const { values } = parseArgs({ args: separator < 0 ? args : args.slice(0, separator), options: {
-    policy: { type: "string" }, split: { type: "string" }, out: { type: "string" }, name: { type: "string" },
+    suite: { type: "string" }, policy: { type: "string" }, split: { type: "string" }, out: { type: "string" }, name: { type: "string" },
     "timeout-ms": { type: "string" }, manifest: { type: "boolean" }, verify: { type: "string" }, help: { type: "boolean" },
   } });
   if (values.help) return console.log(usage);
   if (separator >= 0 && !command.length) throw new Error("Provide a program after --.");
-  if (values.verify !== undefined && (separator >= 0 || Object.keys(values).length !== 1)) throw new Error("Use --verify on its own.");
+  const suite = values.suite ?? "reserve";
+  if (!Object.hasOwn(labs, suite)) throw new Error("Choose --suite reserve or drift.");
+  const lab = labs[suite];
+  if (values.verify !== undefined) {
+    if (separator >= 0 || Object.keys(values).some(k => !["verify", "suite"].includes(k))) throw new Error("Use --verify with only an optional --suite.");
+    const saved = JSON.parse(await readFile(values.verify, "utf8"));
+    const target = values.suite ? lab : Object.values(labs).find(item => item.id === saved?.suite);
+    if (!target) throw new Error("Unrecognized benchmark suite.");
+    const report = await target.verify(saved, await loadWeights(target));
+    display(report);
+    return console.log("Verified every action, ledger and comparison against the fixed manifest.");
+  }
   const split = values.split ?? "test";
   if (!["test", "validation"].includes(split)) throw new Error("Choose --split test or validation.");
   if (values.manifest) {
-    if (command.length || Object.keys(values).some(k => !["manifest", "split"].includes(k))) throw new Error("Use --manifest with only an optional --split.");
-    return console.log(JSON.stringify({ suite: RESERVE_SUITE.id, split, cases: reserveCases(split) }, null, 2));
+    if (command.length || Object.keys(values).some(k => !["manifest", "split", "suite"].includes(k))) throw new Error("Use --manifest with only --suite and --split.");
+    return console.log(JSON.stringify({ suite: lab.id, split, cases: lab.cases(split) }, null, 2));
   }
   if (command.length && values.policy !== undefined) throw new Error("Choose --policy or a program after --.");
   const timeout = Number(values["timeout-ms"] ?? 60000);
   if (!Number.isSafeInteger(timeout) || timeout < 1 || timeout > 2147483647 ||
       (values["timeout-ms"] !== undefined && !command.length)) throw new Error("Use a positive --timeout-ms with an external program.");
-  const release = JSON.parse(await readFile(new URL("../docs/data/reserve/results.json", import.meta.url), "utf8"));
-  const weights = release.checkpoint.weights;
-  if (values.verify !== undefined) {
-    const report = await verifyReserveReport(JSON.parse(await readFile(values.verify, "utf8")), weights);
-    display(report);
-    return console.log("Verified every action, ledger and comparison against the fixed manifest.");
-  }
+  const weights = await loadWeights(lab);
   const policy = values.policy ?? "rl";
-  const agent = command.length ? await programAgent(command, timeout) : await moduleAgent(policy, weights);
+  const agent = command.length ? await programAgent(command, timeout) : await moduleAgent(policy, lab.references(weights));
   try {
-    const report = await benchmarkReserve({ split, weights, policy: values.name ?? basename(command[0] ?? policy), createPolicy: agent.createPolicy });
+    const report = await lab.benchmark({ split, weights, policy: values.name ?? basename(command[0] ?? policy), createPolicy: agent.createPolicy });
     if (values.out !== undefined) await saveReport(values.out, report);
     display(report);
     if (values.out !== undefined) console.log("Saved " + values.out);

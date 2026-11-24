@@ -1,6 +1,18 @@
 # EvalSim DISPATCH
 
-[Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Benchmark your agent](RESERVE.md) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+[Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html) · [Benchmark your agent on unseen patterns](DRIFT.md) · [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+
+## When the demand forecast is wrong
+
+The Demand Shift benchmark gives dispatchers a delayed market bulletin and the history of signed freight offers. The new Q-learning policy trained on one-way steps and ramps. The test reserves three whole patterns that change direction during a shift.
+
+On 768 synthetic test shifts, the learned policy earned **46.49 net credits per shift** and the original distribution-aware planner earned **46.22**. The paired difference was **+0.27** (95% interval −0.43 to +0.95). The pattern mattered: the learned policy lost 12.10 credits per reversal shift and gained 11.46 on interrupted drops. The original Reserve Q checkpoint, applied directly, earned 26.77. [Read the measured results](training/drift/)
+
+```sh
+node tools/reserve.mjs --suite drift --policy ./examples/reserve-agent.mjs --out drift.json
+```
+
+Replay a matched shift in the browser, verify a Python or JavaScript agent’s score locally, or inspect every case in the release. [Demand Shift agent guide](DRIFT.md)
 
 ## Should you save a truck for a better offer?
 
