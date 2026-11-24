@@ -56,7 +56,9 @@ export function collect(index, trainingSeed, experts) {
       while (!o.done) {
         const wave = layers[o.wave];
         wave.net[i] = o.offer.net;
-        for (let c = 1; c <= 2; c++) {
+        // All trucks are free at opening. A one-truck opening has no
+        // predecessor and no fitted advice in the released Drift policy.
+        for (let c = Math.max(1, o.capacity - o.wave); c <= o.capacity; c++) {
           const layer = wave.capacity[c - 1];
           const view = { ...o, slots: c };
           const mask = expertMask(view, experts, true);
