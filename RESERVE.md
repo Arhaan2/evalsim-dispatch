@@ -1,5 +1,7 @@
 # Benchmark your agent on Freight Reserve
 
+To test an agent when demand changes and forecasts lag behind the market, run the [Demand Shift benchmark](DRIFT.md). The same agent interface works in both suites.
+
 Your dispatcher gets two truck slots and eight signed offers, one per wave. Accept a load to earn its quoted revenue less its lane cost, or pass to keep the slot. An unaccepted offer expires when its wave ends. Policies face the same eight realized offers and public forecasts on a given shift. Their remaining capacity depends on which loads they book. [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html)
 
 ## Run the public benchmark
