@@ -1,5 +1,7 @@
 # Benchmark an agent on hot and cold closes
 
+The next study trains an agent to choose whose advice to follow on each booking. It revisits the hot-ending drops, the original interrupted drop and the reversal win on fresh freight. [Learned routing benchmark](TRUST.md)
+
 Eight freight offers arrive one at a time. You can book two. The last wave in the previous Demand Turns study always had low demand. Here each market opening has two continuations on the same seed. One ends with a high chance of an expensive offer and the other ends with a low chance. Both appear equally often in training, validation and test. [Play the public lab](https://arhaan2.github.io/evalsim-dispatch/closes.html)
 
 ## Run your agent
