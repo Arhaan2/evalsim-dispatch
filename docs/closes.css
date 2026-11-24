@@ -10,3 +10,6 @@
   left: 0;
   background: var(--paper);
 }
+@media (max-width: 820px) {
+  .closes .primary-nav a { white-space: normal; max-width: 100%; }
+}
