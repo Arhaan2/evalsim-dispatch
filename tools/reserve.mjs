@@ -17,6 +17,8 @@ import { benchmarkCloses, closesReferences, verifyClosesReport, CLOSES_EVALUATIO
 import { CLOSES_SUITE, closesCases } from "../docs/lib/closes.js";
 import { benchmarkTrust, trustReferences, trustWeights, verifyTrustReport, TRUST_EVALUATION_SPLITS } from "../docs/lib/trust-benchmark.js";
 import { TRUST_SUITE, trustCases } from "../docs/lib/trust.js";
+import { benchmarkRally, rallyReferences, rallyWeights, verifyRallyReport, RALLY_EVALUATION_SPLITS } from "../docs/lib/rally-benchmark.js";
+import { RALLY_SUITE, rallyCases } from "../docs/lib/rally.js";
 
 const labs = {
   reserve: { id: RESERVE_SUITE.id, cases: reserveCases, references: reserveReferences, benchmark: benchmarkReserve, verify: verifyReserveReport },
@@ -27,6 +29,8 @@ const labs = {
     verify: verifyClosesReport, splits: CLOSES_EVALUATION_SPLITS },
   trust: { id: TRUST_SUITE.id, cases: trustCases, references: trustReferences, benchmark: benchmarkTrust,
     verify: verifyTrustReport, splits: TRUST_EVALUATION_SPLITS },
+  rally: { id: RALLY_SUITE.id, cases: rallyCases, references: rallyReferences, benchmark: benchmarkRally,
+    verify: verifyRallyReport, splits: RALLY_EVALUATION_SPLITS },
 };
 
 async function loadRelease(name) {
@@ -39,6 +43,10 @@ async function loadCheckpoint(name) {
 }
 
 async function loadWeights(lab) {
+  if (lab === labs.rally) {
+    const releases = await Promise.all(["rally", "trust", "closes", "drift", "turns"].map(loadRelease));
+    return rallyWeights(...releases);
+  }
   if (lab === labs.trust) {
     const releases = await Promise.all(["trust", "closes", "drift", "turns"].map(loadRelease));
     return trustWeights(...releases);
@@ -69,18 +77,23 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --suite trust --policy ./examples/reserve-agent.mjs --out trust.json
   node tools/reserve.mjs --suite trust --split retention --policy rl
   node tools/reserve.mjs --suite trust --split archive --policy binary
+  node tools/reserve.mjs --suite rally --policy ./examples/reserve-agent.mjs --out rally.json
+  node tools/reserve.mjs --suite rally --split retention --policy rl
+  node tools/reserve.mjs --suite rally --split archive --policy trust
   node tools/reserve.mjs --out python-result.json -- python3 examples/reserve_agent.py
   node tools/reserve.mjs --manifest
   node tools/reserve.mjs --verify my-result.json
 
---suite NAME              reserve (default), drift, turns, closes or trust.
---split NAME              test or validation. Turns, Closes and Trust offer retention on earlier drops.
+--suite NAME              reserve (default), drift, turns, closes, trust or rally.
+--split NAME              test or validation. Turns, Closes, Trust and Rally also offer retention.
                           The Trust archive replays all eight previous Closes patterns on new seeds.
+                          The Rally archive replays the eight previous Trust test patterns on new seeds.
 --policy NAME|PATH        Local ES module, or a reference. Every suite offers rl and stochastic.
                           Reserve adds planner. Drift adds adaptive, legacy and the new turns policy.
                           Turns adds adaptive and the previous drift policy. rl selects the new agent.
                           Closes adds ablated (same training without history), turns, drift and adaptive.
                           Trust adds binary (two-expert router), votes (reduced gate inputs), closes, drift, turns and adaptive.
+                          Rally adds ablated (current-only control), trust, closes, drift, turns and adaptive.
 --name LABEL              Set the display name stored in the report.
 --out PATH                Save the full replayable JSON report.
 -- PROGRAM [ARG ...]      Run a local agent using one JSON request and response per line.
@@ -127,7 +140,7 @@ async function programAgent(command, timeout) {
 
 async function moduleAgent(policy, builtins) {
   if (Object.hasOwn(builtins, policy)) return { createPolicy: () => builtins[policy] };
-  if (["planner", "adaptive", "legacy", "turns", "drift", "ablated", "binary", "votes", "closes"].includes(policy)) throw new Error("Policies in this suite: " + Object.keys(builtins).join(", "));
+  if (["planner", "adaptive", "legacy", "turns", "drift", "ablated", "binary", "votes", "closes", "trust"].includes(policy)) throw new Error("Policies in this suite: " + Object.keys(builtins).join(", "));
   const module = await import(pathToFileURL(resolve(policy)).href);
   if (typeof module.createPolicy === "function") return { createPolicy: module.createPolicy };
   if (typeof module.default === "function") return { createPolicy: () => module.default };
@@ -148,7 +161,7 @@ function display(report) {
   const number = n => n.toFixed(2);
   const labels = { rl: "RL", planner: "point planner", stochastic: "stochastic planner", adaptive: "adaptive planner",
     legacy: "original RL", drift: "previous Drift RL", turns: "previous Turns RL", ablated: "RL without history",
-    binary: "two-expert router", votes: "reduced-input router", closes: "Closes history RL" };
+    binary: "two-expert router", votes: "reduced-input router", closes: "Closes history RL", trust: "Trust router" };
   console.log(report.suite + " / " + report.split + " / " + report.policy);
   console.log("Mean net credits per shift");
   console.table(Object.entries({ all: report.summary.all, ...report.summary.byFamily }).map(([family, group]) => ({
@@ -173,8 +186,9 @@ function display(report) {
   if (report.summary.byStratumEnding) {
     console.log("Paired differences across hot and cold endings");
     const comparisons = [];
-    const other = report.summary.all.references.closes ? "closes" : "ablated";
-    const intervalHeading = other === "closes" ? "95% vs Closes" : "95% vs no history";
+    const refs = report.summary.all.references;
+    const other = refs.trust ? "trust" : refs.closes ? "closes" : "ablated";
+    const intervalHeading = { trust: "95% vs Trust", closes: "95% vs Closes", ablated: "95% vs no history" }[other];
     for (const [pattern, endings] of Object.entries(report.summary.byStratumEnding)) {
       for (const [ending, group] of Object.entries(endings)) {
         const planner = group.references.stochastic;

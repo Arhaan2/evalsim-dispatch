@@ -1,6 +1,19 @@
 # EvalSim DISPATCH
 
-[Play the routing lab](https://arhaan2.github.io/evalsim-dispatch/trust.html) · [Benchmark your agent](TRUST.md) · [Play hot and cold closes](https://arhaan2.github.io/evalsim-dispatch/closes.html) · [Play Demand Turns](https://arhaan2.github.io/evalsim-dispatch/turns.html) · [Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html) · [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+[Play the rally lab](https://arhaan2.github.io/evalsim-dispatch/rally.html) · [Benchmark your agent](RALLY.md) · [Play expert routing](https://arhaan2.github.io/evalsim-dispatch/trust.html) · [Play hot and cold closes](https://arhaan2.github.io/evalsim-dispatch/closes.html) · [Play Demand Turns](https://arhaan2.github.io/evalsim-dispatch/turns.html) · [Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html) · [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+
+## Is this rally a lasting demand turn?
+
+Two dispatchers see the same early rally and have room to book only two loads. One shift ends hot and the other cools. The learned demand model updates its estimate after every signed offer and survey, then prices its remaining truck slots. The desk shows its probability of a hot finish, the value of booking now, and the distribution-aware planner’s decision. [Play both endings](https://arhaan2.github.io/evalsim-dispatch/rally.html)
+
+On 8,192 fresh shifts the learned agent earned 0.64 more net credits per shift than the planner overall. It **trailed by 0.54 credits on cold-ending reversals and 1.87 on hot-ending drops**. On the original interrupted drop it beat the planner by 11.79 and retained the gains of all three earlier policies. At wave seven the model predicted the correct ending 52.1% of the time. A separately trained agent using the current offer and bulletin reached 61.7%. [Paired results and forecast accuracy](training/rally/)
+
+```sh
+node tools/reserve.mjs --suite rally --policy ./examples/reserve-agent.mjs --out rally.json
+node tools/reserve.mjs --verify rally.json
+```
+
+Score your own agent on the fresh shifts, the original drop and the eight earlier Trust patterns. Upload the report to the public desk to replay its decisions locally. [Agent guide](RALLY.md)
 
 ## When should the dispatcher trust history?
 
