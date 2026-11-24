@@ -1,6 +1,12 @@
 # EvalSim DISPATCH
 
-[Play the survey lab](https://arhaan2.github.io/evalsim-dispatch/survey.html) · [Benchmark your agent](SURVEY.md) · [Play the rally lab](https://arhaan2.github.io/evalsim-dispatch/rally.html) · [Play expert routing](https://arhaan2.github.io/evalsim-dispatch/trust.html) · [Play hot and cold closes](https://arhaan2.github.io/evalsim-dispatch/closes.html) · [Play Demand Turns](https://arhaan2.github.io/evalsim-dispatch/turns.html) · [Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html) · [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+[Play the booking lab](https://arhaan2.github.io/evalsim-dispatch/booking.html) · [Benchmark your agent](BOOKING.md) · [Play the survey lab](https://arhaan2.github.io/evalsim-dispatch/survey.html) · [Play the rally lab](https://arhaan2.github.io/evalsim-dispatch/rally.html) · [Play expert routing](https://arhaan2.github.io/evalsim-dispatch/trust.html) · [Play hot and cold closes](https://arhaan2.github.io/evalsim-dispatch/closes.html) · [Play Demand Turns](https://arhaan2.github.io/evalsim-dispatch/turns.html) · [Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html) · [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+
+## When should a dispatcher book before the final survey?
+
+With two truck slots and eight offers, a dispatcher who waits can earn more on a later load or end the shift with capacity to spare. The new agent learns the value of both choices on the first six offers. On the last two it uses the previously released Survey policy. [Replay the booking decisions](https://arhaan2.github.io/evalsim-dispatch/booking.html#early-decisions)
+
+On 8,192 fresh synthetic shifts it averaged **0.72 more net credits per shift than the distribution-aware planner**. It led by 0.26 on cold-ending reversals and trailed by 1.39 on hot-ending interrupted drops. On the original interrupted drop it gained 1.50 over Survey and remained 2.04 behind Rally. The earlier cold-reversal schedules also had a positive estimate, with an interval spanning zero. [Read the results](training/booking/) · [Benchmark your own agent](BOOKING.md)
 
 ## Can the dispatcher recognize a misleading survey?
 

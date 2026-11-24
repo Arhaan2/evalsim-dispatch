@@ -21,6 +21,8 @@ import { benchmarkRally, rallyReferences, rallyWeights, verifyRallyReport, RALLY
 import { RALLY_SUITE, rallyCases } from "../docs/lib/rally.js";
 import { benchmarkSurvey, surveyReferences, surveyWeights, verifySurveyReport, SURVEY_EVALUATION_SPLITS } from "../docs/lib/survey-benchmark.js";
 import { SURVEY_SUITE, surveyCases } from "../docs/lib/survey.js";
+import { benchmarkBooking, bookingReferences, bookingWeights, verifyBookingReport, BOOKING_EVALUATION_SPLITS } from "../docs/lib/booking-benchmark.js";
+import { BOOKING_SUITE, bookingCases } from "../docs/lib/booking.js";
 
 const labs = {
   reserve: { id: RESERVE_SUITE.id, cases: reserveCases, references: reserveReferences, benchmark: benchmarkReserve, verify: verifyReserveReport },
@@ -35,6 +37,8 @@ const labs = {
     verify: verifyRallyReport, splits: RALLY_EVALUATION_SPLITS },
   survey: { id: SURVEY_SUITE.id, cases: surveyCases, references: surveyReferences, benchmark: benchmarkSurvey,
     verify: verifySurveyReport, splits: SURVEY_EVALUATION_SPLITS },
+  booking: { id: BOOKING_SUITE.id, cases: bookingCases, references: bookingReferences, benchmark: benchmarkBooking,
+    verify: verifyBookingReport, splits: BOOKING_EVALUATION_SPLITS },
 };
 
 async function loadRelease(name) {
@@ -47,6 +51,10 @@ async function loadCheckpoint(name) {
 }
 
 async function loadWeights(lab) {
+  if (lab === labs.booking) {
+    const releases = await Promise.all(["booking", "survey", "rally", "trust", "closes", "drift", "turns"].map(loadRelease));
+    return bookingWeights(...releases);
+  }
   if (lab === labs.survey) {
     const releases = await Promise.all(["survey", "rally", "trust", "closes", "drift", "turns"].map(loadRelease));
     return surveyWeights(...releases);
@@ -91,15 +99,19 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --suite survey --policy ./examples/reserve-agent.mjs --out survey.json
   node tools/reserve.mjs --suite survey --split retention --policy rl
   node tools/reserve.mjs --suite survey --split archive --policy rally
+  node tools/reserve.mjs --suite booking --policy ./examples/reserve-agent.mjs --out booking.json
+  node tools/reserve.mjs --suite booking --split retention --policy rl
+  node tools/reserve.mjs --suite booking --split archive --policy survey
   node tools/reserve.mjs --out python-result.json -- python3 examples/reserve_agent.py
   node tools/reserve.mjs --manifest
   node tools/reserve.mjs --verify my-result.json
 
---suite NAME              reserve (default), drift, turns, closes, trust, rally or survey.
---split NAME              test or validation. Turns, Closes, Trust, Rally and Survey also offer retention.
+--suite NAME              reserve (default), drift, turns, closes, trust, rally, survey or booking.
+--split NAME              test or validation. Turns, Closes, Trust, Rally, Survey and Booking also offer retention.
                           The Trust archive replays all eight previous Closes patterns on new seeds.
                           The Rally archive replays the eight previous Trust test patterns on new seeds.
                           The Survey archive replays the eight previous Rally test patterns on new seeds.
+                          The Booking archive replays the eight previous Survey test patterns on new seeds.
 --policy NAME|PATH        Local ES module, or a reference. Every suite offers rl and stochastic.
                           Reserve adds planner. Drift adds adaptive, legacy and the new turns policy.
                           Turns adds adaptive and the previous drift policy. rl selects the new agent.
@@ -108,6 +120,8 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
                           Rally adds ablated (current-only control), trust, closes, drift, turns and adaptive.
                           Survey adds always/never (survey-use controls), rally, ablated (Rally current-only),
                           trust, closes, drift, turns and adaptive.
+                          Booking adds equal (equal-weight learner), earlyPlanner and earlyRally
+                          (each hands the last two decisions to Survey), and survey.
 --name LABEL              Set the display name stored in the report.
 --out PATH                Save the full replayable JSON report.
 -- PROGRAM [ARG ...]      Run a local agent using one JSON request and response per line.
@@ -154,7 +168,7 @@ async function programAgent(command, timeout) {
 
 async function moduleAgent(policy, builtins) {
   if (Object.hasOwn(builtins, policy)) return { createPolicy: () => builtins[policy] };
-  if (["planner", "adaptive", "legacy", "turns", "drift", "ablated", "binary", "votes", "closes", "trust", "rally", "always", "never"].includes(policy)) throw new Error("Policies in this suite: " + Object.keys(builtins).join(", "));
+  if (["planner", "adaptive", "legacy", "turns", "drift", "ablated", "binary", "votes", "closes", "trust", "rally", "always", "never", "survey", "equal", "earlyPlanner", "earlyRally"].includes(policy)) throw new Error("Policies in this suite: " + Object.keys(builtins).join(", "));
   const module = await import(pathToFileURL(resolve(policy)).href);
   if (typeof module.createPolicy === "function") return { createPolicy: module.createPolicy };
   if (typeof module.default === "function") return { createPolicy: () => module.default };
@@ -176,7 +190,8 @@ function display(report) {
   const labels = { rl: "RL", planner: "point planner", stochastic: "stochastic planner", adaptive: "adaptive planner",
     legacy: "original RL", drift: "previous Drift RL", turns: "previous Turns RL", ablated: "RL without history",
     binary: "two-expert router", votes: "reduced-input router", closes: "Closes history RL", trust: "Trust router",
-    rally: "Rally agent", always: "always use survey", never: "never use survey" };
+    rally: "Rally agent", always: "always use survey", never: "never use survey", survey: "Survey agent",
+    equal: "equal-weight learner", earlyPlanner: "planner then Survey", earlyRally: "Rally then Survey" };
   console.log(report.suite + " / " + report.split + " / " + report.policy);
   console.log("Mean net credits per shift");
   console.table(Object.entries({ all: report.summary.all, ...report.summary.byFamily }).map(([family, group]) => ({
@@ -202,8 +217,8 @@ function display(report) {
     console.log("Paired differences across hot and cold endings");
     const comparisons = [];
     const refs = report.summary.all.references;
-    const other = ["rally","trust","closes","ablated"].find(key => refs[key]);
-    const intervalHeading = { rally: "95% vs Rally", trust: "95% vs Trust", closes: "95% vs Closes", ablated: "95% vs no history" }[other];
+    const other = ["survey","rally","trust","closes","ablated"].find(key => refs[key]);
+    const intervalHeading = { survey: "95% vs Survey", rally: "95% vs Rally", trust: "95% vs Trust", closes: "95% vs Closes", ablated: "95% vs no history" }[other];
     for (const [pattern, endings] of Object.entries(report.summary.byStratumEnding)) {
       for (const [ending, group] of Object.entries(endings)) {
         const planner = group.references.stochastic;

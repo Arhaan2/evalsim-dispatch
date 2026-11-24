@@ -1,0 +1,16 @@
+import { RESERVE_BOOTSTRAP } from "../../docs/lib/reserve-policy.js";
+
+export const SPEC = Object.freeze({
+  trainingSeeds: Object.freeze([13, 37, 73, 101, 211]), releaseSeed: 13, blockSize: 12000, margin: 1,
+  design: "Learn book and wait action values from observed freight returns on waves one through six. Delegate both final waves to the frozen Survey checkpoint on the actual capacity each policy leaves. Use no hidden market type, ending label, seed, future price or unreleased survey at deployment.",
+  fitting: "For each fit, draw 2,000 distinct training seeds for value fitting and 1,000 different seeds for candidate selection from its own block. Fit on 18 paired training openings and six recovery analogues. Select on the remaining six paired openings and three unpaired recovery analogues. The exact original and every evaluation family are excluded from both stages.",
+  selection: "Prespecify 16 candidate weightings, including an equal-weight control. Choose the one maximizing minimum slack on the three goals' training-only analogues. Break ties by mean slack then fixed order. Freeze the five selected policies and all controls before evaluating any public split. Publish seed 13 irrespective of performance.",
+  grid: "Alongside equal weight per tape, cross hot-drop training group mass {1,2,4,8,16} with recovery analogue mass {1,4,12}, keeping cold reversals at 4 and the other paired endings together at 1. Normalize training weights across groups. Use the same input features and return learner for every candidate.",
+  hotDrops: "On fresh hot-ending interrupted drops, the lower paired 95% confidence bound of the mean difference versus the unchanged distribution-aware planner must exceed zero.",
+  coldReversals: "On fresh cold-ending reversals require a lower bound above zero versus the planner and above minus one credit versus the previous Survey policy. Repeat this criterion independently on the previous Survey test schedules with fresh draws to check the previously demonstrated win.",
+  originalDrop: "On fresh draws of the exact original interrupted-drop generator require lower bounds above zero versus the planner and Survey, and above minus one credit versus EACH of Rally, Trust, Drift and Turns.",
+  joint: "Require both cold checks, the fresh hot-drop win and original-drop recovery. Report each check, including misses. Secondary means cover all four ending-by-stratum groups, each opening, and the five independent fits.",
+  diagnosis: "Compare policies that share the frozen final two decisions. At each pre-survey observation reached by a comparison policy, evaluate taking the learned action or the comparison action once, then follow the learned continuation in both branches on the same freight tape. Sum these paired credit differences across waves to reconcile the exact score gap. Future draws are used only in the evaluator.",
+  bootstrapDraws: RESERVE_BOOTSTRAP.draws, bootstrapSeed: RESERVE_BOOTSTRAP.seed,
+  uncertainty: "Resample whole seeds 2,000 times, keeping sibling endings, markets and policies together. Paired 95% percentile intervals apply to the named fixed schedules and the predetermined release checkpoint. The joint claim requires all prespecified comparisons.",
+});

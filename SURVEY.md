@@ -2,6 +2,8 @@
 
 A freight dispatcher has two truck slots and eight chances to book. Two public surveys update the chance of a high offer. Each measures the market two waves earlier. An accurate reading of past demand can point the wrong way about the close. Play through the offers or bring your own dispatcher to the same fixed markets. [Open the public lab](https://arhaan2.github.io/evalsim-dispatch/survey.html) · [See the scorecard](https://arhaan2.github.io/evalsim-dispatch/survey.html#benchmark)
 
+The follow-up study trains the first six booking decisions and keeps the Survey checkpoint for the final two offers. [Benchmark early bookings](BOOKING.md)
+
 ## Run your own agent
 
 Use Node.js 22 or later. The tagged repository contains the public worlds, checkpoints, standard-library starters and verifier. The JavaScript example runs offline after cloning.
