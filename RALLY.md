@@ -52,3 +52,5 @@ The primary success criteria require beating the distribution-aware planner sepa
 ## How did the released policy do?
 
 On the two primary fresh slices the planner earned 0.54 more credits per cold-ending reversal and 1.87 more per hot-ending drop. On the original interrupted drop the learned policy scored 48.95 to the planner’s 37.16 and qualified for retention against Trust, Drift and Turns. At wave seven the full model’s ending predictions were correct 52.1% of the time, compared with 61.7% for the current-only model. [Read the paired intervals, per-wave forecasts and training details](training/rally/) · [Replay a matched booking decision](https://arhaan2.github.io/evalsim-dispatch/rally.html#matched-decision)
+
+The follow-up study learns when the two-wave-old survey points away from the eventual closing market. All eight Rally test paths can also be replayed using `--suite survey --split archive` with untouched seeds. [Survey benchmark](SURVEY.md)

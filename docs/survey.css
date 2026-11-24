@@ -1,0 +1,18 @@
+.survey .turn-signal { padding: 0 0 1.05rem; }
+.survey .turn-signal[hidden] { display: none; }
+.survey .turn-signal h4 { margin: 0 0 .2rem; }
+.survey #signal-reading, .survey #closing-outlook { font-variant-numeric: tabular-nums; }
+.survey #closing-outlook { margin: .25rem 0; color: var(--soft); }
+.survey #scorecard section { margin-top: 1.6rem; }
+.survey #scorecard .test-results { min-width: 32rem; }
+.survey #scorecard .test-results td { white-space: nowrap; }
+.survey .calibration-figure { max-width: 42rem; margin: .8rem 0 1.3rem; }
+.survey .calibration-figure figcaption { color: var(--muted); font-size: .91rem; margin-bottom: .6rem; }
+.survey .calibration-line { display: grid; grid-template-columns: minmax(6rem, .7fr) minmax(5rem, 1fr) 3.8rem; align-items: center; gap: .6rem; margin: .3rem 0; }
+.survey .calibration-line span:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.survey .calibration-track { height: .6rem; background: var(--soft); }
+.survey .calibration-track i { display: block; height: 100%; background: var(--accent-ink); }
+.survey .calibration-model { margin: .8rem 0 .25rem; font-weight: 600; }
+.survey #survey-trace { margin-top: .85rem; }
+.survey #recent-offers { color: var(--soft); }
+.survey #net-offer { font-size: clamp(2.35rem, 3.7vw, 2.5rem); }
