@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { once } from "node:events";
 import { readFile, rename, unlink, writeFile } from "node:fs/promises";
 import { basename, resolve } from "node:path";
@@ -30,7 +30,11 @@ import { PAID_SUITE, paidCases } from "../docs/lib/paid.js";
 import { benchmarkTariff, tariffReferences, tariffWeights, verifyTariffReport, TARIFF_EVALUATION_SPLITS } from "../docs/lib/tariff-benchmark.js";
 import { TARIFF_SUITE, tariffCases } from "../docs/lib/tariff.js";
 
+import { benchmarkLastslot,lastslotReferences,verifyLastslotReport,LASTSLOT_EVALUATION_SPLITS } from "../docs/lib/lastslot-benchmark.js";
+import { LASTSLOT_SUITE,lastslotCases } from "../docs/lib/lastslot.js";
+
 const labs = {
+  lastslot: {id:LASTSLOT_SUITE.id,cases:lastslotCases,references:lastslotReferences,benchmark:benchmarkLastslot,verify:verifyLastslotReport,splits:LASTSLOT_EVALUATION_SPLITS},
   tariff: { id:TARIFF_SUITE.id, cases:tariffCases, references:tariffReferences, benchmark:benchmarkTariff, verify:verifyTariffReport, splits:TARIFF_EVALUATION_SPLITS },
   paid: { id: PAID_SUITE.id, cases: paidCases, references: paidReferences, benchmark: benchmarkPaid,
     verify: verifyPaidReport, splits: PAID_EVALUATION_SPLITS },
@@ -59,7 +63,17 @@ async function loadCheckpoint(name) {
   return (await loadRelease(name)).checkpoint;
 }
 
+async function loadLastslotBank(lab,split) {
+  if(lab!==labs.lastslot) return undefined;
+  if(!LASTSLOT_EVALUATION_SPLITS.includes(split)) throw new Error("Unknown one-slot split.");
+  const metadata=await loadRelease("lastslot");
+  const raw=await readFile(new URL("../docs/data/lastslot/"+split+".json",import.meta.url));
+  if(createHash("sha256").update(raw).digest("hex")!==metadata.banks[split]) throw new Error("The packaged reference bank differs from the release.");
+  return JSON.parse(raw);
+}
+
 async function loadWeights(lab) {
+  if(lab===labs.lastslot) return JSON.parse(await readFile(new URL("../docs/data/lastslot/desk.json",import.meta.url))).weights;
   if (lab === labs.tariff) {
     const names = ["tariff","paid","booking","survey","rally","trust","closes","drift","turns"];
     return tariffWeights(...await Promise.all(names.map(loadRelease)));
@@ -125,17 +139,20 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --suite tariff --policy ./examples/tariff-agent.mjs --out tariff.json
   node tools/reserve.mjs --suite tariff --split retention --policy planner
   node tools/reserve.mjs --suite tariff --out python-tariff.json -- python3 examples/tariff_agent.py
+  node tools/reserve.mjs --suite lastslot --policy ./examples/lastslot-agent.mjs --out lastslot.json
+  node tools/reserve.mjs --suite lastslot --split validation -- python3 examples/lastslot_agent.py
   node tools/reserve.mjs --out python-result.json -- python3 examples/reserve_agent.py
   node tools/reserve.mjs --manifest
   node tools/reserve.mjs --verify my-result.json
 
---suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid or tariff.
+--suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff or lastslot.
 --split NAME              test or validation. Turns, Closes, Trust, Rally, Survey and Booking also offer retention.
                           The Trust archive replays all eight previous Closes patterns on new seeds.
                           The Rally archive replays the eight previous Trust test patterns on new seeds.
                           The Survey archive replays the eight previous Rally test patterns on new seeds.
                           The Booking archive replays the eight previous Survey test patterns on new seeds.
                           Paid offers test, validation, retention, archive (Booking) and surveyArchive (Survey).
+                          Lastslot offers validation, test, retention and archive, including an always-skip specialist (rlNever).
                           Tariff crosses seven prices with each validation, test, retention or archived Paid tape.
 --policy NAME|PATH        Local ES module, or a reference. Every suite offers rl and stochastic.
                           Tariff adds paid (previous Paid learner at the current tariff) and reports purchases by price.
@@ -222,9 +239,11 @@ function display(report) {
     rally: "Rally agent", always: "always use survey", never: "never use survey", survey: "Survey agent",
     equal: "equal-weight learner", earlyPlanner: "planner then Survey", earlyRally: "Rally then Survey" };
   const isPaid = report.suite === PAID_SUITE.id;
-  const isTariff = report.suite === TARIFF_SUITE.id;
+  const isLastslot = report.suite === LASTSLOT_SUITE.id;
+  const isTariff = report.suite === TARIFF_SUITE.id || isLastslot;
   if (isPaid || isTariff) Object.assign(labels, { planner: "paid survey planner", booking: "Booking agent", rlNever: "RL skip", rlAlways: "RL buy",
     rlFree: "RL free survey", plannerNever: "planner skip", plannerAlways: "planner buy", plannerFree: "planner free survey", paid: "previous Paid agent" });
+  if(isLastslot) Object.assign(labels,{rl:"one-slot specialist",rlAlways:"buy with one slot",tariff:"previous Tariff agent"});
   console.log(report.suite + " / " + report.split + " / " + report.policy);
   console.log("Mean net credits per shift");
   console.table(Object.entries({ all: report.summary.all, ...report.summary.byFamily }).map(([family, group]) => ({
@@ -246,6 +265,15 @@ function display(report) {
     console.table(Object.entries(report.summary.byPrice).map(([cents,{all}]) => ({ cents, tapes:all.tapes, buys:all.bought, fees:all.fees, net:number(all.mean),
       "planner buys":all.references.planner.bought, "agent minus planner":number(all.references.planner.delta),
       "95% interval":all.references.planner.interval95.map(number).join(" to ") })));
+  }
+  if(isLastslot) {
+    const precision = value => value.toFixed(value !== 0 && Math.abs(value) < 0.001 ? 6 : 3);
+    const p=report.summary.positiveByStratumEnding;
+    console.log("Positive-price target comparisons, net credits per offered shift");
+    const rows=Object.entries(p).flatMap(([pattern,ends])=>Object.entries(ends).map(([ending,g])=>({pattern,ending,shifts:g.shifts,
+      "vs specialist skip":precision(g.references.rlNever.delta),"skip 95%":g.references.rlNever.interval95.map(precision).join(" to "),
+      "vs planner":precision(g.references.planner.delta),"planner 95%":g.references.planner.interval95.map(precision).join(" to ")})));
+    console.table(rows);
   }
   if (report.summary.byStratum) {
     console.log("Mean paired differences by demand pattern type");
@@ -293,7 +321,7 @@ async function main() {
     const saved = JSON.parse(await readFile(values.verify, "utf8"));
     const target = values.suite ? lab : Object.values(labs).find(item => item.id === saved?.suite);
     if (!target) throw new Error("Unrecognized benchmark suite.");
-    const report = await target.verify(saved, await loadWeights(target));
+    const report = await target.verify(saved, await loadWeights(target),await loadLastslotBank(target,saved.split));
     display(report);
     return console.log("Verified every action, ledger and comparison against the fixed manifest.");
   }
@@ -321,7 +349,7 @@ async function main() {
   }
   const agent = command.length ? await programAgent(command, timeout) : await moduleAgent(policy, available);
   try {
-    const report = await lab.benchmark({ split, weights, policy: values.name ?? basename(command[0] ?? policy), createPolicy: agent.createPolicy });
+    const report = await lab.benchmark({ split, weights, bank:await loadLastslotBank(lab,split), policy: values.name ?? basename(command[0] ?? policy), createPolicy: agent.createPolicy });
     if (values.out !== undefined) await saveReport(values.out, report);
     display(report);
     if (values.out !== undefined) console.log("Saved " + values.out);
