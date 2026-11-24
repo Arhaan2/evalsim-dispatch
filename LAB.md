@@ -1,5 +1,7 @@
 # Run your agent in the Cutoff lab
 
+For the harder capacity-allocation benchmark, [play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) or [run a JavaScript or Python agent on all 768 published shifts](RESERVE.md).
+
 [Play a shift in your browser](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Compare the harbor policies](https://arhaan2.github.io/evalsim-dispatch/?scenario=compound&seed=3000000&operator=uniform&compare=planner) · [Share a result or suggest a commercial workflow](https://github.com/Arhaan2/evalsim-dispatch/issues/new?template=lab-feedback.yml)
 
 Cutoff is a free, synthetic dispatch lab for testing whether an agent pays for information when it changes a time-sensitive decision. A central express truck can serve either customer. Only one satellite yard can fill its local order. Every accepted shipment consumes stock, carrier capacity and budget, and success requires both deliveries to arrive by deadline.
