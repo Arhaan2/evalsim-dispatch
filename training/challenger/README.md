@@ -15,3 +15,5 @@ This experiment adds a second policy. The operator chooses a tool call. The chal
 ## Reproduce
 
 Run `node training/challenger/run.mjs` from the repository root. It trains both conditions, evaluates the frozen final checkpoints and writes evidence to `docs/data/challenger/`. Run `node training/challenger/audit.mjs` to regenerate trial histories, probability updates and held-out outcomes and compare them with the published artifacts.
+
+The audit requires exact agreement on tool calls, sample counts, source fingerprints, outcomes and rounded public metrics. Unrounded learned weights, challenger logits, probabilities and return baselines use an absolute tolerance of `1e-12` to accommodate differences in floating-point math between Node builds. The audit validates execution metadata separately and excludes host identity and timings from equality checks.

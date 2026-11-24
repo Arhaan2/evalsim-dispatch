@@ -31,7 +31,33 @@ const expectedCheckpoint = await read('checkpoint');
 const expectedOutcomes = await read('test-outcomes');
 const actual = await experiment();
 
+// Math.exp and Math.log can round differently across V8 builds and processor families.
+// Only learned, unrounded parameter fields may vary by this absolute tolerance.
+const parameterTolerance = 1e-12;
+function matchParameters(actualObject, expectedObject, fields, label) {
+  for (const name of fields) {
+    const actualValue = actualObject[name];
+    const expectedValue = expectedObject[name];
+    assert.equal(Array.isArray(actualValue), Array.isArray(expectedValue), label + '.' + name + ' shape');
+    const values = Array.isArray(actualValue) ? actualValue : [actualValue];
+    const references = Array.isArray(expectedValue) ? expectedValue : [expectedValue];
+    assert.equal(values.length, references.length, label + '.' + name + ' length');
+    for (let i = 0; i < values.length; i++) {
+      assert.ok(Number.isFinite(values[i]) && Number.isFinite(references[i]) &&
+        Math.abs(values[i] - references[i]) <= parameterTolerance,
+        label + '.' + name + '[' + i + '] parameter drift');
+    }
+    // The exact comparison that follows still sees every other field and key.
+    actualObject[name] = expectedValue;
+  }
+}
+
 function deterministicFields(result) {
+  // Host identity and measured timings describe the machine that performed the run.
+  for (const field of ['node','platform','arch']) {
+    assert.ok(typeof result.hardware?.[field] === 'string' && result.hardware[field].length > 0,
+      'Missing execution hardware field ' + field);
+  }
   const copy = structuredClone(result);
   delete copy.hardware;
   delete copy.evaluationTiming;
@@ -40,9 +66,24 @@ function deterministicFields(result) {
   return copy;
 }
 
-assert.deepEqual(deterministicFields(actual.result),deterministicFields(published));
+const rerun = deterministicFields(actual.result);
+const reference = deterministicFields(published);
+assert.equal(rerun.trials.length, reference.trials.length);
+for (const [i, trial] of rerun.trials.entries()) {
+  const expected = reference.trials[i];
+  const label = trial.mode + '/' + trial.replicate;
+  matchParameters(trial.checkpoint, expected.checkpoint, ['weights'], label + '/operator');
+  matchParameters(trial.teacher, expected.teacher, ['logits','baseline'], label + '/challenger');
+  assert.equal(trial.history.length, expected.history.length);
+  for (const [j, point] of trial.history.entries()) {
+    matchParameters(point, expected.history[j], ['probabilities','logits','teacherBaseline'], label + '/history/' + j);
+  }
+}
+assert.deepEqual(rerun, reference);
 assert.deepEqual(actual.outcomes,expectedOutcomes);
-assert.deepEqual(actual.checkpoint,expectedCheckpoint);
+const publicCheckpoint = structuredClone(actual.checkpoint);
+matchParameters(publicCheckpoint, expectedCheckpoint, ['logits','probabilities'], 'public challenger');
+assert.deepEqual(publicCheckpoint, expectedCheckpoint);
 assert.equal(published.trials.length,2 * SEEDS.length);
 assert.ok(published.trials.every(trial => trial.trainingCalls === BUDGET));
 const drawn = new Set();
