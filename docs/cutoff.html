@@ -26,7 +26,7 @@
 <div class="shell">
   <aside class="sidebar">
     <div class="brand-row"><a class="brand" href="./" aria-label="EvalSim DISPATCH home"><img src="./assets/mark.svg?v=2" width="28" height="28" alt=""><span>EvalSim<span class="brand-period" aria-hidden="true">.</span></span></a><span class="product">Dispatch</span></div>
-    <nav class="primary-nav" aria-label="Workspace"><a href="./index.html">Harbor simulator</a><a class="current" aria-current="page" href="./cutoff.html">Inventory cutoff</a><a href="./language-model.html">Qwen pilot</a></nav>
+    <nav class="primary-nav" aria-label="Workspace"><a href="./reserve.html">Freight reserve</a><a href="./index.html">Harbor simulator</a><a class="current" aria-current="page" href="./cutoff.html">Inventory cutoff</a><a href="./language-model.html">Qwen pilot</a></nav>
     <nav class="resource-nav" aria-label="Project"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/main/LAB.md">Integration guide ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch">Source code ↗</a></nav>
   </aside>
   <main id="desk">
@@ -61,6 +61,7 @@
       <details id="compare"><summary>Run both cases and inspect decisions</summary><div id="operator-runs"></div></details>
     </section>
     <section class="lab-section" aria-labelledby="evidence-title"><h2 id="evidence-title">Training evidence</h2><div id="cpu-evidence"></div><div id="qwen-evidence" hidden></div><a class="text-link" href="https://github.com/Arhaan2/evalsim-dispatch/tree/main/training/cutoff">Explore the experiment files ↗</a></section>
+    <section class="lab-section" aria-labelledby="reserve-title"><h2 id="reserve-title">Try a harder shift</h2><p class="intro">The freight reserve lab gives you two dispatch slots and eight expiring offers. Compare Q-learning with two planners, then score your agent on the same shifts.</p><a class="text-link" href="./reserve.html">Play freight reserve →</a></section>
     <section class="lab-section integrate" aria-labelledby="integrate-title"><div><h2 id="integrate-title">Run your own operator</h2><p class="intro">Use the same observation, available calls and delivery verifier in your own benchmark. The free lab runs locally with Node.js.</p></div><div class="integration-links"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/main/LAB.md">Open integration guide ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch/issues/new?template=lab-feedback.yml">Send lab feedback ↗</a><a class="contact" href="https://arhaan2.github.io/evalsim-site/#contact">Discuss your workflow with EvalSim ↗</a></div></section>
     <footer><span>EvalSim DISPATCH</span><a href="./index.html">Harbor simulator</a></footer>
   </main>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f8f1">
+  <meta name="description" content="Play a capacity-constrained freight shift, see where a learned policy gains or loses against two planners, and benchmark your own dispatch agent.">
+  <meta property="og:title" content="Freight reserve lab · EvalSim DISPATCH">
+  <meta property="og:description" content="Eight freight offers, two dispatch slots. Compare a learned policy and two planners on the same offers, then benchmark your own agent.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="EvalSim DISPATCH">
+  <title>Freight reserve lab · EvalSim DISPATCH</title>
+  <link rel="icon" href="./assets/mark.svg?v=2" type="image/svg+xml">
+  <link rel="preload" href="./assets/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./reserve.css">
+  <script type="module" src="./reserve.js"></script>
+</head>
+<body class="reserve">
+<a class="skip" href="#desk">Skip to dispatch desk</a>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand-row"><a class="brand" href="./" aria-label="EvalSim DISPATCH home"><img src="./assets/mark.svg?v=2" width="28" height="28" alt=""><span>EvalSim<span class="brand-period" aria-hidden="true">.</span></span></a><span class="product">Dispatch</span></div>
+    <nav class="primary-nav" aria-label="Workspace"><a class="current" aria-current="page" href="./reserve.html">Freight reserve</a><a href="./cutoff.html">Inventory cutoff</a><a href="./index.html">Harbor simulator</a><a href="./language-model.html">Qwen pilot</a></nav>
+    <nav class="resource-nav" aria-label="Project"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/main/RESERVE.md">Benchmark guide ↗</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Contact EvalSim ↗</a></nav>
+  </aside>
+  <main id="desk">
+    <header class="page-heading"><h1>Freight reserve lab</h1><p>Eight freight offers arrive one at a time. You have two dispatch slots. Book the loads that earn the most net credits by the end of the shift.</p>
+      <div class="section-links"><a href="#benchmark">See benchmark results ↓</a><a href="#own-agent">Test your agent ↓</a></div>
+    </header>
+    <noscript><p>This desk needs JavaScript to play a shift. You can also <a href="https://github.com/Arhaan2/evalsim-dispatch/blob/main/RESERVE.md">run the benchmark locally</a>.</p></noscript>
+    <p id="load-status" role="status"></p>
+    <section id="session" hidden aria-labelledby="session-heading" data-ui>
+      <div class="section-line"><h2 id="session-heading">Your shift</h2><span id="active-config"></span></div>
+      <div class="desk-grid">
+        <div class="offer-panel">
+          <div class="offer-head"><h3 id="offer-heading" tabindex="-1">Signed freight offer</h3><span id="wave"></span></div>
+          <div id="amount"><strong id="net-offer"></strong><span id="amount-label"></span></div>
+          <p id="offer-detail"></p><p id="capacity-note"></p>
+          <div id="slot-board"><span id="slot-tiles" aria-hidden="true"></span><p id="slot-count"></p></div>
+          <div class="actions" id="actions"><button id="accept" type="button">Book load</button><button id="pass" type="button">Pass</button><button id="again" type="button" hidden>Play again</button></div>
+        </div>
+        <div class="forecast-panel"><h3>Demand forecast</h3><p id="forecast-note"></p>
+          <table id="forecast-table"><caption class="sr">Forecast for each remaining wave. All offer amounts are net credits.</caption><thead><tr><th scope="col">Wave</th><th scope="col">Low / high</th><th scope="col">High chance</th><th scope="col">Mean</th></tr></thead><tbody id="forecast"></tbody></table>
+        </div>
+      </div>
+      <div class="shift-foot"><p id="current-score"></p><div><a id="share" href="./reserve.html">Link to this run</a><button id="reset" type="button">Restart shift</button></div></div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <details id="config"><summary>Change shift</summary>
+        <form id="case-form"><label>Demand pattern<select id="family" name="family"><option value="steady">Steady</option><option value="surge">Surge</option><option value="volatile">Volatile</option></select></label><label>Shift seed<input type="text" inputmode="numeric" name="seed" id="seed" maxlength="10" pattern="[0-9]{1,10}" required></label><button type="submit">Load shift</button></form>
+      </details>
+      <details id="compare"><summary>Compare operators on this shift</summary>
+        <p class="description">Reveal all eight offers and see which loads each operator books. Each one receives the same offers in the same order.</p>
+        <div id="comparison"></div>
+      </details>
+    </section>
+    <section class="lab-section" id="benchmark" aria-labelledby="benchmark-title">
+      <h2 id="benchmark-title">Where does RL help?</h2>
+      <p class="description">The point planner reserves slots using each future offer’s mean. The distribution planner prices the option to wait using the full public probabilities. Q-learning learns the value of booking or waiting through practice.</p>
+      <div id="scorecard" data-ui></div>
+      <div class="section-links"><a href="./data/reserve/results.json">Raw results JSON</a><a href="https://github.com/Arhaan2/evalsim-dispatch/tree/main/training/reserve">Training protocol ↗</a></div>
+    </section>
+    <section class="lab-section" id="own-agent" aria-labelledby="agent-title">
+      <h2 id="agent-title">Benchmark your agent</h2><p class="description">Clone DISPATCH and run the example in Node.js 22 or later. Replace its booking rule with your own. The runner gives every agent the same public observations and scores it on the same frozen shifts.</p>
+      <pre><code>git clone https://github.com/Arhaan2/evalsim-dispatch.git
+cd evalsim-dispatch
+node tools/reserve.mjs --policy ./examples/reserve-agent.mjs --out my-result.json</code></pre>
+      <div class="section-links"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/main/RESERVE.md">Benchmark guide ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/main/examples/reserve-agent.mjs">Example agent ↗</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Discuss your workflow ↗</a></div>
+      <div id="upload" hidden><label for="report-file"><strong>Compare your saved result</strong></label><p class="description" id="upload-help">Choose the JSON written by the command above. Your browser replays every decision locally and verifies the scores.</p><input type="file" id="report-file" accept=".json,application/json" aria-describedby="upload-help"><p id="report-status" role="status"></p><div id="report-result"></div></div>
+    </section>
+    <footer><span>EvalSim DISPATCH</span><a href="./cutoff.html">Inventory cutoff lab</a></footer>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,93 @@
+.reserve .shell main { display: block; max-width: 79rem; }
+.reserve .page-heading { margin: 0 0 1.3rem; }
+.reserve .page-heading p, .reserve .description { max-width: 76ch; color: var(--muted); }
+.reserve .section-links, .reserve .shift-foot div { display: flex; flex-wrap: wrap; gap: 0 1.15rem; }
+.reserve .section-links a, .reserve .shift-foot a, .reserve .shift-foot button { display: inline-flex; align-items: center; min-height: 44px; font-size: .93rem; color: var(--ink); text-underline-offset: .22em; }
+.reserve .section-links a:hover, .reserve .shift-foot :is(a,button):hover { text-decoration-thickness: 2px; }
+.reserve .section-line, .reserve .offer-head, .reserve .shift-foot { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .3rem 1rem; }
+.reserve .section-line { margin-bottom: .6rem; }
+.reserve h2 { font-size: 1.38rem; letter-spacing: -.042em; }
+.reserve h3 { font-size: 1.08rem; }
+.reserve .section-line > span, .reserve .shift-foot, .reserve .status { font-size: .94rem; }
+.reserve .section-line > span, .reserve .status { color: var(--muted); }
+.reserve .desk-grid { display: grid; grid-template-columns: minmax(0,1.12fr) minmax(0,1fr); }
+.reserve .offer-panel, .reserve .forecast-panel { padding: clamp(1.05rem,2vw,2.1rem); }
+.reserve .offer-panel { display: flex; flex-direction: column; background: var(--accent-ink); color: var(--white); }
+.reserve #wave { font-variant-numeric: tabular-nums; color: var(--soft); }
+.reserve #amount { display: flex; align-items: baseline; flex-wrap: wrap; column-gap: .65rem; margin-top: clamp(1.3rem,2.8vw,2.5rem); }
+.reserve #net-offer { font-size: clamp(2.7rem,5vw,4.25rem); font-weight: 510; letter-spacing: -.08em; line-height: .96; }
+.reserve #amount-label { font-size: 1.12rem; }
+.reserve #offer-detail { color: var(--soft); font-size: .97rem; margin: .6rem 0 1.2rem; }
+.reserve #capacity-note:not(:empty) { max-width: 35ch; color: var(--soft); font-size: .96rem; margin: 0 0 1.25rem; }
+.reserve #slot-board { display: flex; flex-wrap: wrap; gap: .45rem .65rem; align-items: center; margin-top: auto; font-size: .96rem; }
+.reserve #slot-tiles { display: inline-flex; gap: .23rem; }
+.reserve #slot-tiles span { width: 1.6rem; height: .7rem; background: #677f70; }
+.reserve #slot-tiles .open { background: var(--lime); }
+.reserve .actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
+.reserve :is(button,input,select) { border: 1px solid var(--border); background: var(--white); border-radius: 4px; min-height: 44px; padding: .4rem .85rem; }
+.reserve button { font-weight: 540; }
+.reserve .actions button { padding-inline: 1.15rem; background: transparent; color: var(--white); border-color: #97a99c; }
+.reserve .actions :is(#accept,#again) { background: var(--lime); color: var(--ink); border-color: var(--lime); }
+.reserve .actions button:enabled:hover { color: var(--ink); background: var(--white); }
+.reserve .actions button:focus-visible { outline-color: var(--white); }
+.reserve input:focus-visible, .reserve summary:focus-visible { outline-offset: 2px; }
+.reserve .forecast-panel { background: var(--soft); }
+.reserve #forecast-note { color: var(--muted); font-size: .91rem; margin: .35rem 0 .55rem; }
+.reserve table { white-space: normal; }
+.reserve table th, .reserve table td { padding: .33rem .45rem; }
+.reserve table :is(th,td):first-child { padding-left: 0; }
+.reserve table :is(th,td):last-child { padding-right: 0; }
+.reserve table thead { font-size: .83rem; }
+.reserve .forecast-panel tbody tr { border-color: #c8d3c7; }
+.reserve #forecast td, .reserve #forecast th { font-size: .91rem; }
+.reserve .shift-foot { align-items: center; padding-top: .3rem; }
+.reserve .shift-foot button { border: 0; padding: 0; text-decoration: underline; background: transparent; font-weight: 400; }
+.reserve .status:not(:empty) { margin: .2rem 0 .5rem; }
+.reserve details { margin-block: .22rem; }
+.reserve summary { cursor: pointer; display: list-item; width: fit-content; min-height: 44px; align-content: center; padding-block: .55rem; font-weight: 570; }
+.reserve #case-form { display: flex; align-items: end; flex-wrap: wrap; gap: .65rem; margin: .15rem 0 .9rem; }
+.reserve #case-form label { display: grid; gap: .24rem; font-size: .86rem; }
+.reserve #seed { width: 9rem; }
+.reserve #case-form button:hover { background: var(--soft); }
+.reserve .lab-section { margin-top: clamp(1.75rem,3.8vw,3.5rem); }
+.reserve .description { margin: .4rem 0 .9rem; }
+.reserve #comparison, .reserve #scorecard { max-width: 65rem; }
+.reserve #comparison table, .reserve #scorecard table { margin: .4rem 0 .55rem; }
+.reserve #comparison td.booked { color: #1d5137; font-weight: 660; }
+.reserve tfoot { border-top: 2px solid var(--ink); font-weight: 620; }
+.reserve .result-lead { margin: .9rem 0 .35rem; font-weight: 575; }
+.reserve .result-note { color: var(--muted); font-size: .92rem; margin: .2rem 0 .8rem; }
+.reserve .examples { display: flex; flex-wrap: wrap; gap: .25rem 1rem; }
+.reserve .examples a { min-height: 44px; display: inline-flex; align-items: center; text-underline-offset: .22em; }
+.reserve pre { background: var(--soft); padding: .95rem 1rem; max-width: 65rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .9rem; }
+.reserve footer { margin: 2.2rem 0 0; }
+@media(max-width:820px) {
+  .reserve .shell main { order: 2; padding: 1.25rem max(17px,1.05rem) 0; }
+  .reserve .primary-nav a { min-height: 44px; padding-inline: .54rem; }
+  .reserve .page-heading { margin-inline: 0; }
+}
+@media(max-width:650px) {
+  .reserve .desk-grid { grid-template-columns: 1fr; }
+  .reserve #amount { margin-top: 1.45rem; }
+  .reserve .shift-foot { align-items: start; }
+  .reserve .forecast-panel table { max-width: 33rem; }
+  .reserve .primary-nav { gap: .15rem; }
+}
+@media(max-width:440px) {
+  .reserve #case-form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .reserve #case-form :is(select,input) { width: 100%; min-width: 0; }
+  .reserve #case-form button { grid-column: 1 / -1; }
+  .reserve .primary-nav a { padding-inline: .45rem; }
+  .reserve table { font-size: .86rem; }
+  .reserve table :is(th,td) { padding-inline: .23rem; }
+  .reserve footer { flex-wrap: wrap; }
+}
+@media(prefers-reduced-motion:reduce) { .reserve button:active { transform: none; } }
+.reserve #upload { max-width: 65rem; margin-top: 1rem; }
+.reserve #upload input { max-width: 100%; }
+.reserve #report-status { overflow-wrap: anywhere; margin: .5rem 0; }
+.reserve #report-result button { margin-top: .6rem; }
+@media(max-width:440px) {
+  .reserve #comparison table { font-size: .8rem; }
+  .reserve #comparison table th { font-size: .8rem; }
+}

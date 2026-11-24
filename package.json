@@ -1,9 +1,10 @@
 {
   "name": "evalsim-dispatch",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "license": "MIT",
   "exports": {
     ".": "./docs/lib/lab.js",
+    "./reserve": "./docs/lib/reserve-benchmark.js",
     "./*": "./*"
   },
   "private": true,
@@ -13,7 +14,9 @@
   "scripts": {
     "start": "node tools/serve.mjs",
     "lab": "node tools/lab.mjs",
-    "audit:labs": "node training/harbor-planner/audit.mjs && node training/cutoff/run.mjs --check && node training/cutoff/qwen/audit.mjs",
+    "reserve": "node tools/reserve.mjs",
+    "audit:reserve": "node training/reserve/run.mjs --check",
+    "audit:labs": "node training/harbor-planner/audit.mjs && node training/cutoff/run.mjs --check && node training/cutoff/qwen/audit.mjs && npm run audit:reserve",
     "test": "node --test test/*.test.mjs training/language-model/decision-credit/gradient.test.mjs",
     "audit:results": "node training/audit.mjs && node training/challenger/audit.mjs",
     "audit:models": "node training/language-model/audit.mjs && node training/language-model/audit.mjs docs/data/llm-curriculum && node training/language-model/decision-credit/audit.mjs"

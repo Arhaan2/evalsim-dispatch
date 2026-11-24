@@ -1,6 +1,18 @@
 # EvalSim DISPATCH
 
-[Play the free Cutoff lab](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Run your own agent](LAB.md) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/) · [Inspect the original Qwen pilot](https://arhaan2.github.io/evalsim-dispatch/language-model.html)
+[Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Benchmark your agent](RESERVE.md) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+
+## Should you save a truck for a better offer?
+
+Eight freight offers arrive one at a time. Two loads can ship. Play a shift, then compare your bookings with a trained Q-learning policy and two dispatch planners on exactly the same offers.
+
+On the 768-shift public test suite, the released policy earned **33.70 net credits per shift**. A planner that books against average future offers earned **30.21**. A planner that uses the full probability distribution earned **33.71**. RL’s largest gain over average-forecast planning was on surge shifts. All three policies tied on steady shifts. These are synthetic freight credits. [Results by demand pattern and training seed](training/reserve/)
+
+```sh
+node tools/reserve.mjs --policy ./examples/reserve-agent.mjs --out my-result.json
+```
+
+This scores your agent on the published shifts, re-runs all three reference policies and saves every decision. Open the result in the browser lab or verify it locally. JavaScript modules and external programs, including Python, use the same observations. [Agent interface and benchmark guide](RESERVE.md)
 
 ## Can your agent decide when to buy information?
 
