@@ -26,7 +26,7 @@
   </aside>
   <main id="desk">
     <header class="page-heading"><h1>Demand shift lab</h1><p>Eight freight offers. Two truck slots. Demand changes while the forecast lags. Decide which loads to book as the offers come in.</p>
-      <div class="section-links"><a href="#benchmark">Compare on unseen patterns ↓</a><a href="#own-agent">Test your agent ↓</a></div>
+      <div class="section-links"><a href="./turns.html">Test the reversal agent →</a><a href="#benchmark">Compare on unseen patterns ↓</a><a href="#own-agent">Test your agent ↓</a></div>
     </header>
     <noscript><p>This desk needs JavaScript to play a shift. You can also <a href="https://github.com/Arhaan2/evalsim-dispatch/blob/main/DRIFT.md">run the benchmark locally</a>.</p></noscript>
     <p id="load-status" role="status"></p>
@@ -58,7 +58,13 @@
       <h2 id="benchmark-title">Does RL transfer?</h2>
       <p class="description">Each test pattern was held out of both training and validation. The distribution planner prices future bookings using the posted odds. The adaptive planner adjusts those odds using observed forecast errors.</p>
       <div id="scorecard" data-ui></div>
-      <div class="section-links"><a href="./data/drift/results.json">Raw results JSON</a><a href="https://github.com/Arhaan2/evalsim-dispatch/tree/main/training/drift">Training protocol ↗</a></div>
+      <div id="historical-run" hidden>
+        <h3>Turns RL on the original shifts</h3>
+        <p class="description">Compare the newer policy on the shifts that exposed the reversal weakness. The separate Demand Turns study uses fresh patterns for its transfer test.</p>
+        <button id="run-historical" type="button">Run Turns RL on the original 768 shifts</button>
+        <p id="historical-status" role="status"></p><div id="historical-result"></div>
+      </div>
+      <div class="section-links"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/main/TURNS.md#run-the-new-agent-on-the-original-benchmark">Run the new agent on these 768 shifts ↗</a><a href="./data/drift/results.json">Raw results JSON</a><a href="https://github.com/Arhaan2/evalsim-dispatch/tree/main/training/drift">Training protocol ↗</a></div>
     </section>
     <section class="lab-section" id="own-agent" aria-labelledby="agent-title">
       <h2 id="agent-title">Benchmark your agent</h2><p class="description">Clone DISPATCH and run the example in Node.js 22 or later. Replace its booking rule with your own. The runner gives each agent the current offer, posted forecast and revealed history. Every agent gets the same held-out shifts.</p>

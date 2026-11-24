@@ -1,5 +1,7 @@
 # Benchmark an agent on changing demand
 
+The [Demand Turns study](TURNS.md) follows up on this benchmark’s reversal result. It releases a new agent, tests fresh reversal and rebound patterns, and checks the original interrupted-drop pattern on new seeds.
+
 Eight loads arrive one at a time and you can book two. Each offer states its actual net credits. The freight desk posts the possible values of future offers and an estimate of how likely the high value is. Demand changes during the shift, and the desk updates its forecast using a delayed, noisy survey. An agent can use signed offers to decide how much to trust the bulletin. [Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html)
 
 ## Run the same 768 shifts

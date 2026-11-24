@@ -1,10 +1,23 @@
 # EvalSim DISPATCH
 
-[Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html) · [Benchmark your agent on unseen patterns](DRIFT.md) · [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+[Play Demand Turns](https://arhaan2.github.io/evalsim-dispatch/turns.html) · [Benchmark your agent](TURNS.md) · [Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html) · [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+
+## Can an agent recognize a turn in demand?
+
+On 1,024 fresh shifts with early or late turns, the new policy earned **48.88 net credits per shift**, ahead of the previous Drift policy at **47.88** and the distribution-aware planner at **44.48**. On reversals alone it recovered 2.49 credits against Drift and trailed the planner by 0.69. It kept the original interrupted-drop advantage. On fresh rebounds its lead over the planner was 9.47 credits, but the measured range against Drift narrowly missed the study’s retention target.
+
+Removing the agent’s history features and refitting it on the same freight offers increased average earnings by 0.54 credits. History helped on fresh rebounds. All four test markets cooled before closing, so the benchmark also rewards learning the shift clock. [Paired results and training method](training/turns/)
+
+```sh
+node tools/reserve.mjs --suite turns --policy ./examples/reserve-agent.mjs --out turns.json
+node tools/reserve.mjs --verify turns.json
+```
+
+Use the same four test markets for your own JavaScript or Python agent, or replay the new policy on the original 768 Demand Shift cases. [Agent guide and pinned release](TURNS.md)
 
 ## When the demand forecast is wrong
 
-The Demand Shift benchmark gives dispatchers a delayed market bulletin and the history of signed freight offers. The new Q-learning policy trained on one-way steps and ramps. The test reserves three whole patterns that change direction during a shift.
+The Demand Shift benchmark gives dispatchers a delayed market bulletin and the history of signed freight offers. Its original Q-learning policy trained on one-way steps and ramps. The test reserves three whole patterns that change direction during a shift.
 
 On 768 synthetic test shifts, the learned policy earned **46.49 net credits per shift** and the original distribution-aware planner earned **46.22**. The paired difference was **+0.27** (95% interval −0.43 to +0.95). The pattern mattered: the learned policy lost 12.10 credits per reversal shift and gained 11.46 on interrupted drops. The original Reserve Q checkpoint, applied directly, earned 26.77. [Read the measured results](training/drift/)
 
