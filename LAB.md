@@ -44,7 +44,13 @@ node tools/lab.mjs --replay shift.json
 
 ## Use the simulator as a library
 
-From inside the checkout or a vendored copy, use the browser-compatible ES module. Node projects that install this repository as a Git dependency can import the same functions from `evalsim-dispatch`.
+To pin the lab in a Node.js project, install the tagged Git dependency and import from `evalsim-dispatch`.
+
+```sh
+npm install 'git+https://github.com/Arhaan2/evalsim-dispatch.git#cutoff-v2.0.1'
+```
+
+From inside the checkout or a vendored copy, use the browser-compatible ES module directly.
 
 ```js
 import { runCase, replayCase, planner } from "./docs/lib/lab.js";

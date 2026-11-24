@@ -179,7 +179,27 @@ const comparisons = { uniformMinusUntrained: pairedInterval(masks("uniform"), ru
   progressMinusUniform: pairedInterval(masks("progress"), masks("uniform")) };
 const output = { version: CUTOFF_VERSION, fingerprint: fingerprint(), protocol: SPEC, featureNames, baselines, checkpoints, summary, comparisons, runs };
 if (process.argv.includes("--check")) {
-  assert.deepEqual(output, JSON.parse(readFileSync(artifact, "utf8")));
+  const published = JSON.parse(readFileSync(artifact, "utf8"));
+  // Math.exp and Adam's exponentiation can differ in their last bits on x64 vs ARM64.
+  // Compare each learned coefficient, then verify the exact behavior of the published weights.
+  function verifyWeights(actual, expected) {
+    assert.equal(actual.length, expected.length);
+    actual.forEach((value, i) => assert.ok(Math.abs(value - expected[i]) <= 1e-12,
+      "Retrained coefficient differs from the published checkpoint at index " + i));
+  }
+  for (const [index, run] of output.runs.entries()) {
+    const saved = published.runs[index];
+    verifyWeights(run.weights, saved.weights);
+    assert.deepEqual(evaluate(suite, obs => chooseCutoff(obs, saved.weights)), run.final);
+    run.weights = saved.weights;
+  }
+  for (const mode of modes) {
+    verifyWeights(output.checkpoints[mode].weights, published.checkpoints[mode].weights);
+    const chosen = published.runs.find(r => r.mode === mode && r.seed === SPEC.reportCheckpointSeed);
+    assert.deepEqual(published.checkpoints[mode].weights, chosen.weights);
+    output.checkpoints[mode].weights = published.checkpoints[mode].weights;
+  }
+  assert.deepEqual(output, published);
   console.log("Reproduced ten cutoff training runs, three baselines, paired decisions and learning-progress probes.");
 } else {
   mkdirSync(fileURLToPath(new URL(".", artifact)), { recursive: true });

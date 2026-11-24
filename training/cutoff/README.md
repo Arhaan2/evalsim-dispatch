@@ -26,6 +26,8 @@ Three of the ten learned checkpoints also inspected the accurate yards *after* t
 
 ## Policy and curriculum
 
+The CPU reproduction check compares all sampled outcomes, learning curves, scores and selected checkpoint behavior exactly. Retrained coefficients allow a maximum absolute difference of 0.000000000001 for platform math on ARM64 and x64. The released coefficients themselves are included in the result file.
+
 The 15-coefficient linear policy scores the common action menu using action type, current report/requirement ratio, freshness, travel time, remaining departure slack, and window availability. Coefficients are shared across the two customer positions. Training starts from zero and samples actions under a softmax. REINFORCE uses the terminal return and a running baseline with Adam updates after complete episodes. The reward is strict success plus the fraction of units delivered on time, less 0.025 per credit and 0.01 per tool call. Final evaluation chooses the highest-scoring action.
 
 Each arm gets 4,096 simulator tool calls, split into sixteen 256-call blocks. Incomplete episodes at a budget boundary are charged and provide no update. The uniform arm picks either family with equal probability. The progress sampler compares the previous and current operators on both stock variants of four fresh seeds per family at each new block. Its next family weights are 0.15 plus each family's positive change in success. The first block uses uniform probabilities. Both pre- and post-checkpoint probe trajectories count toward the progress arm's budget. This teacher is a measured sampling rule with two choices. Scenario design and the learning-progress calculation are hand-written.
