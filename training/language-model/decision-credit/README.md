@@ -1,5 +1,7 @@
 # Decision-level credit for the Qwen dispatcher
 
+On the fixed 21-case test suite, the trained adapter completed 4 shifts, frozen Qwen completed 2, and the conventional dispatcher completed 17. The adapter used 405 tool calls to deliver 555 of 665 units on time. Frozen Qwen used 277 calls to deliver 468 units on time. Four previously failed shifts became successes, and both previously successful shifts became failures. Training required 1,117 on-policy calls and 70,100 additional simulated calls in 5,964 alternative continuations. Training and evaluation used a single Apple M4 Pro. [Published per-case outcomes and compute](../../../docs/data/llm-credit/results.json)
+
 A terminal reward evaluates a complete shift, even when only a handful of early choices determine its outcome. This follow-up asks whether a frozen Qwen decoder can learn more from each visited decision when the simulator can try every offered tool call. The starting policy is the original Qwen checkpoint with a freshly initialized rank-four residual on its eight constrained action-token logits. Training and inference use its real final decoder hidden state.
 
 ## How training works

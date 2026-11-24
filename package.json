@@ -8,6 +8,7 @@
   "scripts": {
     "start": "node tools/serve.mjs",
     "test": "node --test test/*.test.mjs training/language-model/decision-credit/gradient.test.mjs",
-    "audit:results": "node training/audit.mjs && node training/challenger/audit.mjs"
+    "audit:results": "node training/audit.mjs && node training/challenger/audit.mjs",
+    "audit:models": "node training/language-model/audit.mjs && node training/language-model/audit.mjs docs/data/llm-curriculum && node training/language-model/decision-credit/audit.mjs"
   }
 }

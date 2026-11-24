@@ -40,6 +40,8 @@ We trained two rank-four action-selection adapters on Qwen3-4B. Each received 72
 
 The balanced arm used 1,018 training tool calls and the adaptive arm used 951. Neither reached the prespecified 85% validation threshold. These are paired pilot measurements from one training seed. See the choices and rejected bookings in the [recorded comparison](https://arhaan2.github.io/evalsim-dispatch/language-model.html). [Balanced results](docs/data/llm/results.json) · [Adaptive results](docs/data/llm-curriculum/results.json) · [Model, method and local inference](training/language-model/README.md)
 
+**Can the simulator teach an individual decision?** In a separate 60-episode experiment, we scored the consequences of 5,964 possible actions by asking what would happen if the dispatcher finished each alternative shift. Those training branches took another 70,100 simulated tool calls. On 21 previously unused test shifts, the new adapter completed 4, frozen Qwen completed 2, and the dispatcher completed 17. The adapter delivered 555 of 665 units on time, up from 468. Four shifts changed from failure to success, and two changed from success to failure. The test suite and method differ from the 20-case pilot above. [Decision-level results and paired cases](https://arhaan2.github.io/evalsim-dispatch/language-model.html#decision-credit) · [Training method](training/language-model/decision-credit/README.md)
+
 ## Inside the harbor
 
 - Two suppliers, two warehouses and four customer destinations share limited inventory, transport capacity, shipping budget and time. Stock and capacity reports can go stale.
@@ -56,6 +58,7 @@ Node.js 22 or later runs the simulator tests, benchmark and local preview with n
 ```sh
 npm test
 npm run audit:results
+npm run audit:models
 npm start
 ```
 
