@@ -586,11 +586,11 @@ function renderEvidence() {
 }
 
 function respondToNavigation() {
-  const nav = document.querySelectorAll(".primary-nav a");
-  const evidence =
-    $("evidence").getBoundingClientRect().top < innerHeight * 0.5;
-  nav.forEach((a, i) => {
-    const active = Boolean(i) === evidence;
+  const nav = document.querySelectorAll('.primary-nav a[href^="#"]');
+  const section = $("evidence").getBoundingClientRect().top < innerHeight * 0.5
+    ? "#evidence" : "#simulator";
+  nav.forEach((a) => {
+    const active = a.hash === section;
     a.classList.toggle("current", active);
     if (active) a.setAttribute("aria-current", "location");
     else a.removeAttribute("aria-current");

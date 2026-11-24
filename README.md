@@ -29,7 +29,16 @@ We also trained a scenario-selection policy to choose feasible disruptions and o
 
 ## What changed for a 4B language model
 
-On twenty fresh scenarios, frozen Qwen3-4B delivered 467 of 657 units on time and completed zero shifts. A rank-four action-selection adapter trained on 72 balanced episodes delivered 542 units on time and completed two shifts. The dispatcher delivered 647 units on time and completed sixteen shifts. These are paired pilot measurements from one training seed. See the model's tool calls, including rejected bookings, in the [recorded comparison](https://arhaan2.github.io/evalsim-dispatch/language-model.html). [Per-case results](docs/data/llm/results.json) · [Model, method and local inference](training/language-model/README.md)
+We trained two rank-four action-selection adapters on Qwen3-4B. Each received 72 complete episodes with a different practice schedule. Twenty new test scenarios were shared across all four operators.
+
+| Operator | Complete shifts | Units delivered on time |
+| --- | ---: | ---: |
+| Frozen Qwen3-4B | 0 / 20 | 467 / 657 |
+| Qwen, balanced practice | 2 / 20 | 542 / 657 |
+| Qwen, adaptive practice | 1 / 20 | 509 / 657 |
+| Dispatcher | 16 / 20 | 647 / 657 |
+
+The balanced arm used 1,018 training tool calls and the adaptive arm used 951. Neither reached the prespecified 85% validation threshold. These are paired pilot measurements from one training seed. See the choices and rejected bookings in the [recorded comparison](https://arhaan2.github.io/evalsim-dispatch/language-model.html). [Balanced results](docs/data/llm/results.json) · [Adaptive results](docs/data/llm-curriculum/results.json) · [Model, method and local inference](training/language-model/README.md)
 
 ## Inside the harbor
 

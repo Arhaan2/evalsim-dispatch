@@ -15,3 +15,4 @@ jobs:
       - run: npm test
       - run: npm run audit:results
       - run: node training/language-model/audit.mjs
+      - run: node training/language-model/audit.mjs docs/data/llm-curriculum

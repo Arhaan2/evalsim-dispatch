@@ -939,7 +939,7 @@ footer > span {
   }
   .primary-nav a {
     font-size: 0.86rem;
-    min-height: 40px;
+    min-height: 44px;
   }
   .resource-nav {
     display: none;
@@ -1164,6 +1164,13 @@ footer > span {
   }
 }
 @media (max-width: 410px) {
+  .primary-nav a {
+    white-space: nowrap;
+    padding-inline: 8px;
+  }
+  .primary-nav .icon {
+    display: none;
+  }
   :root {
     font-size: 14px;
   }
@@ -1196,6 +1203,16 @@ footer > span {
   }
   .page-heading p {
     font-size: 0.96rem;
+  }
+}
+@media (max-width: 350px) {
+  .setup .primary, .panel-heading .quiet {
+    white-space: nowrap;
+    gap: 4px;
+    padding-inline: 5px;
+  }
+  .panel-heading .title-icon > .icon {
+    display: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
