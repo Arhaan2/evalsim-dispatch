@@ -1,6 +1,6 @@
 {
   "name": "evalsim-dispatch",
-  "version": "2.11.0",
+  "version": "2.12.0",
   "license": "MIT",
   "exports": {
     ".": "./docs/lib/lab.js",
@@ -15,6 +15,7 @@
     "./paid": "./docs/lib/paid-benchmark.js",
     "./tariff": "./docs/lib/tariff-benchmark.js",
     "./lastslot": "./docs/lib/lastslot-benchmark.js",
+    "./loadchoice": "./docs/lib/loadchoice-benchmark.js",
     "./*": "./*"
   },
   "private": true,
@@ -33,7 +34,7 @@
     "audit:closes": "node training/closes/run.mjs --check",
     "audit:trust": "node training/trust/run.mjs --check",
     "audit:rally": "node training/rally/run.mjs --check",
-    "audit:labs": "node training/harbor-planner/audit.mjs && node training/cutoff/run.mjs --check && node training/cutoff/qwen/audit.mjs && npm run audit:reserve && npm run audit:drift && npm run audit:turns && npm run audit:closes && npm run audit:trust && npm run audit:rally && npm run audit:survey && npm run audit:booking && npm run audit:paid && npm run audit:tariff && npm run audit:lastslot",
+    "audit:labs": "node training/harbor-planner/audit.mjs && node training/cutoff/run.mjs --check && node training/cutoff/qwen/audit.mjs && npm run audit:reserve && npm run audit:drift && npm run audit:turns && npm run audit:closes && npm run audit:trust && npm run audit:rally && npm run audit:survey && npm run audit:booking && npm run audit:paid && npm run audit:tariff && npm run audit:lastslot && npm run audit:loadchoice",
     "test": "node --test test/*.test.mjs training/language-model/decision-credit/gradient.test.mjs",
     "audit:results": "node training/audit.mjs && node training/challenger/audit.mjs",
     "audit:models": "node training/language-model/audit.mjs && node training/language-model/audit.mjs docs/data/llm-curriculum && node training/language-model/decision-credit/audit.mjs",
@@ -41,6 +42,8 @@
     "audit:booking": "node training/booking/run.mjs --check",
     "audit:paid": "node training/paid/run.mjs --check",
     "audit:tariff": "node training/tariff/run.mjs --check",
-    "audit:lastslot": "node training/lastslot/run.mjs --check"
+    "audit:lastslot": "node training/lastslot/run.mjs --check",
+    "audit:loadchoice": "node training/loadchoice/run.mjs --check",
+    "audit:loadchoice:ledgers": "node training/loadchoice/audit.mjs"
   }
 }

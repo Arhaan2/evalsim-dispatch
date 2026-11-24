@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f8f1">
+  <meta name="description" content="Explore EvalSim DISPATCH reinforcement learning studies by question. Compare measured results, replay decisions and benchmark an agent on public shifts.">
+  <title>Research studies · EvalSim DISPATCH</title>
+  <link rel="icon" href="./assets/mark.svg?v=2" type="image/svg+xml">
+  <link rel="preload" href="./assets/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./studies.css">
+</head>
+<body class="library">
+<a class="skip" href="#studies">Skip to studies</a>
+<header class="library-bar">
+  <a class="brand" href="./index.html" aria-label="EvalSim DISPATCH home"><img src="./assets/mark.svg?v=2" width="28" height="28" alt=""><span>EvalSim<span class="brand-period">.</span></span><span class="product">Dispatch</span></a>
+  <nav aria-label="Research"><a aria-current="page" href="./studies.html">Studies</a><a href="./index.html">Simulator</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Contact EvalSim</a></nav>
+</header>
+<main id="studies">
+  <header class="library-title">
+    <h1>DISPATCH studies</h1>
+    <p>How does a trained dispatcher compare with a planner when freight, forecasts and capacity change? Follow a question from its first experiment to the latest evidence.</p>
+    <nav class="topic-nav" aria-label="Browse by research question"><a href="#information">Survey decisions ↓</a><a href="#demand">Changing demand ↓</a><a href="#operations">Dispatch planning ↓</a></nav>
+  </header>
+  <article class="latest-study" aria-labelledby="latest-title">
+    <div><h2 id="latest-title">Can a survey help pick a better load?</h2>
+      <p id="latest-result">After survey fees, the agent beat the planner on hot drops and trailed it on cold reversals. Following the same offers with the reading hidden shows which bookings changed.</p>
+    </div>
+    <figure class="load-distribution" aria-labelledby="changed-caption"><figcaption id="changed-caption">When a purchased survey changed the booking</figcaption>
+      <div class="load-bin"><strong>Cold reversals</strong><span>6 earned more · 15 earned less</span><div class="load-bar" aria-hidden="true"><i style="width:28.5714%"></i></div></div>
+      <div class="load-bin"><strong>Hot drops</strong><span>64 earned more · 37 earned less</span><div class="load-bar" aria-hidden="true"><i style="width:63.3663%"></i></div></div>
+    </figure>
+    <nav aria-label="Load-choice study"><a href="./loadchoice.html#benchmark">Read the latest results →</a><a href="./loadchoice.html#session">Try the decision →</a><a href="./loadchoice.html#own-agent">Benchmark your agent →</a></nav>
+  </article>
+  <section id="information" class="study-group" aria-labelledby="information-title">
+    <h2 id="information-title">When is a survey worth buying?</h2>
+    <p>Trace the decisions in reverse publication order. Net earnings include any fee the agent paid. Each study has its own fixed shifts and controls.</p>
+    <dl>
+      <dt><a href="./loadchoice.html#load-decisions">Choosing the final load</a></dt><dd>Among paid purchases, 101 hot-drop load choices changed, with 64 paying more and 37 paying less. Neither fresh target showed a reliable gain over always skipping. The original interrupted-drop gains held.</dd>
+      <dt><a href="./lastslot.html#benchmark">One slot left</a></dt><dd>The specialist beat the planner on fresh hot drops and cold reversals. The two cold-reversal purchases added zero gross freight and cost 0.15 credits in total.</dd>
+      <dt><a href="./tariff.html#benchmark">Variable prices</a></dt><dd>The agent made 264 paid purchases on fresh shifts. Its differences from the price-aware planner on both target endings had intervals that included zero.</dd>
+      <dt><a href="./paid.html#benchmark">A one-credit survey</a></dt><dd>Both the trained agent and planner skipped all 8,192 fresh surveys. Forcing the agent to buy reduced mean net earnings by 1.04 credits.</dd>
+      <dt><a href="./booking.html#benchmark">Booking before the survey</a></dt><dd>Learning when to reserve capacity gained 0.26 credits per cold reversal over the distribution-aware planner and cost 1.39 per hot drop.</dd>
+      <dt><a href="./survey.html#benchmark">Misleading bulletins</a></dt><dd>The survey agent beat the planner by 0.84 credits per cold reversal and trailed by 1.04 per hot drop. It missed the original-drop retention target.</dd>
+    </dl>
+  </section>
+  <section id="demand" class="study-group" aria-labelledby="demand-title">
+    <h2 id="demand-title">Can the agent recognize a demand turn?</h2>
+    <p>A brief rally and a lasting reversal can look the same at first. These studies test how much the history of signed offers can tell a dispatcher.</p>
+    <dl>
+      <dt><a href="./rally.html#benchmark">Brief rallies</a></dt><dd>The agent earned 0.64 credits more than the planner across fresh shifts. Both cold-ending reversals and hot-ending drops favored the planner.</dd>
+      <dt><a href="./trust.html#benchmark">Routing to a planner</a></dt><dd>Choosing between three policies recovered the historical interrupted-drop gains. The mean fresh reversal difference from the planner was −0.02 credits, with a 95% interval from −0.23 to +0.19.</dd>
+      <dt><a href="./closes.html#benchmark">Hot and cold endings</a></dt><dd>On fresh reversals, using history added 0.70 credits over the no-history agent on cold endings and cost 0.47 on hot endings.</dd>
+      <dt><a href="./turns.html#benchmark">Demand turns</a></dt><dd>The Turns agent recovered 2.49 credits per reversal over the earlier Drift policy, while the planner still led by 0.69.</dd>
+      <dt><a href="./drift.html#benchmark">Shifting demand</a></dt><dd>On patterns held out of training, the original Drift learner beat the planner by 11.46 credits on interrupted drops and lost 12.10 on reversals.</dd>
+    </dl>
+  </section>
+  <section id="operations" class="study-group" aria-labelledby="operations-title">
+    <h2 id="operations-title">What should the dispatcher do next?</h2>
+    <p>The original environments measure the consequences of reserving capacity, inspecting stock, moving goods and selecting freight tools.</p>
+    <dl>
+      <dt><a href="./reserve.html#benchmark">Freight Reserve</a></dt><dd>On 768 test shifts the Q-learning agent earned 33.70 credits per shift, close to 33.71 for the planner that used the full distribution of offers.</dd>
+      <dt><a href="./cutoff.html#evidence-title">Inventory Cutoff</a></dt><dd>Trained policies and the observation-only planner completed all 192 held-out shifts. Disabling the planner’s inventory check reduced completions to 144.</dd>
+      <dt><a href="./index.html#evidence">Meridian Harbor</a></dt><dd>Uniform reinforcement learning delivered every order on time on 82.5% of held-out shifts, averaged across three runs. A later planner completed all 168 shifts.</dd>
+      <dt><a href="./language-model.html#decision-credit">Language-model decisions</a></dt><dd>In the decision-level training experiment, the Qwen adapter completed 4 of 21 fresh freight shifts. The base model completed 2 and the dispatcher completed 17.</dd>
+    </dl>
+  </section>
+  <footer><a href="./index.html">DISPATCH simulator</a><a href="https://github.com/Arhaan2/evalsim-dispatch">Code and reproducible studies ↗</a></footer>
+</main>
+</body>
+</html>
