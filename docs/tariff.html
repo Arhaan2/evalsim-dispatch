@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f8f1">
+  <meta name="description" content="Choose a survey price from zero to one credit. Decide whether to buy, then compare two dispatchers on the same freight offers.">
+  <meta property="og:title" content="What is a survey worth? · EvalSim DISPATCH">
+  <meta property="og:description" content="Set the survey price and benchmark your agent on the same freight shifts as the trained dispatcher and planner.">
+  <meta property="og:type" content="website">
+  <title>What is a survey worth? · EvalSim DISPATCH</title>
+  <link rel="icon" href="./assets/mark.svg?v=2" type="image/svg+xml">
+  <link rel="preload" href="./assets/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./reserve.css">
+  <link rel="stylesheet" href="./closes.css">
+  <link rel="stylesheet" href="./paid.css">
+  <link rel="stylesheet" href="./tariff.css">
+  <script type="module" src="./tariff.js"></script>
+</head>
+<body class="reserve closes paid tariff">
+<a class="skip" href="#desk">Skip to dispatch desk</a>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand-row"><a class="brand" href="./" aria-label="EvalSim DISPATCH home"><img src="./assets/mark.svg?v=2" width="28" height="28" alt=""><span>EvalSim<span class="brand-period" aria-hidden="true">.</span></span></a><span class="product">Dispatch</span></div>
+    <nav class="primary-nav" aria-label="Workspace"><a class="current" href="./tariff.html" aria-current="page">Survey pricing</a><a href="./paid.html">One-credit survey</a><a href="./index.html">DISPATCH home</a></nav>
+    <nav class="resource-nav" aria-label="Project"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/tariff-v1.0.0/TARIFF.md">Benchmark guide ↗</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Contact EvalSim ↗</a></nav>
+  </aside>
+  <main id="desk">
+    <header class="page-heading">
+      <h1>What is a survey worth?</h1>
+      <p>Choose a price from zero to one credit. Before the sixth freight offer arrives, decide whether six fresh demand samples are worth the fee.</p>
+      <div class="section-links"><a href="#benchmark">See the results ↓</a><a href="#survey-value">See purchases by price ↓</a><a href="#own-agent">Test your agent ↓</a></div>
+    </header>
+    <noscript><p>Enable JavaScript to play, or <a href="https://github.com/Arhaan2/evalsim-dispatch/blob/tariff-v1.0.0/TARIFF.md">run the benchmark locally</a>.</p></noscript>
+    <section id="session" hidden aria-labelledby="session-heading" data-ui>
+      <div class="section-line"><h2 id="session-heading">Dispatch desk</h2><span id="active-config"></span></div>
+      <form id="price-form"><div class="price-control"><label for="price">Survey price in credits</label><output id="price-label" for="price">0.10</output><input id="price" type="range" min="0" max="100" step="1" value="10" aria-describedby="price-help"><span class="range-low" aria-hidden="true">0</span><span class="range-high" aria-hidden="true">1 credit</span></div><div class="price-submit"><button type="submit" id="apply-price">Apply price</button><p id="price-help">Changing the price keeps your opening and reopens the survey window if you have passed it.</p></div></form>
+      <div class="desk-grid">
+        <div class="offer-panel">
+          <div class="offer-head"><h3 id="offer-heading" tabindex="-1"></h3><span id="wave"></span></div>
+          <div id="amount"><strong id="net-offer"></strong><span id="amount-label"></span></div>
+          <p id="offer-detail"></p>
+          <div id="received" hidden><span id="reading-marks" aria-hidden="true"></span><p id="received-reading"></p></div>
+          <details id="advice" hidden><summary>See both survey estimates</summary><div id="live-estimates"></div></details>
+          <div id="slot-board"><span id="slot-tiles" aria-hidden="true"></span><p id="slot-count"></p></div>
+          <div class="actions"><button type="button" id="accept"></button><button type="button" id="pass"></button><button type="button" id="again" hidden>Play from wave one</button></div>
+        </div>
+        <div class="forecast-panel"><h3>Freight board</h3><p id="forecast-note">The public bulletin updates at waves four and seven and reflects demand two waves earlier.</p>
+          <div class="grid-scroll" tabindex="0" role="region" aria-label="Forecast and revealed offers by wave"><table><caption class="sr">Public price range, posted chance of a high offer, signed price and your decisions</caption><thead><tr><th scope="col">Wave</th><th scope="col">Low / high</th><th scope="col">High chance</th><th scope="col">Offer</th><th scope="col">Your call</th></tr></thead><tbody id="forecast"></tbody></table></div>
+        </div>
+      </div>
+      <div class="shift-foot"><p id="current-score"></p><div><a id="share" href="./tariff.html">Link to this run</a><button id="reset" type="button">Start at wave one</button></div></div>
+      <p class="status" id="status" role="status"></p>
+      <details id="config"><summary>Choose another shift</summary>
+        <form id="case-form"><label>Blind case<select id="family"></select></label><label>Shift seed<input type="text" inputmode="numeric" id="seed" maxlength="10" pattern="[0-9]{1,10}" required></label><button type="submit">Load shift</button></form>
+      </details>
+      <details id="compare"><summary>Reveal the shift and compare agents</summary>
+        <p class="description">See the survey result, all eight freight offers and what each policy earned on this shift.</p><div id="comparison"></div>
+      </details>
+    </section>
+    <section id="benchmark" class="lab-section" aria-labelledby="score-title"><h2 id="score-title">Earnings after survey fees</h2>
+      <p class="description">Each shift is played at seven survey prices. The agent and planner see the price from the start, face the same demand draws, and pay only when they buy.</p>
+      <p id="load-status" role="status">Loading trained policies and scores…</p><div id="scorecard"></div>
+      <div class="section-links"><a href="./data/tariff/results.json">Download results JSON</a><a href="https://github.com/Arhaan2/evalsim-dispatch/tree/tariff-v1.0.0/training/tariff">Training study ↗</a></div>
+    </section>
+    <section id="survey-value" class="lab-section" aria-labelledby="value-title"><h2 id="value-title">When do dispatchers buy?</h2><div id="acquisition"></div></section>
+    <section id="own-agent" class="lab-section" aria-labelledby="agent-title"><h2 id="agent-title">Benchmark your agent</h2>
+      <p class="description">Run your own JavaScript or Python dispatcher on the same shifts. It sees the survey price from wave one. At the purchase window it has seen five freight offers. It returns <code>buy</code> or <code>skip</code> before it sees the sixth offer.</p>
+      <pre><code>git clone --branch tariff-v1.0.0 https://github.com/Arhaan2/evalsim-dispatch.git
+cd evalsim-dispatch
+node tools/reserve.mjs --suite tariff --policy ./examples/tariff-agent.mjs --out tariff.json
+node tools/reserve.mjs --verify tariff.json</code></pre>
+      <div class="section-links"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/tariff-v1.0.0/TARIFF.md">Benchmark guide ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/tariff-v1.0.0/examples/tariff-agent.mjs">JavaScript starter ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/tariff-v1.0.0/examples/tariff_agent.py">Python starter ↗</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Discuss your workflow ↗</a></div>
+      <div id="upload" hidden><label for="report-file"><strong>Verify your report</strong></label><p class="description" id="upload-help">Choose a saved report from any public split. Your browser replays the decisions and checks the charges locally.</p><input type="file" id="report-file" accept=".json,application/json" aria-describedby="upload-help"><p id="report-status" role="status"></p><div id="report-result"></div></div>
+    </section>
+    <footer><span>EvalSim DISPATCH</span><a href="./paid.html">Previous survey study</a></footer>
+  </main>
+</div>
+</body>
+</html>

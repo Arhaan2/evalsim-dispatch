@@ -27,7 +27,11 @@ import { BOOKING_SUITE, bookingCases } from "../docs/lib/booking.js";
 import { benchmarkPaid, paidReferences, paidWeights, verifyPaidReport, PAID_EVALUATION_SPLITS } from "../docs/lib/paid-benchmark.js";
 import { PAID_SUITE, paidCases } from "../docs/lib/paid.js";
 
+import { benchmarkTariff, tariffReferences, tariffWeights, verifyTariffReport, TARIFF_EVALUATION_SPLITS } from "../docs/lib/tariff-benchmark.js";
+import { TARIFF_SUITE, tariffCases } from "../docs/lib/tariff.js";
+
 const labs = {
+  tariff: { id:TARIFF_SUITE.id, cases:tariffCases, references:tariffReferences, benchmark:benchmarkTariff, verify:verifyTariffReport, splits:TARIFF_EVALUATION_SPLITS },
   paid: { id: PAID_SUITE.id, cases: paidCases, references: paidReferences, benchmark: benchmarkPaid,
     verify: verifyPaidReport, splits: PAID_EVALUATION_SPLITS },
   reserve: { id: RESERVE_SUITE.id, cases: reserveCases, references: reserveReferences, benchmark: benchmarkReserve, verify: verifyReserveReport },
@@ -56,6 +60,10 @@ async function loadCheckpoint(name) {
 }
 
 async function loadWeights(lab) {
+  if (lab === labs.tariff) {
+    const names = ["tariff","paid","booking","survey","rally","trust","closes","drift","turns"];
+    return tariffWeights(...await Promise.all(names.map(loadRelease)));
+  }
   if (lab === labs.paid) {
     const releases = await Promise.all(["paid", "booking", "survey", "rally", "trust", "closes", "drift", "turns"].map(loadRelease));
     return paidWeights(...releases);
@@ -114,18 +122,23 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --suite paid --policy ./examples/paid-agent.mjs --out paid.json
   node tools/reserve.mjs --suite paid --split retention --policy planner
   node tools/reserve.mjs --suite paid --split archive -- python3 examples/paid_agent.py
+  node tools/reserve.mjs --suite tariff --policy ./examples/tariff-agent.mjs --out tariff.json
+  node tools/reserve.mjs --suite tariff --split retention --policy planner
+  node tools/reserve.mjs --suite tariff --out python-tariff.json -- python3 examples/tariff_agent.py
   node tools/reserve.mjs --out python-result.json -- python3 examples/reserve_agent.py
   node tools/reserve.mjs --manifest
   node tools/reserve.mjs --verify my-result.json
 
---suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking or paid.
+--suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid or tariff.
 --split NAME              test or validation. Turns, Closes, Trust, Rally, Survey and Booking also offer retention.
                           The Trust archive replays all eight previous Closes patterns on new seeds.
                           The Rally archive replays the eight previous Trust test patterns on new seeds.
                           The Survey archive replays the eight previous Rally test patterns on new seeds.
                           The Booking archive replays the eight previous Survey test patterns on new seeds.
                           Paid offers test, validation, retention, archive (Booking) and surveyArchive (Survey).
+                          Tariff crosses seven prices with each validation, test, retention or archived Paid tape.
 --policy NAME|PATH        Local ES module, or a reference. Every suite offers rl and stochastic.
+                          Tariff adds paid (previous Paid learner at the current tariff) and reports purchases by price.
                           Paid uses planner for the optional survey planner. Its rlNever, rlAlways,
                           plannerNever and plannerAlways force the purchase decision at the one-credit fee.
                           Free controls are shown alongside every report at a separate zero fee.
@@ -209,8 +222,9 @@ function display(report) {
     rally: "Rally agent", always: "always use survey", never: "never use survey", survey: "Survey agent",
     equal: "equal-weight learner", earlyPlanner: "planner then Survey", earlyRally: "Rally then Survey" };
   const isPaid = report.suite === PAID_SUITE.id;
-  if (isPaid) Object.assign(labels, { planner: "paid survey planner", booking: "Booking agent", rlNever: "RL skip", rlAlways: "RL buy",
-    rlFree: "RL free survey", plannerNever: "planner skip", plannerAlways: "planner buy", plannerFree: "planner free survey" });
+  const isTariff = report.suite === TARIFF_SUITE.id;
+  if (isPaid || isTariff) Object.assign(labels, { planner: "paid survey planner", booking: "Booking agent", rlNever: "RL skip", rlAlways: "RL buy",
+    rlFree: "RL free survey", plannerNever: "planner skip", plannerAlways: "planner buy", plannerFree: "planner free survey", paid: "previous Paid agent" });
   console.log(report.suite + " / " + report.split + " / " + report.policy);
   console.log("Mean net credits per shift");
   console.table(Object.entries({ all: report.summary.all, ...report.summary.byFamily }).map(([family, group]) => ({
@@ -226,6 +240,12 @@ function display(report) {
   if (isPaid) {
     const fees = report.cases.reduce((total,row) => total + row.feePaid,0);
     console.log("Survey purchases: " + fees + " / " + report.cases.length + " shifts. Total survey fees: " + fees + " credits.");
+  }
+  if (isTariff) {
+    console.log("Survey purchases and fee-adjusted earnings by posted price");
+    console.table(Object.entries(report.summary.byPrice).map(([cents,{all}]) => ({ cents, tapes:all.tapes, buys:all.bought, fees:all.fees, net:number(all.mean),
+      "planner buys":all.references.planner.bought, "agent minus planner":number(all.references.planner.delta),
+      "95% interval":all.references.planner.interval95.map(number).join(" to ") })));
   }
   if (report.summary.byStratum) {
     console.log("Mean paired differences by demand pattern type");
@@ -244,7 +264,7 @@ function display(report) {
     const intervalHeading = { survey: "95% vs Survey", rally: "95% vs Rally", trust: "95% vs Trust", closes: "95% vs Closes", ablated: "95% vs no history" }[other];
     for (const [pattern, endings] of Object.entries(report.summary.byStratumEnding)) {
       for (const [ending, group] of Object.entries(endings)) {
-        const planner = group.references[isPaid ? "planner" : "stochastic"];
+        const planner = group.references[isPaid || isTariff ? "planner" : "stochastic"];
         const paired = group.references[other];
         comparisons.push({ pattern, ending, shifts: group.shifts, agent: number(group.mean),
           "agent minus planner": number(planner.delta), "95% vs planner": planner.interval95.map(number).join(" to "),
