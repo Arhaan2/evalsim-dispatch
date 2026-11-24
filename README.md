@@ -2,6 +2,8 @@
 
 [Run the public simulator](https://arhaan2.github.io/evalsim-dispatch/) · [See the training evidence](https://arhaan2.github.io/evalsim-dispatch/#evidence) · [Inspect the language-model pilot](https://arhaan2.github.io/evalsim-dispatch/language-model.html)
 
+[![The Meridian Harbor map, with the East Yard to Old Town lane closed](docs/assets/dispatch-preview.png)](https://arhaan2.github.io/evalsim-dispatch/)
+
 Close a freight lane or double a customer order. Run two dispatch policies in the same fictional harbor, pause at the decision where their plans diverge, and follow the goods to their destination. The verifier credits an order when the cargo arrives on time.
 
 The interactive policies run directly in your browser. The exhibit also includes a separate experiment with a local 4B language model. The two experiments have different policies, training budgets and test suites.

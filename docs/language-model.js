@@ -28,8 +28,8 @@ function node(tag, value, className) {
   return el;
 }
 
-async function readJson(file) {
-  const response = await fetch(dir + file, { cache: "no-cache" });
+async function readJson(file, directory = dir) {
+  const response = await fetch(directory + file, { cache: "no-cache" });
   if (!response.ok) {
     const e = new Error("HTTP " + response.status);
     e.status = response.status;
@@ -150,9 +150,11 @@ function renderDecision() {
     const header = node("header");
     header.append(node("h3", modeName[mode]), node("small", entry ? "Clock " + entry.tick : "Final state"));
     article.append(header);
+    const outcome = data.metrics.success ? "Completed shift" : "Missed commitment";
+    article.append(node("small", outcome + " · " + data.metrics.fulfilled + " / " + data.metrics.totalDemand
+      + " units on time by shift end", "record-final"));
     if (!entry) {
-      article.append(node("h4", "Shift ended"), node("p", data.metrics.fulfilled + " / " + data.metrics.totalDemand
-        + " units on time across " + data.trace.length + " calls.", "consequence"));
+      article.append(node("h4", "Shift ended"), node("p", "This operator made " + data.trace.length + " calls.", "consequence"));
       return article;
     }
     article.append(node("h4", toolName[entry.action.tool] ?? entry.action.tool), node("p", entry.result, "consequence"),
@@ -212,6 +214,52 @@ async function loadTraces(data) {
   renderDecision();
 }
 
+function validTrajectory(trajectory) {
+  return Array.isArray(trajectory) && trajectory.length === 4 && trajectory.every((point, i) =>
+    point.group === i * 8 && point.episodes === 10 && Number.isInteger(point.successes)
+    && point.successes >= 0 && point.successes <= point.episodes && Number.isInteger(point.trainingCalls)
+    && point.trainingCalls >= 0 && (!i || point.trainingCalls >= trajectory[i - 1].trainingCalls));
+}
+
+async function compareCurricula(balanced) {
+  const section = byId("curriculum");
+  section.hidden = true;
+  byId("compare-training-link").hidden = true;
+  if (!validTrajectory(balanced.validation)) return;
+  const adaptive = await readJson("results.json", "./data/llm-curriculum/");
+  validateResults(adaptive);
+  if (balanced.schedule !== "balanced" || adaptive.schedule !== "adaptive" || adaptive.signature !== balanced.signature
+    || !validTrajectory(adaptive.validation) || adaptive.protocol.sha256 !== balanced.protocol.sha256
+    || adaptive.protocol.trainingSeed !== balanced.protocol.trainingSeed || adaptive.worldVersion !== balanced.worldVersion
+    || balanced.cases.some((row, i) => row.seed !== adaptive.cases[i].seed || row.family !== adaptive.cases[i].family)) {
+    return;
+  }
+  const a = adaptive.summary.trained, b = balanced.summary.trained;
+  byId("arm-result").textContent = "On the final " + a.episodes + " shifts, the balanced adapter completed " + b.successes
+    + " and the adaptive adapter completed " + a.successes + ". On-time unit fulfillment was "
+    + percent(b.onTime, b.demand) + " and " + percent(a.onTime, a.demand) + ", respectively.";
+  const perGroup = balanced.protocol.rolloutsPerGroup;
+  byId("validation-curve").replaceChildren(...balanced.validation.map((pt, i) => {
+    const tr = node("tr");
+    tr.append(rowHeader(String(pt.group * perGroup)));
+    for (const p of [pt, adaptive.validation[i]]) {
+      const td = node("td", p.successes + " / " + p.episodes);
+      td.append(node("small", count(p.trainingCalls) + " calls"));
+      tr.append(td);
+    }
+    return tr;
+  }));
+  const threshold = (name, points) => {
+    const crossed = points.find((pt) => pt.successes / pt.episodes >= .85);
+    return crossed ? name + " first reached 85% at " + crossed.group * perGroup + " training episodes (" + count(crossed.trainingCalls) + " calls)."
+      : name + " stayed below 85% at all four checks.";
+  };
+  byId("threshold").textContent = threshold("Balanced training", balanced.validation) + " "
+    + threshold("Adaptive training", adaptive.validation) + " Each check requires nine successful shifts to clear the threshold.";
+  section.hidden = false;
+  byId("compare-training-link").hidden = false;
+}
+
 async function load() {
   if (loading) return;
   loading = true;
@@ -220,6 +268,9 @@ async function load() {
     const data = await readJson("results.json");
     validateResults(data);
     showResults(data);
+    // Either arm can be published first. An incomplete optional comparison never
+    // prevents visitors from inspecting the completed balanced arm's recordings.
+    const curriculum = compareCurricula(data).catch(() => { byId("curriculum").hidden = true; });
     try {
       await loadTraces(data);
     } catch {
@@ -227,9 +278,13 @@ async function load() {
       byId("trace-intro").textContent = "The published summary is available. The matching recording could not be loaded.";
       byId("retry").hidden = false;
     }
+    await curriculum;
   } catch (e) {
     byId("verified").hidden = true;
     byId("recording").hidden = true;
+    byId("curriculum").hidden = true;
+    byId("compute").hidden = true;
+    byId("downloads").replaceChildren();
     byId("run-status").hidden = false;
     byId("run-status").textContent = e.status === 404
       ? "The protocol is available. Verified results and recorded decisions will appear here when the experiment is published."

@@ -215,3 +215,33 @@ test("named scenarios require a stable seed and an existing grammar", () => {
   for (const seed of [NaN, 0.3, -1, "42", 0x100000000]) assert.throws(() => makeScenario(seed), RangeError);
   assert.throws(() => makeScenario(100, "other"), RangeError);
 });
+
+test("the audit detects departures backed only by a later replenishment", () => {
+  const scenario = makeScenario(343, "normal");
+  const source = scenario.suppliers.find((s) => s.id === scenario.inbound.supplier).warehouse;
+  scenario.warehouses.find((w) => w.id === source).stock = 0;
+  const w = createWorld(scenario);
+  step(w, wait);
+  assert(step(w, { tool: "book_shipment", order: "o0", route: source + "-c0", quantity: 1 }).ok);
+  const shipment = w.shipments[1];
+  while (w.tick < shipment.arrival) step(w, wait);
+  audit(w);
+  shipment.depart--;
+  shipment.arrival--;
+  shipment.arrivedAt--;
+  assert(verify(w).violations.includes("Insufficient inventory at departure of " + shipment.id + "."));
+});
+
+test("budget rejection preserves inventory, reservations, and the carrier's slots", () => {
+  const scenario = makeScenario(11, "normal");
+  scenario.budget = 1;
+  const w = createWorld(scenario);
+  const a = { tool: "book_shipment", order: "o0", route: "w0-c0", quantity: 1 };
+  const before = snapshot(w);
+  assert.match(step(w, a).message, /budget/);
+  assert.equal(w.warehouses[0].stock, before.warehouses[0].stock);
+  assert.equal(w.budget, before.budget);
+  assert.equal(w.routes[0].used, 0);
+  assert.equal(w.shipments.length, 1);
+  audit(w);
+});

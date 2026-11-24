@@ -41,6 +41,7 @@
             <tbody id="aggregates"></tbody>
           </table>
         </div>
+        <a class="download-link" id="compare-training-link" href="#curriculum" hidden>Compare the Qwen training schedules</a>
         <details class="case-list"><summary>Inspect all paired scenarios</summary>
           <div class="pilot-table-wrap" tabindex="0" role="region" aria-label="On-time units in every test scenario">
             <table class="pilot-table"><caption>On-time units / committed units</caption><thead><tr><th scope="col">Scenario</th><th scope="col">Base</th><th scope="col">With adapter</th><th scope="col">Dispatcher</th></tr></thead><tbody id="cases"></tbody></table>
@@ -58,6 +59,19 @@
       </div>
       <div class="comparison" id="comparison" aria-live="polite" aria-atomic="false"></div>
       <p id="replay-availability" role="status" class="explain"></p>
+    </section>
+    <section class="pilot-section" id="curriculum" aria-labelledby="curriculum-title" hidden>
+      <h2 id="curriculum-title">Does the practice schedule matter?</h2>
+      <p class="explain">Two Qwen adapters each trained for 72 episodes from one training seed. The balanced schedule cycles through disruptions. The adaptive schedule selects practice families using training feedback. Both adapters were tested on the same fresh scenarios.</p>
+      <p id="arm-result" class="finding"></p>
+      <div class="pilot-table-wrap" tabindex="0" role="region" aria-label="Fixed validation suite progress">
+        <table class="pilot-table"><caption>Successful shifts on the same 10 validation scenarios. Tool calls count cumulative training interactions.</caption>
+          <thead><tr><th scope="col">Training episodes</th><th scope="col">Balanced</th><th scope="col">Adaptive</th></tr></thead>
+          <tbody id="validation-curve"></tbody>
+        </table>
+      </div>
+      <p id="threshold" class="explain"></p>
+      <a class="download-link" href="./data/llm-curriculum/results.json" download="adaptive-qwen-results.json">Adaptive Qwen results and training history ↓</a>
     </section>
     <section class="pilot-section" aria-labelledby="design-title">
       <h2 id="design-title">How the pilot works</h2>

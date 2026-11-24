@@ -1,73 +1,430 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f6f7f6">
-  <meta name="description" content="Run a reinforcement learning policy in a changing harbor. Compare dispatch decisions, track cargo, and inspect held-out results from EvalSim DISPATCH.">
-  <title>DISPATCH · EvalSim</title>
-  <link rel="icon" href="./assets/mark.svg" type="image/svg+xml">
-  <link rel="preload" href="./assets/geist.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="./style.css">
-</head>
-<body>
-<a class="skip" href="#simulator">Skip to simulator</a>
-<svg aria-hidden="true" class="symbols"><defs>
-  <symbol id="i-map" viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3zm6-3v15m6-12v15"/></symbol>
-  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 4v16h18M6 15l4-5 4 2 6-7"/></symbol>
-  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M6 18 18 6M7 6h11v11"/></symbol>
-  <symbol id="i-branch" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2.5"/><circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M6 8v8m0-2c6 0 12 0 12-5"/></symbol>
-  <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M3 6h2c5 0 8 12 13 12h3m-3-3 3 3-3 3M3 18h2c2.5 0 4.3-2.3 6-5m2-4c1.8-2.3 3-3 5-3h3m-3-3 3 3-3 3"/></symbol>
-  <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7Z" fill="currentColor" stroke="none"/></symbol>
-  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M7 5h4v14H7zm6 0h4v14h-4z" fill="currentColor" stroke="none"/></symbol>
-  <symbol id="i-next" viewBox="0 0 24 24"><path d="m6 5 10 7-10 7zm12 0v14"/></symbol>
-  <symbol id="i-compare" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 5v14"/></symbol>
-  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1Zm8 1v14"/></symbol>
-  <symbol id="i-harbor" viewBox="0 0 24 24"><path d="M3 17h18l-3 4H7zM6 17V4h13l-8 4H6m9-2v6m-2 0h4v3h-4z"/></symbol>
-</defs></svg>
-<div class="shell">
-<aside class="sidebar">
-  <div class="brand-row"><a class="brand" href="#simulator" aria-label="EvalSim Dispatch simulator"><img src="./assets/mark.svg" width="33" height="33" alt=""><span>EvalSim</span></a><span class="product">Dispatch</span></div>
-  <nav class="primary-nav" aria-label="Workspace"><a href="#simulator" class="current"><svg class="icon"><use href="#i-map"/></svg>Simulator</a><a href="#evidence"><svg class="icon"><use href="#i-chart"/></svg>Training evidence</a></nav>
-  <section class="setup" aria-labelledby="setup-title">
-    <h2 id="setup-title">Episode setup</h2>
-    <label for="scenario">Disruption</label><select id="scenario" disabled><option>Loading scenarios…</option></select>
-    <button class="quiet options" id="options" type="button" aria-expanded="false">Episode options</button><p id="scenario-detail" class="field-help"></p>
-    <label for="seed">Scenario seed</label><div class="seed-entry"><input id="seed" type="number" min="0" max="4294967295" inputmode="numeric" value="42" required><button type="button" class="icon-button" id="shuffle" aria-label="Generate a new scenario seed" title="Generate new seed"><svg class="icon"><use href="#i-shuffle"/></svg></button></div>
-    <label for="policy">Operator</label><select id="policy"><option value="trained">Adaptive RL</option><option value="uniform">Uniform RL</option><option value="dispatcher">Dispatcher</option><option value="untrained">Before training</option></select>
-    <label for="rival">Compare with</label><select id="rival"><option value="untrained">Before training</option><option value="dispatcher">Dispatcher</option><option value="uniform">Uniform RL</option><option value="trained">Adaptive RL</option></select>
-    <button id="run" class="primary" type="button" disabled><svg class="icon"><use href="#i-play"/></svg>Run episode</button>
-    <p id="settings-note" class="field-help" aria-live="polite"></p>
-  </section>
-  <nav class="resource-nav" aria-label="Project resources"><a href="https://github.com/Arhaan2/evalsim-dispatch"><svg class="icon"><use href="#i-branch"/></svg>Source code<svg class="icon exterior"><use href="#i-arrow"/></svg></a></nav>
-</aside>
-<main>
-<section id="simulator" aria-labelledby="title">
-  <header class="page-heading"><h1 id="title">Dispatch simulator</h1><p>Give a learned policy a harbor, a shipping budget, and a disruption. Can it deliver every order on time?</p></header>
-  <noscript><p>This simulator needs JavaScript to run its browser-local policies. <a href="https://github.com/Arhaan2/evalsim-dispatch">Read the source and experiment report.</a></p></noscript>
-  <div id="load-message" role="status">Loading the simulation…</div>
-  <section class="atlas-panel" aria-labelledby="map-title">
-    <header class="panel-heading"><div class="title-icon"><svg class="icon"><use href="#i-harbor"/></svg><h2 id="map-title">Meridian Harbor</h2></div><button id="compare" type="button" class="quiet small" aria-pressed="false" disabled><svg class="icon"><use href="#i-compare"/></svg>Compare maps</button></header>
-    <div class="maps">
-      <div class="map-cell" id="first-map"><span class="map-caption"></span><div class="map-window"><svg class="atlas" id="atlas-primary" aria-label="Interactive primary operator freight map"></svg></div></div>
-      <div class="map-cell" id="second-map" hidden><span class="map-caption"></span><div class="map-window"><svg class="atlas" id="atlas-comparison" aria-label="Interactive comparison operator freight map"></svg></div></div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f7f6" />
+    <meta
+      name="description"
+      content="Run a reinforcement learning policy in a changing harbor. Compare dispatch decisions, track cargo, and inspect held-out results from EvalSim DISPATCH."
+    />
+    <title>DISPATCH · EvalSim</title>
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="EvalSim DISPATCH" />
+    <meta property="og:title" content="EvalSim DISPATCH" />
+    <meta property="og:description" content="Close a route, compare dispatch policies, and track every unit through a simulated harbor." />
+    <meta property="og:url" content="https://arhaan2.github.io/evalsim-dispatch/" />
+    <meta property="og:image" content="https://arhaan2.github.io/evalsim-dispatch/assets/dispatch-preview.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The EvalSim DISPATCH freight network around Meridian Harbor with a closed route to Old Town." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="./assets/mark.svg" type="image/svg+xml" />
+    <link
+      rel="preload"
+      href="./assets/geist.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <a class="skip" href="#simulator">Skip to simulator</a>
+    <svg aria-hidden="true" class="symbols">
+      <defs>
+        <symbol id="i-map" viewBox="0 0 24 24">
+          <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3zm6-3v15m6-12v15" />
+        </symbol>
+        <symbol id="i-chart" viewBox="0 0 24 24">
+          <path d="M3 4v16h18M6 15l4-5 4 2 6-7" />
+        </symbol>
+        <symbol id="i-arrow" viewBox="0 0 24 24">
+          <path d="M6 18 18 6M7 6h11v11" />
+        </symbol>
+        <symbol id="i-branch" viewBox="0 0 24 24">
+          <circle cx="6" cy="5" r="2.5" />
+          <circle cx="6" cy="19" r="2.5" />
+          <circle cx="18" cy="6" r="2.5" />
+          <path d="M6 8v8m0-2c6 0 12 0 12-5" />
+        </symbol>
+        <symbol id="i-shuffle" viewBox="0 0 24 24">
+          <path
+            d="M3 6h2c5 0 8 12 13 12h3m-3-3 3 3-3 3M3 18h2c2.5 0 4.3-2.3 6-5m2-4c1.8-2.3 3-3 5-3h3m-3-3 3 3-3 3"
+          />
+        </symbol>
+        <symbol id="i-play" viewBox="0 0 24 24">
+          <path d="m8 5 11 7-11 7Z" fill="currentColor" stroke="none" />
+        </symbol>
+        <symbol id="i-pause" viewBox="0 0 24 24">
+          <path
+            d="M7 5h4v14H7zm6 0h4v14h-4z"
+            fill="currentColor"
+            stroke="none"
+          />
+        </symbol>
+        <symbol id="i-next" viewBox="0 0 24 24">
+          <path d="m6 5 10 7-10 7zm12 0v14" />
+        </symbol>
+        <symbol id="i-compare" viewBox="0 0 24 24">
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="M12 5v14" />
+        </symbol>
+        <symbol id="i-book" viewBox="0 0 24 24">
+          <path
+            d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1Zm8 1v14"
+          />
+        </symbol>
+        <symbol id="i-harbor" viewBox="0 0 24 24">
+          <path d="M3 17h18l-3 4H7zM6 17V4h13l-8 4H6m9-2v6m-2 0h4v3h-4z" />
+        </symbol>
+      </defs>
+    </svg>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand-row">
+          <a
+            class="brand"
+            href="#simulator"
+            aria-label="EvalSim Dispatch simulator"
+            ><img src="./assets/mark.svg" width="33" height="33" alt="" /><span
+              >EvalSim</span
+            ></a
+          ><span class="product">Dispatch</span>
+        </div>
+        <nav class="primary-nav" aria-label="Workspace">
+          <a href="#simulator" class="current"
+            ><svg class="icon"><use href="#i-map" /></svg>Simulator</a
+          ><a href="#evidence"
+            ><svg class="icon"><use href="#i-chart" /></svg>Training evidence</a
+          >
+        </nav>
+        <section class="setup" aria-labelledby="setup-title">
+          <h2 id="setup-title">Episode setup</h2>
+          <label for="scenario">Disruption</label
+          ><select id="scenario" disabled>
+            <option>Loading scenarios…</option>
+          </select>
+          <button
+            class="quiet options"
+            id="options"
+            type="button"
+            aria-expanded="false"
+          >
+            Episode options
+          </button>
+          <p id="scenario-detail" class="field-help"></p>
+          <label for="seed">Scenario seed</label>
+          <div class="seed-entry">
+            <input
+              id="seed"
+              type="number"
+              min="0"
+              max="4294967295"
+              inputmode="numeric"
+              value="3000008"
+              required
+            /><button
+              type="button"
+              class="icon-button"
+              id="shuffle"
+              aria-label="Generate a new scenario seed"
+              title="Generate new seed"
+            >
+              <svg class="icon"><use href="#i-shuffle" /></svg>
+            </button>
+          </div>
+          <label for="policy">Operator</label
+          ><select id="policy">
+            <option value="trained">Adaptive RL</option>
+            <option value="uniform">Uniform RL</option>
+            <option value="dispatcher">Dispatcher</option>
+            <option value="untrained">Before training</option>
+          </select>
+          <label for="rival">Compare with</label
+          ><select id="rival">
+            <option value="untrained">Before training</option>
+            <option value="dispatcher">Dispatcher</option>
+            <option value="uniform">Uniform RL</option>
+            <option value="trained">Adaptive RL</option>
+          </select>
+          <button id="run" class="primary" type="button" disabled>
+            <svg class="icon"><use href="#i-play" /></svg>Run episode
+          </button>
+          <p id="settings-note" class="field-help" aria-live="polite"></p>
+        </section>
+        <nav class="resource-nav" aria-label="Project resources">
+          <a href="https://github.com/Arhaan2/evalsim-dispatch"
+            ><svg class="icon"><use href="#i-branch" /></svg>Source code<svg
+              class="icon exterior"
+            >
+              <use href="#i-arrow" /></svg
+          ></a>
+        </nav>
+      </aside>
+      <main>
+        <section id="simulator" aria-labelledby="title">
+          <header class="page-heading">
+            <h1 id="title">Dispatch simulator</h1>
+            <p>
+              Give a learned policy a harbor, a shipping budget, and a
+              disruption. Can it deliver every order on time?
+            </p>
+          </header>
+          <noscript
+            ><p>
+              This simulator needs JavaScript to run its browser-local policies.
+              <a href="https://github.com/Arhaan2/evalsim-dispatch"
+                >Read the source and experiment report.</a
+              >
+            </p></noscript
+          >
+          <div id="load-message" role="status">Loading the simulation…</div>
+          <section class="atlas-panel" aria-labelledby="map-title">
+            <header class="panel-heading">
+              <div class="title-icon">
+                <svg class="icon"><use href="#i-harbor" /></svg>
+                <h2 id="map-title">Meridian Harbor</h2>
+              </div>
+              <button
+                id="compare"
+                type="button"
+                class="quiet small"
+                aria-pressed="false"
+                disabled
+              >
+                <svg class="icon"><use href="#i-compare" /></svg>Compare maps
+              </button>
+            </header>
+            <div class="maps">
+              <div class="map-cell" id="first-map">
+                <span class="map-caption"></span>
+                <div class="map-window">
+                  <svg
+                    class="atlas"
+                    id="atlas-primary"
+                    aria-label="Interactive primary operator freight map"
+                  ></svg>
+                </div>
+              </div>
+              <div class="map-cell" id="second-map" hidden>
+                <span class="map-caption"></span>
+                <div class="map-window">
+                  <svg
+                    class="atlas"
+                    id="atlas-comparison"
+                    aria-label="Interactive comparison operator freight map"
+                  ></svg>
+                </div>
+              </div>
+            </div>
+            <div class="node-detail" id="node-detail" hidden></div>
+            <div class="map-legend" aria-label="Map legend">
+              <span><i class="key-diamond"></i>Supplier</span
+              ><span><i class="key-square"></i>Warehouse</span
+              ><span><i class="key-circle"></i>Customer</span
+              ><span><i class="key-broken"></i>Closed route</span
+              ><button
+                class="quiet zoom"
+                id="zoom"
+                type="button"
+                aria-pressed="false"
+              >
+                Enlarge map
+              </button>
+            </div>
+            <div class="playback">
+              <button
+                class="icon-button"
+                id="play"
+                aria-label="Play episode"
+                title="Play episode"
+                disabled
+              >
+                <svg class="icon"><use href="#i-play" /></svg></button
+              ><button
+                class="icon-button"
+                id="next"
+                aria-label="Next decision"
+                title="Next decision"
+                disabled
+              >
+                <svg class="icon"><use href="#i-next" /></svg></button
+              ><label class="timeline" for="scrub"
+                ><span class="step-caption"
+                  >Decision <span id="step-count">0 / —</span></span
+                ><input
+                  type="range"
+                  id="scrub"
+                  min="0"
+                  max="1"
+                  value="0"
+                  disabled /></label
+              ><label class="speed"
+                ><span class="sr">Playback speed</span
+                ><select id="speed">
+                  <option value="1">1×</option>
+                  <option value="2">2×</option>
+                  <option value="4">4×</option>
+                </select></label
+              >
+            </div>
+          </section>
+          <section class="monitor" aria-labelledby="monitor-title">
+            <div class="line-heading">
+              <h2 id="monitor-title">Checkpoint comparison</h2>
+              <span class="minor" id="episode-label"></span>
+            </div>
+            <div class="table-scroll">
+              <table class="scores">
+                <thead>
+                  <tr>
+                    <th scope="col">Operator</th>
+                    <th scope="col">On-time units</th>
+                    <th scope="col">Spend</th>
+                    <th scope="col">Tool calls</th>
+                    <th scope="col">Clock</th>
+                  </tr>
+                </thead>
+                <tbody id="scores"></tbody>
+              </table>
+            </div>
+            <p class="audit" id="audit"></p>
+          </section>
+          <div class="details-head">
+            <h2>Episode inspection</h2>
+            <label class="inspect-select"
+              ><span>Inspect</span
+              ><select id="inspection">
+                <option value="0">Operator</option>
+                <option value="1">Comparison</option>
+              </select></label
+            >
+          </div>
+          <div class="inspection-grid">
+            <section>
+              <h3>Order board</h3>
+              <div id="orders" class="orders"></div>
+            </section>
+            <section>
+              <h3>Tool trace</h3>
+              <ol id="trace" class="trace"></ol>
+              <details class="raw">
+                <summary>Observation and tool call</summary>
+                <pre id="observation"></pre>
+              </details>
+              <button
+                class="text-action"
+                id="export-traces"
+                type="button"
+                disabled
+              >
+                Download both traces
+              </button>
+            </section>
+          </div>
+        </section>
+        <section id="evidence" aria-labelledby="evidence-title">
+          <header class="page-heading">
+            <h2 id="evidence-title">Training evidence</h2>
+            <p id="research-intro">
+              Compare policies across held-out freight scenarios and inspect the
+              recorded learning curves.
+            </p>
+          </header>
+          <div class="research-grid">
+            <section class="chart-panel">
+              <div class="line-heading">
+                <h3>Validation learning curve</h3>
+                <label class="inspect-select"
+                  ><span class="sr">Chart metric</span
+                  ><select id="chart-metric">
+                    <option value="Success">Full success</option>
+                    <option value="">On-time units</option>
+                  </select></label
+                >
+              </div>
+              <div class="chart-key">
+                <span><i></i>Adaptive RL</span><span><i></i>Uniform RL</span>
+              </div>
+              <div id="learning-chart"></div>
+              <p class="minor" id="curve-description"></p>
+            </section>
+            <section class="research-notes">
+              <h3>Experiment record</h3>
+              <p id="method"></p>
+              <p id="research-details"></p>
+              <p id="challenger-finding"></p>
+              <a
+                href="?scenario=challenger&amp;seed=101&amp;operator=challenger-trained&amp;compare=challenger-uniform"
+                >Run the challenger pairing
+                <svg class="icon"><use href="#i-arrow" /></svg
+              ></a>
+              <a href="./data/experiment.json"
+                >Experiment data
+                <svg class="icon"><use href="#i-arrow" /></svg></a
+              ><a href="./data/checkpoints.json"
+                >Policy checkpoints
+                <svg class="icon"><use href="#i-arrow" /></svg></a
+              ><a href="./language-model.html"
+                >Language-model pilot
+                <svg class="icon"><use href="#i-arrow" /></svg></a
+              ><a
+                href="https://github.com/Arhaan2/evalsim-dispatch/blob/main/training/challenger/RESULTS.md"
+                >Learned challenger experiment
+                <svg class="icon"><use href="#i-arrow" /></svg></a
+              ><a href="https://github.com/Arhaan2/evalsim-dispatch#readme"
+                >Technical report <svg class="icon"><use href="#i-arrow" /></svg
+              ></a>
+            </section>
+          </div>
+          <div class="line-heading final-label">
+            <h3>Held-out performance</h3>
+            <label class="inspect-select"
+              ><span class="sr">Test cases</span
+              ><select id="test-scope">
+                <option value="all">All test scenarios</option>
+                <option value="unseen">Unseen combinations</option>
+              </select></label
+            >
+          </div>
+          <p class="research-finding" id="test-finding"></p>
+          <div class="table-scroll">
+            <table class="evidence-table">
+              <thead>
+                <tr>
+                  <th scope="col">Operator</th>
+                  <th scope="col">On-time units</th>
+                  <th scope="col">Full success</th>
+                  <th scope="col">Mean spend</th>
+                  <th scope="col">Mean calls</th>
+                </tr>
+              </thead>
+              <tbody id="evidence-scores"></tbody>
+            </table>
+          </div>
+          <div class="cases">
+            <p>Two selected test episodes</p>
+            <a
+              href="?seed=3000008&amp;scenario=route-closure&amp;operator=trained&amp;compare=dispatcher"
+              >A successful reroute
+              <svg class="icon"><use href="#i-arrow" /></svg></a
+            ><a
+              href="?seed=3000000&amp;scenario=compound&amp;operator=trained&amp;compare=dispatcher"
+              >A missed compound order
+              <svg class="icon"><use href="#i-arrow" /></svg
+            ></a>
+          </div>
+        </section>
+        <footer>
+          <span>EvalSim Dispatch</span
+          ><a href="./assets/geist-license.txt">Typeface license</a
+          ><a href="https://github.com/Arhaan2/evalsim-dispatch"
+            >GitHub <svg class="icon"><use href="#i-arrow" /></svg
+          ></a>
+        </footer>
+      </main>
     </div>
-    <div class="node-detail" id="node-detail" hidden></div>
-    <div class="map-legend" aria-label="Map legend"><span><i class="key-diamond"></i>Supplier</span><span><i class="key-square"></i>Warehouse</span><span><i class="key-circle"></i>Customer</span><span><i class="key-broken"></i>Closed route</span><button class="quiet zoom" id="zoom" type="button" aria-pressed="false">Enlarge map</button></div>
-    <div class="playback"><button class="icon-button" id="play" aria-label="Play episode" title="Play episode" disabled><svg class="icon"><use href="#i-play"/></svg></button><button class="icon-button" id="next" aria-label="Next decision" title="Next decision" disabled><svg class="icon"><use href="#i-next"/></svg></button><label class="timeline" for="scrub"><span class="step-caption">Decision <span id="step-count">0 / —</span></span><input type="range" id="scrub" min="0" max="1" value="0" disabled></label><label class="speed"><span class="sr">Playback speed</span><select id="speed"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select></label></div>
-  </section>
-  <section class="monitor" aria-labelledby="monitor-title"><div class="line-heading"><h2 id="monitor-title">Checkpoint comparison</h2><span class="minor" id="episode-label"></span></div>
-    <div class="table-scroll"><table class="scores"><thead><tr><th scope="col">Operator</th><th scope="col">On-time units</th><th scope="col">Spend</th><th scope="col">Tool calls</th><th scope="col">Clock</th></tr></thead><tbody id="scores"></tbody></table></div><p class="audit" id="audit"></p>
-  </section>
-  <div class="details-head"><h2>Episode inspection</h2><label class="inspect-select"><span>Inspect</span><select id="inspection"><option value="0">Operator</option><option value="1">Comparison</option></select></label></div>
-  <div class="inspection-grid"><section><h3>Order board</h3><div id="orders" class="orders"></div></section><section><h3>Tool trace</h3><ol id="trace" class="trace"></ol><details class="raw"><summary>Observation and tool call</summary><pre id="observation"></pre></details></section></div>
-</section>
-<section id="evidence" aria-labelledby="evidence-title"><header class="page-heading"><h2 id="evidence-title">Training evidence</h2><p id="research-intro">Compare policies across held-out freight scenarios and inspect the recorded learning curves.</p></header>
-  <div class="research-grid"><section class="chart-panel"><div class="line-heading"><h3>Validation learning curve</h3><label class="inspect-select"><span class="sr">Chart metric</span><select id="chart-metric"><option value="Success">Full success</option><option value="">On-time units</option></select></label></div><div class="chart-key"><span><i></i>Adaptive RL</span><span><i></i>Uniform RL</span></div><div id="learning-chart"></div><p class="minor" id="curve-description"></p></section><section class="research-notes"><h3>Experiment record</h3><p id="method"></p><p id="research-details"></p><a href="./data/experiment.json">Experiment data <svg class="icon"><use href="#i-arrow"/></svg></a><a href="./data/checkpoints.json">Policy checkpoints <svg class="icon"><use href="#i-arrow"/></svg></a><a href="./language-model.html">Language-model pilot <svg class="icon"><use href="#i-arrow"/></svg></a><a href="https://github.com/Arhaan2/evalsim-dispatch#readme">Technical report <svg class="icon"><use href="#i-arrow"/></svg></a></section></div>
-  <div class="line-heading final-label"><h3>Held-out performance</h3><label class="inspect-select"><span class="sr">Test cases</span><select id="test-scope"><option value="all">All test scenarios</option><option value="unseen">Unseen combinations</option></select></label></div><p class="research-finding" id="test-finding"></p><div class="table-scroll"><table class="evidence-table"><thead><tr><th scope="col">Operator</th><th scope="col">On-time units</th><th scope="col">Full success</th><th scope="col">Mean spend</th><th scope="col">Mean calls</th></tr></thead><tbody id="evidence-scores"></tbody></table></div><div class="cases"><p>Inspect two test episodes</p><a href="?seed=3000008&amp;scenario=route-closure&amp;operator=trained&amp;compare=dispatcher">A successful reroute <svg class="icon"><use href="#i-arrow"/></svg></a><a href="?seed=3000000&amp;scenario=compound&amp;operator=trained&amp;compare=dispatcher">A missed compound order <svg class="icon"><use href="#i-arrow"/></svg></a></div>
-</section>
-<footer><span>EvalSim Dispatch</span><a href="./assets/geist-license.txt">Typeface license</a><a href="https://github.com/Arhaan2/evalsim-dispatch">GitHub <svg class="icon"><use href="#i-arrow"/></svg></a></footer>
-</main>
-</div>
-<script type="module" src="./app.js"></script>
-</body></html>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
