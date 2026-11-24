@@ -33,6 +33,16 @@ function table(headers, caption) {
   return el;
 }
 
+function scrollTable(table) {
+  const frame = document.createElement("div");
+  frame.className = "grid-scroll";
+  frame.tabIndex = 0;
+  frame.setAttribute("role", "region");
+  frame.setAttribute("aria-label", table.caption.textContent);
+  frame.append(table);
+  return frame;
+}
+
 function readConfig(seed, family) {
   if (!/^\d{1,10}$/.test(seed) || Number(seed) > 0xffffffff || !RESERVE_FAMILIES.includes(family)) {
     throw new Error("Choose a listed demand pattern and a shift seed from 0 to 4294967295.");
@@ -164,7 +174,7 @@ function renderComparison() {
   const note = text("p", "RL uses the released Q-learning checkpoint. Point uses forecast means. Dist. uses the full distribution."
     + (importedCase ? " Agent is your replay-verified local policy." : ""));
   note.className = "result-note";
-  $("comparison").replaceChildren(el, note);
+  $("comparison").replaceChildren(scrollTable(el), note);
   if (rl) {
     const gap = rl.net - point.net;
     const line = text("p", gap === 0 ? "RL and the point planner tied on this shift."
@@ -213,7 +223,7 @@ function renderEvidence(report) {
     for (const key of ["wins","ties","losses"]) cell(row, "td", values.rlMinusPlanner[key]);
   });
   const detail = document.createElement("details");
-  detail.append(text("summary", "Wins, ties and losses against the point planner"), outcomes);
+  detail.append(text("summary", "Wins, ties and losses against the point planner"), scrollTable(outcomes));
   const examples = document.createElement("div");
   examples.className = "examples";
   for (const [label, test] of [
@@ -230,7 +240,7 @@ function renderEvidence(report) {
   }
   const patterns = text("p", RESERVE_FAMILIES.map(f => title(f) + " " + signed(byFamily[f].rlMinusPlanner.delta)).join(" · ") + " net credits per shift for RL versus the point planner.");
   patterns.className = "result-note";
-  $("scorecard").replaceChildren(lead, means, patterns, delta, detail, examples);
+  $("scorecard").replaceChildren(lead, scrollTable(means), patterns, delta, detail, examples);
 }
 
 async function loadResults() {
@@ -280,7 +290,7 @@ async function importReport(file) {
       renderComparison();
       $("compare").querySelector("summary").focus();
     });
-    $("report-result").replaceChildren(grid, stats, pick);
+    $("report-result").replaceChildren(scrollTable(grid), stats, pick);
     if ($("compare").open) renderComparison();
   } catch (err) {
     $("report-status").textContent = "Could not verify this file. " + err.message;
