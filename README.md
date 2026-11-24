@@ -1,6 +1,14 @@
 # EvalSim DISPATCH
 
-[Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Play the load-choice lab](https://arhaan2.github.io/evalsim-dispatch/loadchoice.html) · [Benchmark your own agent](LOADCHOICE.md) · [Open the original simulator](https://arhaan2.github.io/evalsim-dispatch/)
+[Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Play the final survey-wait study](https://arhaan2.github.io/evalsim-dispatch/waitcost.html) · [Benchmark an agent](WAITCOST.md) · [Open the original simulator](https://arhaan2.github.io/evalsim-dispatch/)
+
+## When does a survey make the dispatcher wait too long?
+
+The final study trains a stopping rule for a specific disagreement. With a single truck slot, a public-history policy would book the signed offer, but the purchased survey makes its dispatcher want to wait. The new rule estimates the return from passing and can take the offer immediately.
+
+On fresh cold-ending reversals, the release agent beat the fee-aware planner by **0.280 net credits per shift** (paired 95% interval +0.150 to +0.416). Across 50 paid surveys it booked exactly the same freight as always skipping and spent 3.75 credits in fees. It saved 40 credits relative to following the survey's original booking advice, all on one tape tested at two prices. A rule that stopped at every disagreement made the same saves.
+
+On fresh hot drops the planner difference was **+0.0008 credits** (−0.0726 to +0.0750). Eight early bookings cost 80 credits relative to following the original advice. The hot-drop lead remained on the earlier market schedules with new seeds, and all eleven original interrupted-drop retention checks passed. [See the paired outcomes](https://arhaan2.github.io/evalsim-dispatch/waitcost.html#benchmark) · [Replay the stopping decisions](https://arhaan2.github.io/evalsim-dispatch/waitcost.html#slot-example) · [Training and independent audit](training/waitcost/)
 
 ## Does the survey change which load the dispatcher books?
 

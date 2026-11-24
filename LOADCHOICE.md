@@ -58,3 +58,5 @@ Full-shift scores measure net credits from wave one. A second comparison starts 
 npm run audit:loadchoice         # Refit five checkpoints and reproduce the release.
 npm run audit:loadchoice:ledgers # Rebuild the paired outcomes independently.
 ```
+
+The final study revisits the cold-reversal waits and measures the cost of stopping too soon on hot drops. [Published survey-wait outcomes](https://arhaan2.github.io/evalsim-dispatch/waitcost.html#benchmark) · [Research library](https://arhaan2.github.io/evalsim-dispatch/studies.html)

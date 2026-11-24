@@ -7,7 +7,7 @@ const markets = [
 
 // Counts are for the checkpoint's own openings. The subsequent comparison on
 // the page uses the common Tariff opening and has its own eligible population.
-export function loadEvidence(study, {grid, note, text, details, money, difference, interval}) {
+export function loadEvidence(study, {grid, note, text, details, money, difference, interval}, previous = {key:"lastslot",label:"previous one-slot agent",archive:"one-slot study"}) {
   const test = study.splits.test;
   const container = document.getElementById("load-mechanism");
   const groups = [
@@ -31,10 +31,10 @@ export function loadEvidence(study, {grid, note, text, details, money, differenc
   const archive = study.splits.archive.summary.positive, original = study.splits.retention.summary.all;
   const holdout = Object.entries(test.summary.positiveByStratumEnding).flatMap(([family,endings]) =>
     Object.entries(endings).map(([ending,g])=>[family==="reversal"?"Reversal":"Interrupted drop",ending,num(g.shifts),money(g.mean),
-      interval(g.references.rlNever),interval(g.references.planner),interval(g.references.lastslot)]));
+      interval(g.references.rlNever),interval(g.references.planner),interval(g.references[previous.key])]));
   container.append(details("All four fresh endings and earlier checkpoints",
-    grid(["Market","Ending","Priced shifts","Agent net","Versus skip [95%]","Versus planner [95%]","Versus previous one-slot agent [95%]"],
+    grid(["Market","Ending","Priced shifts","Agent net","Versus skip [95%]","Versus planner [95%]","Versus "+previous.label+" [95%]"],
       "Full-shift paired earnings at positive prices",holdout),
-    note("On archived one-slot study patterns, the agent earned " + money(archive.mean) + " net credits per positive-price shift. Its paired difference from the planner was " + interval(archive.references.planner) + "."),
+    note( "On archived "+previous.archive+" patterns, the agent earned " + money(archive.mean) + " net credits per positive-price shift. Its paired difference from the planner was " + interval(archive.references.planner) + "."),
     note("On the original interrupted drop, the difference from the current planner across all prices was " + interval(original.references.planner) + " credits.")));
 }

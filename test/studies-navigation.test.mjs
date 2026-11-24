@@ -23,11 +23,11 @@ test("research library reaches each published desk and its linked sections witho
   const source=html("studies.html");
   const links=localLinks(source);
   links.forEach(href=>checkTarget(href,"studies.html"));
-  const studies=["loadchoice","lastslot","tariff","paid","booking","survey","rally","trust","closes","turns","drift",
+  const studies=["waitcost","loadchoice","lastslot","tariff","paid","booking","survey","rally","trust","closes","turns","drift",
     "reserve","cutoff","index","language-model"];
   for (const name of studies) {
     assert(links.some(href=>href.split("#")[0]==="./"+name+".html"),name+" missing from study library");
     assert(localLinks(html(name+".html")).some(href=>href.split("#")[0]==="./studies.html"),name+" missing a return path");
   }
-  localLinks(html("loadchoice.html")).forEach(href=>checkTarget(href,"loadchoice.html"));
+  for (const page of ["loadchoice.html","waitcost.html"]) localLinks(html(page)).forEach(href=>checkTarget(href,page));
 });

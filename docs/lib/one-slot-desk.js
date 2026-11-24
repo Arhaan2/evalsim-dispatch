@@ -4,7 +4,7 @@ import { note, pairedDesk, verifyInWorker } from "./paired-desk.js";
 import { tariffPlannerDecision } from "./tariff-policy.js";
 
 export function mountOneSlotDesk({suite,patterns,world,priceCentsList,decodeCase,references,agentDecision,
-  checkpoint,names,deskURL,workerURL,loadStudyDetails,extraMargins}) {
+  checkpoint,names,deskURL,workerURL,loadStudyDetails,extraMargins,primaryRule,freightExplanation}) {
   const calls = { accept: "Book", pass: "Pass", buy: "Buy", skip: "Skip" };
   const initialPrefix = ["pass", "pass", "accept", "pass", "pass"];
   const { picker, reportGroups } = pairedDesk({ suite, patterns, names, compareKeys: ["rl","rlNever","planner"],
@@ -147,6 +147,7 @@ export function mountOneSlotDesk({suite,patterns,world,priceCentsList,decodeCase
       }
       $("live-estimates").replaceChildren(note("Booking earns the signed offer. Waiting keeps the slot for a later load. The agent estimates both in freight credits."),
         grid(["Information","Book this load","Wait","Decision"],"Learned action values on this signed offer",rows));
+      if (freightExplanation && actual.guard) $("live-estimates").append(note(freightExplanation(actual.guard)));
       return;
     }
     const agent = agentDecision(o,weights[checkpoint],weights);
@@ -226,7 +227,7 @@ export function mountOneSlotDesk({suite,patterns,world,priceCentsList,decodeCase
       const card = document.createElement("section");
       const beatSkip = group.references.rlNever.interval95[0] > 0;
       const beatPlanner = group.references.planner.interval95[0] > 0;
-      const result = checks[market.check] ? "Beat both controls" : beatPlanner ? "Beat the planner only" : beatSkip ? "Beat always skipping only" : "Neither win was established";
+      const result = beatSkip && beatPlanner ? "Beat both controls" : beatPlanner ? "Beat the planner only" : beatSkip ? "Beat always skipping only" : "Neither win was established";
       const finding = loadStudyDetails && group.references.planner.interval95[1] < 0 ? "The planner earned more" : result;
       const headline = text("h4",finding);
       const rows = ["rl","rlNever","planner"].map(id => {
@@ -243,7 +244,7 @@ export function mountOneSlotDesk({suite,patterns,world,priceCentsList,decodeCase
       return [names[id],interval(ref),margin,ref.interval95[0] > margin ? "Passed" : "Missed"];
     });
     $("scorecard").replaceChildren(cards,
-      note("Each tape is played at six positive prices from 0.05 to 1 credit. Differences are in net credits per shift. Paired 95% intervals keep all families and prices for each seed together. A fresh win needs both lower bounds above zero."),
+      note("Each tape is played at six positive prices from 0.05 to 1 credit. Differences are in net credits per shift. Paired 95% intervals keep all families and prices for each seed together. " + (primaryRule ?? "A fresh win needs both lower bounds above zero.")),
       text("h3", checks.originalDrop ? "Original interrupted-drop gains retained" : "Original interrupted-drop target missed"),
       note("On " + num(retention.tapes) + " original-pattern freight tapes at all seven prices, the agent averaged " + money(retention.mean) + " net credits. Its paired gains were " + interval(retention.references.stochastic) + " against the original planner and " + interval(retention.references.booking) + " against Booking. Retention requires every lower bound to clear its published margin."),
       details("See all original-drop margins",grid(["Reference","Agent minus reference [95%]","Required lower bound","Result"],"Original interrupted-drop comparisons including the free price",history)),
@@ -314,7 +315,7 @@ export function mountOneSlotDesk({suite,patterns,world,priceCentsList,decodeCase
       if (loadStudyDetails) {
         const describe = (value) => value === 0 ? "no load" : "wave " + value;
         const market = example.stratum === "reversal" ? "Cold reversal" : "Hot drop";
-        const netText = "Buying " + (delta < 0 ? "cost " : "gained ") + money(Math.abs(delta)) + " net credits on this shift.";
+        const netText = delta===0 ? "Both branches earned the same net credits." : "Buying " + (delta < 0 ? "cost " : "gained ") + money(Math.abs(delta)) + " net credits on this shift.";
         const waveChosen = trace => {
           const index = trace.slice(6).findIndex(step => step.action === "accept");
           return index < 0 ? 0 : index + 6;
@@ -325,13 +326,28 @@ export function mountOneSlotDesk({suite,patterns,world,priceCentsList,decodeCase
             buy.score.grossCents - skip.score.grossCents !== example.grossDeltaCents) {
           throw new Error("Published load example differs from replay.");
         }
-        const outcomes = branches.map(({score,trace}) => [calls[trace[5].action],score.reading == null ? "—" : score.reading + " / 6",
+        const controls = [...branches];
+        const labels = ["Buy","Skip"];
+        const guardNotes = [];
+        let title = market + " · " + (example.buyWave === example.skipWave ? "kept the same load" : "changed from " + describe(example.skipWave) + " to " + describe(example.buyWave));
+        if (example.unguardedWave != null) {
+          const unguarded = replay(settings,(o,i) => i<5 ? opening[i] : i===5 ? "buy" : refs.unguarded(o));
+          const gain = buy.score.grossCents - unguarded.score.grossCents;
+          if (waveChosen(unguarded.trace) !== example.unguardedWave || gain !== example.guardGainCents) throw new Error("Published waiting example differs from replay.");
+          controls.push(unguarded);
+          labels.splice(0,2,"Buy with wait check","Skip","Buy without wait check");
+          const findings = {saved:"stopping earned more",costly:"stopping earned less",tied:"stopping earned the same","harmful-wait":"waiting earned less than skipping","other-wait":"kept the later booking",unchanged:"the wait check kept the same booking"};
+          title = market + " · " + findings[example.reason];
+          guardNotes.push(note("With the same reading and fee, the previous freight rule booked " + describe(example.unguardedWave) + ". The guard changed freight earnings by " + difference(gain/100) + " credits."));
+        }
+        const outcomes = controls.map(({score,trace},i) => [labels[i],score.reading == null ? "—" : score.reading + " / 6",
           describe(waveChosen(trace)),money(score.gross),money(score.feePaid),money(score.net)]);
-        const actionRows = buy.trace.slice(6).map((step,i) => [i+6,step.offer,calls[step.action],calls[skip.trace[6+i].action]]);
-        block.append(text("h3", market + " · " + (example.buyWave === example.skipWave ? "kept the same load" : "changed from " + describe(example.skipWave) + " to " + describe(example.buyWave))),
+        const actionRows = buy.trace.slice(6).map((step,i) => [i+6,step.offer,...controls.map(branch=>calls[branch.trace[6+i].action])]);
+        block.append(text("h3",title),
           note("Seed " + seed + " · " + patterns[family].label + " · survey " + priceLabel(priceCents) + " credits. " + (example.bought ? "The agent chose to buy. " : "The agent skipped. A forced purchase shows the alternative. ") + netText),
-          grid(["Branch","Reading","Final load","Freight","Fee","Net"],"Two continuations on seed " + seed,outcomes),
-          details("Inspect all three signed offers",grid(["Wave","Offer","After buying","After skipping"],"Freight decisions on seed " + seed,actionRows)),
+          ...guardNotes,
+          grid(["Branch","Reading","Final load","Freight","Fee","Net"],"Paired continuations on seed " + seed,outcomes),
+          details("Inspect all three signed offers",grid(["Wave","Offer",...labels],"Freight decisions on seed " + seed,actionRows)),
           link("Play this one-slot opening →", settings, opening, "session"));
         items.push(block);
         continue;
@@ -344,7 +360,7 @@ export function mountOneSlotDesk({suite,patterns,world,priceCentsList,decodeCase
         link("Play this one-slot opening →",settings,opening,"session"));
       items.push(block);
     }
-    container.replaceChildren(note(loadStudyDetails ? "Each example replays one tape twice using identical first-five bookings. The final load is the wave booked after the survey. A signed offer pays the same amount in both branches." : "Both branches use the same first five decisions and freight offers. Open a ledger to see how the survey changed the outcome."),...items);
+    container.replaceChildren(note(loadStudyDetails ? "Each example replays a tape using identical first-five bookings. The final load is the wave booked after the survey. A signed offer pays the same amount in both branches." : "Both branches use the same first five decisions and freight offers. Open a ledger to see how the survey changed the outcome."),...items);
   }
   function reportView(report) {
     const refs = report.summary.all.references;
