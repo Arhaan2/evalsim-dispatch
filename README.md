@@ -1,6 +1,19 @@
 # EvalSim DISPATCH
 
-[Play hot and cold closes](https://arhaan2.github.io/evalsim-dispatch/closes.html) · [Benchmark your agent](CLOSES.md) · [Play Demand Turns](https://arhaan2.github.io/evalsim-dispatch/turns.html) · [Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html) · [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+[Play the routing lab](https://arhaan2.github.io/evalsim-dispatch/trust.html) · [Benchmark your agent](TRUST.md) · [Play hot and cold closes](https://arhaan2.github.io/evalsim-dispatch/closes.html) · [Play Demand Turns](https://arhaan2.github.io/evalsim-dispatch/turns.html) · [Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html) · [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+
+## When should the dispatcher trust history?
+
+The planner and the trained dispatchers sometimes disagree about booking a load. The new agent learns the value of booking versus passing at those decisions. Visitors can see the advice behind a booking and replay a matched shift. The study also trains a two-expert agent restricted to the planner and the Closes history policy.
+
+The three-expert agent recovered the original interrupted-drop gains within the one-credit tolerance. It earned **2.54 more credits per shift than Closes** and **11.61 more than the distribution-aware planner** there. On fresh hot-ending drops, it gained 0.83 over Closes and trailed the planner by 0.66 (95% paired interval −1.16 to −0.15). The earlier reversal patterns kept a 0.69-credit lead over the planner on new seeds. On previously unseen reversal patterns the difference was −0.02 (−0.23 to +0.19). The two-expert agent met the hot-drop tolerance on fresh patterns and missed the original-drop recovery. [Read the paired results and inspect actual routing decisions](https://arhaan2.github.io/evalsim-dispatch/trust.html#benchmark)
+
+```sh
+node tools/reserve.mjs --suite trust --policy ./examples/reserve-agent.mjs --out trust.json
+node tools/reserve.mjs --verify trust.json
+```
+
+Score your own agent on 8,192 fresh shifts, the original interrupted-drop test, or the eight earlier Closes markets on new seeds. [Agent guide](TRUST.md) · [Training results](training/trust/)
 
 ## Does history help when the market can finish hot or cold?
 

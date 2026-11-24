@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f8f1">
+  <meta name="description" content="Play matched freight shifts alongside an agent that learns when to use offer history and when to follow the distribution planner.">
+  <meta property="og:title" content="Expert routing · EvalSim DISPATCH">
+  <meta property="og:description" content="See where a trained routing policy follows its experts on fresh hot-ending drops and demand reversals.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="EvalSim DISPATCH">
+  <title>Expert routing · EvalSim DISPATCH</title>
+  <link rel="icon" href="./assets/mark.svg?v=2" type="image/svg+xml">
+  <link rel="preload" href="./assets/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./reserve.css">
+  <link rel="stylesheet" href="./turns.css">
+  <link rel="stylesheet" href="./closes.css">
+  <script type="module" src="./trust.js"></script>
+</head>
+<body class="reserve closes">
+<a class="skip" href="#desk">Skip to dispatch desk</a>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand-row"><a class="brand" href="./" aria-label="EvalSim DISPATCH home"><img src="./assets/mark.svg?v=2" width="28" height="28" alt=""><span>EvalSim<span class="brand-period" aria-hidden="true">.</span></span></a><span class="product">Dispatch</span></div>
+    <nav class="primary-nav" aria-label="Workspace"><a class="current" aria-current="page" href="./trust.html">Expert routing</a><a href="./closes.html">Hot and cold finishes</a><a href="./turns.html">Demand turns</a><a href="./index.html">DISPATCH home</a></nav>
+    <nav class="resource-nav" aria-label="Project"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/trust-v1.0.0/TRUST.md">Benchmark guide ↗</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Contact EvalSim ↗</a></nav>
+  </aside>
+  <main id="desk">
+    <header class="page-heading"><h1>Expert routing</h1><p>Watch a trained agent choose a booking when two history policies and the distribution planner disagree. Play the same shift with two truck slots of your own.</p>
+      <div class="section-links"><a href="#benchmark">See the routing results ↓</a><a href="#history-example">Inspect the 24-credit decision ↓</a><a href="#own-agent">Test your agent ↓</a></div>
+    </header>
+    <noscript><p>This desk needs JavaScript to play a shift. You can also <a href="https://github.com/Arhaan2/evalsim-dispatch/blob/trust-v1.0.0/TRUST.md">run the benchmark locally</a>.</p></noscript>
+    <p id="load-status" role="status"></p>
+    <section id="session" hidden aria-labelledby="session-heading">
+      <div class="section-line"><h2 id="session-heading">Dispatch desk</h2><span id="active-config"></span></div>
+      <div class="desk-grid">
+        <div class="offer-panel">
+          <div class="offer-head"><h3 id="offer-heading" tabindex="-1">Signed freight offer</h3><span id="wave"></span></div>
+          <div id="amount"><strong id="net-offer"></strong><span id="amount-label"></span></div>
+          <p id="offer-detail"></p><p id="capacity-note"></p>
+          <div class="turn-signal"><h4>The router’s decision</h4><p id="signal-reading"></p><p id="signal-decision"></p></div>
+          <div id="slot-board"><span id="slot-tiles" aria-hidden="true"></span><p id="slot-count"></p></div>
+          <div class="actions" id="actions"><button id="accept" type="button">Book load</button><button id="pass" type="button">Pass</button><button id="again" type="button" hidden>Play again</button></div>
+        </div>
+        <div class="forecast-panel"><h3>Forecast and actual</h3><p id="forecast-note">The board updates at waves 4 and 7 using a delayed survey. Earlier rows keep their original quote. Later rows show the latest outlook.</p>
+          <div class="grid-scroll" tabindex="0" role="region" aria-label="Forecast and actual credits by wave"><table><caption class="sr">Public quote for each wave and signed offers revealed so far, in net credits.</caption><thead><tr><th scope="col">Wave</th><th scope="col">Low / high</th><th scope="col">High chance</th><th scope="col">Mean</th><th scope="col">Actual</th></tr></thead><tbody id="forecast"></tbody></table></div>
+          <p class="signal-guide">The planner prices future offers using the published odds. The Closes and Drift policies also use earlier freight offers. The router learns from the credits earned by booking or waiting.</p>
+        </div>
+      </div>
+      <div class="shift-foot"><p id="current-score"></p><div><a id="share" href="./trust.html">Link to this run</a><button id="reset" type="button">Restart shift</button></div></div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <details id="config"><summary>Choose another shift</summary>
+        <form id="case-form"><label>Blind case<select id="family" name="family"></select></label><label>Shift seed<input type="text" inputmode="numeric" name="seed" id="seed" maxlength="10" pattern="[0-9]{1,10}" required></label><button type="submit">Load shift</button></form>
+      </details>
+      <details id="compare"><summary>Reveal the ending and compare agents</summary>
+        <p class="description">Reveal all eight offers, the underlying demand and each booking decision. On a fresh case, you can also play its matched ending.</p>
+        <div id="comparison"></div>
+      </details>
+    </section>
+    <section class="lab-section" id="benchmark" aria-labelledby="benchmark-title">
+      <h2 id="benchmark-title">Can routing repair the missed bookings?</h2>
+      <p class="description">Hot-ending drops exposed a weakness in the Closes history agent. This study tests whether routing fixes those drops, recovers earlier gains on the original drop and preserves the advantage on reversals.</p>
+      <div id="scorecard"></div>
+      <div class="section-links"><a href="./data/trust/results.json">Raw results JSON</a><a href="https://github.com/Arhaan2/evalsim-dispatch/tree/trust-v1.0.0/training/trust">Training protocol ↗</a></div>
+    </section>
+    <section class="lab-section" id="own-agent" aria-labelledby="agent-title">
+      <h2 id="agent-title">Benchmark your agent</h2><p class="description">Clone DISPATCH and run the example in Node.js 22 or later. Replace its booking rule with your own. The runner gives each agent the current offer, posted forecast and revealed history. Use the same test shifts or select the retention and archive splits in the guide.</p>
+      <pre><code>git clone --branch trust-v1.0.0 https://github.com/Arhaan2/evalsim-dispatch.git
+cd evalsim-dispatch
+node tools/reserve.mjs --suite trust --policy ./examples/reserve-agent.mjs --out trust.json
+node tools/reserve.mjs --verify trust.json</code></pre>
+      <div class="section-links"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/trust-v1.0.0/TRUST.md">Benchmark guide ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/trust-v1.0.0/examples/reserve-agent.mjs">JavaScript starter ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/trust-v1.0.0/examples/reserve_agent.py">Python starter ↗</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Discuss your workflow ↗</a></div>
+      <div id="upload" hidden><label for="report-file"><strong>Compare your saved result</strong></label><p class="description" id="upload-help">Choose the JSON written by the command above. Your browser replays every decision locally and verifies the scores.</p><input type="file" id="report-file" accept=".json,application/json" aria-describedby="upload-help"><p id="report-status" role="status"></p><div id="report-result"></div></div>
+    </section>
+    <footer><span>EvalSim DISPATCH</span><a href="./closes.html">Previous hot and cold study</a></footer>
+  </main>
+</div>
+</body>
+</html>

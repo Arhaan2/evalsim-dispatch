@@ -155,7 +155,7 @@ export function mountDemandDesk({ suite, patterns, world, names, policies, check
     try {
       const releases = await Promise.all(checkpoints.map(key => json("./data/" + key + "/results.json")));
       weights = weightsFrom ? weightsFrom(releases) : Object.fromEntries(checkpoints.map((key, i) => [key, releases[i].checkpoint.weights]));
-      renderEvidence(releases[0]);
+      renderEvidence(releases[0], weights);
       if (renderSignal) renderSignal(world.observe(shift), weights);
       $("upload").hidden = false;
       if (runFeatured) {
