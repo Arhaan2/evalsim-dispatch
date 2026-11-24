@@ -151,15 +151,20 @@ footer a,
 }
 .brand {
   text-decoration: none;
+  color: #142b23;
+  font-family: -apple-system, system-ui, "Segoe UI", sans-serif;
   gap: 0.45rem;
   font-size: 1.5rem;
   font-weight: 650;
-  letter-spacing: -0.07em;
+  letter-spacing: -0.055em;
   line-height: 1;
+}
+.brand-period {
+  color: #64843b;
 }
 .brand img {
   width: 28px;
-  height: 29px;
+  height: 28px;
 }
 .product {
   border-left: 1px solid #b7c1b8;
