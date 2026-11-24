@@ -4,6 +4,8 @@ Before wave six, choose whether to spend one credit for a new reading of freight
 
 At one credit, both the trained agent and the survey-aware planner skipped all 8,192 fresh surveys. When the agent was forced to buy, it changed 185 booking sequences and lost 1.04 net credits per shift. Against the survey-aware planner it earned +0.02 on fresh hot-ending drops (paired 95% interval −0.02 to +0.06) and −0.21 on fresh cold-ending reversals (−0.33 to −0.09). It recovered the historical interrupted-drop gains and finished 0.01 behind the survey-aware planner there (−0.08 to +0.05). [Full results and controls](training/paid/)
 
+The next study posts prices from zero to one credit and trains the opening bookings and survey decision across seven tariffs. [Run the variable-price benchmark](TARIFF.md)
+
 ## Run your own agent
 
 The MIT-licensed checkout includes the market generators, reference policies, learned checkpoint, report verifier and two starter agents. The JavaScript benchmark needs Node.js 22 or later and runs offline.
