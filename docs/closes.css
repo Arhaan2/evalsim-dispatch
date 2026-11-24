@@ -1,0 +1,12 @@
+.closes :is(#scorecard, #report-result, #comparison) table {
+  font-variant-numeric: tabular-nums;
+  min-width: 34rem;
+}
+.closes :is(#scorecard, #report-result, #comparison) table :is(th, td) {
+  padding: .48rem .55rem;
+}
+.closes :is(#scorecard, #report-result, #comparison) tbody th {
+  position: sticky;
+  left: 0;
+  background: var(--bg, #f8f8f1);
+}

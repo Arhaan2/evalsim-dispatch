@@ -7,14 +7,14 @@ export function dataRow(body, values) {
   return row;
 }
 
-export function exampleLinks(cases) {
+export function exampleLinks(cases, urlFor = shiftUrl) {
   const links = document.createElement("div");
   links.className = "examples";
   for (const [label, test] of [["Replay an RL win",r=>r.rl>r.stochastic],["Replay a tie",r=>r.rl===r.stochastic],["Replay an RL loss",r=>r.rl<r.stochastic]]) {
     const row = cases.find(test);
     if (row) {
       const link = text("a",label);
-      link.href = shiftUrl(row, [], "compare");
+      link.href = urlFor(row, [], "compare");
       links.append(link);
     }
   }
@@ -23,16 +23,18 @@ export function exampleLinks(cases) {
 
 const splitLabels = { train: "Training patterns", validation: "Validation patterns", test: "Held-out test patterns", retention: "Original interrupted-drop check" };
 
-export function mountDemandDesk({ suite, patterns, world, names, policies, checkpoints, renderEvidence, verifyReport, renderSignal, reportGroups, runFeatured }) {
+export function mountDemandDesk({ suite, patterns, world, names, policies, checkpoints, renderEvidence, verifyReport, renderSignal, reportGroups, runFeatured, picker, renderPair, weightsFrom }) {
   const initial = { family: suite.splits.test.families[0], seed: suite.splits.test.start };
   const refs = Object.keys(names);
+  const urlFor = picker?.url ?? shiftUrl;
   let config, shift, weights, imported;
 
-  function checkConfig(family, seed) {
-    if (!Object.hasOwn(patterns, family) || !/^\d{1,10}$/.test(seed) || Number(seed) > 0xffffffff) {
-      throw new Error("Choose a listed demand pattern and a whole-number seed from 0 to 4294967295.");
-    }
-    return { family, seed: Number(seed) };
+  function checkConfig(choice, rawSeed) {
+    if (!/^\d{1,10}$/.test(rawSeed) || Number(rawSeed) > 0xffffffff) throw new Error("Use a whole-number seed from 0 to 4294967295.");
+    const seed = Number(rawSeed);
+    const family = picker ? picker.decode(choice, seed) : choice;
+    if (!Object.hasOwn(patterns, family)) throw new Error("Choose a listed shift.");
+    return { family, seed };
   }
 
   function renderDesk() {
@@ -55,7 +57,7 @@ export function mountDemandDesk({ suite, patterns, world, names, policies, check
     const score = world.verify(shift);
     $("active-config").textContent = "Seed " + config.seed;
     $("current-score").textContent = score.net + " net credits earned · " + score.accepted + (score.accepted === 1 ? " load booked" : " loads booked");
-    const url = shiftUrl(config, shift.calls.map(c => c.id), location.hash);
+    const url = urlFor(config, shift.calls.map(c => c.id), location.hash);
     $("share").href = url;
     history.replaceState(null, "", url);
     if ($("compare").open) renderComparison();
@@ -64,9 +66,15 @@ export function mountDemandDesk({ suite, patterns, world, names, policies, check
   function start(settings, actions = []) {
     const next = world.create(settings);
     for (const action of actions) world.step(next, action);
+    if (picker && shift) {
+      $("compare").open = false;
+      $("comparison").replaceChildren();
+      if (location.hash === "#compare") history.replaceState(null, "", urlFor(settings, actions, "session"));
+    }
     config = settings;
     shift = next;
-    $("family").value = config.family;
+    if (picker) picker.select($("family"), config);
+    else $("family").value = config.family;
     $("seed").value = config.seed;
     renderDesk();
   }
@@ -135,6 +143,7 @@ export function mountDemandDesk({ suite, patterns, world, names, policies, check
     note.className = "description";
     if (importedCase) divergence.push(text("p", "The Agent column replays " + imported.policy + "."));
     $("comparison").replaceChildren(...divergence, scrollTable(grid), text("h3", "Behind the forecast"), note, scrollTable(audit));
+    if (renderPair) renderPair($("comparison"), config, weights);
   }
 
   async function loadEvidence() {
@@ -145,7 +154,7 @@ export function mountDemandDesk({ suite, patterns, world, names, policies, check
     }
     try {
       const releases = await Promise.all(checkpoints.map(key => json("./data/" + key + "/results.json")));
-      weights = Object.fromEntries(checkpoints.map((key, i) => [key, releases[i].checkpoint.weights]));
+      weights = weightsFrom ? weightsFrom(releases) : Object.fromEntries(checkpoints.map((key, i) => [key, releases[i].checkpoint.weights]));
       renderEvidence(releases[0]);
       if (renderSignal) renderSignal(world.observe(shift), weights);
       $("upload").hidden = false;
@@ -181,7 +190,7 @@ export function mountDemandDesk({ suite, patterns, world, names, policies, check
       $("compare").querySelector("summary").focus();
     };
     target.replaceChildren(scrollTable(grid), stats, pick);
-    if (reportGroups && report.summary.byStratum) target.insertBefore(reportGroups(report.summary.byStratum), pick);
+    if (reportGroups && report.summary.byStratum) target.insertBefore(reportGroups(report.summary.byStratum, report.summary), pick);
   }
 
   async function runHistorical() {
@@ -216,7 +225,7 @@ export function mountDemandDesk({ suite, patterns, world, names, policies, check
   }
 
   function init() {
-    for (const [split, manifest] of Object.entries(suite.splits)) {
+    if (!picker) for (const [split, manifest] of Object.entries(suite.splits)) {
       const group = document.createElement("optgroup");
       group.label = splitLabels[split];
       for (const family of manifest.families) group.append(new Option(patterns[family].label, family));
@@ -224,7 +233,8 @@ export function mountDemandDesk({ suite, patterns, world, names, policies, check
     }
     const params = new URL(location.href).searchParams;
     try {
-      const settings = checkConfig(params.get("family") ?? initial.family, params.get("seed") ?? String(initial.seed));
+      const settings = picker ? checkConfig(params.get("case") ?? "1", params.get("seed") ?? String(picker.initialSeed()))
+        : checkConfig(params.get("family") ?? initial.family, params.get("seed") ?? String(initial.seed));
       const actions = params.get("actions")?.split(",") ?? [];
       if (actions.length > 8) throw new Error("Too many waves.");
       start(settings, actions);
