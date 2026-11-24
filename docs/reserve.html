@@ -26,7 +26,7 @@
   </aside>
   <main id="desk">
     <header class="page-heading"><h1>Freight reserve lab</h1><p>Eight freight offers arrive one at a time. You have two dispatch slots. Book the loads that earn the most net credits by the end of the shift.</p>
-      <div class="section-links"><a href="./turns.html">Test the reversal agent →</a><a href="./drift.html">Try changing demand →</a><a href="#benchmark">See benchmark results ↓</a><a href="#own-agent">Test your agent ↓</a></div>
+      <div class="section-links"><a href="./closes.html">Play hot and cold finishes →</a><a href="#benchmark">See benchmark results ↓</a><a href="#own-agent">Test your agent ↓</a></div>
     </header>
     <noscript><p>This desk needs JavaScript to play a shift. You can also <a href="https://github.com/Arhaan2/evalsim-dispatch/blob/main/RESERVE.md">run the benchmark locally</a>.</p></noscript>
     <p id="load-status" role="status"></p>
@@ -58,7 +58,7 @@
       <h2 id="benchmark-title">Where does RL help?</h2>
       <p class="description">The point planner reserves slots using each future offer’s mean. The distribution planner prices the option to wait using the full public probabilities. Q-learning learns the value of booking or waiting through practice.</p>
       <div id="scorecard" data-ui></div>
-      <div class="section-links"><a href="./data/reserve/results.json">Raw results JSON</a><a href="https://github.com/Arhaan2/evalsim-dispatch/tree/main/training/reserve">Training protocol ↗</a></div>
+      <div class="section-links"><a href="./turns.html">Test the reversal agent →</a><a href="./drift.html">Try changing demand →</a><a href="./data/reserve/results.json">Raw results JSON</a><a href="https://github.com/Arhaan2/evalsim-dispatch/tree/main/training/reserve">Training protocol ↗</a></div>
     </section>
     <section class="lab-section" id="own-agent" aria-labelledby="agent-title">
       <h2 id="agent-title">Benchmark your agent</h2><p class="description">Clone DISPATCH and run the example in Node.js 22 or later. Replace its booking rule with your own. The runner gives every agent the same public observations and scores it on the same frozen shifts.</p>

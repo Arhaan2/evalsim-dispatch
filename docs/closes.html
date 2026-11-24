@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f8f1">
+  <meta name="description" content="Play matching freight shifts that can finish hot or cold. See what offer history adds on fresh reversals, then benchmark your own agent.">
+  <meta property="og:title" content="Hot and cold finishes · EvalSim DISPATCH">
+  <meta property="og:description" content="Compare a retrained freight agent with the same agent trained without history and the distribution planner on unseen reversals.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="EvalSim DISPATCH">
+  <title>Hot and cold finishes · EvalSim DISPATCH</title>
+  <link rel="icon" href="./assets/mark.svg?v=2" type="image/svg+xml">
+  <link rel="preload" href="./assets/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./reserve.css">
+  <link rel="stylesheet" href="./turns.css">
+  <link rel="stylesheet" href="./closes.css">
+  <script type="module" src="./closes.js"></script>
+</head>
+<body class="reserve closes">
+<a class="skip" href="#desk">Skip to dispatch desk</a>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand-row"><a class="brand" href="./" aria-label="EvalSim DISPATCH home"><img src="./assets/mark.svg?v=2" width="28" height="28" alt=""><span>EvalSim<span class="brand-period" aria-hidden="true">.</span></span></a><span class="product">Dispatch</span></div>
+    <nav class="primary-nav" aria-label="Workspace"><a class="current" aria-current="page" href="./closes.html">Hot and cold finishes</a><a href="./turns.html">Demand turns</a><a href="./drift.html">Demand shifts</a><a href="./reserve.html">Freight reserve</a><a href="./index.html">DISPATCH home</a></nav>
+    <nav class="resource-nav" aria-label="Project"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/closes-v1.0.0/CLOSES.md">Benchmark guide ↗</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Contact EvalSim ↗</a></nav>
+  </aside>
+  <main id="desk">
+    <header class="page-heading"><h1>Hot and cold finishes</h1><p>The same opening can lead to a rush or a quiet finish. Use signed freight offers and a delayed forecast to decide when to fill your two truck slots.</p>
+      <div class="section-links"><a href="#benchmark">See what history added ↓</a><a href="#own-agent">Test your agent ↓</a></div>
+    </header>
+    <noscript><p>This desk needs JavaScript to play a shift. You can also <a href="https://github.com/Arhaan2/evalsim-dispatch/blob/closes-v1.0.0/CLOSES.md">run the benchmark locally</a>.</p></noscript>
+    <p id="load-status" role="status"></p>
+    <section id="session" hidden aria-labelledby="session-heading">
+      <div class="section-line"><h2 id="session-heading">Dispatch desk</h2><span id="active-config"></span></div>
+      <div class="desk-grid">
+        <div class="offer-panel">
+          <div class="offer-head"><h3 id="offer-heading" tabindex="-1">Signed freight offer</h3><span id="wave"></span></div>
+          <div id="amount"><strong id="net-offer"></strong><span id="amount-label"></span></div>
+          <p id="offer-detail"></p><p id="capacity-note"></p>
+          <div class="turn-signal"><h4>What the agents would book</h4><p id="signal-reading"></p><p id="signal-decision"></p></div>
+          <div id="slot-board"><span id="slot-tiles" aria-hidden="true"></span><p id="slot-count"></p></div>
+          <div class="actions" id="actions"><button id="accept" type="button">Book load</button><button id="pass" type="button">Pass</button><button id="again" type="button" hidden>Play again</button></div>
+        </div>
+        <div class="forecast-panel"><h3>Forecast and actual</h3><p id="forecast-note">The board updates at waves 4 and 7 using a delayed survey. Earlier rows keep their original quote. Later rows show the latest outlook.</p>
+          <div class="grid-scroll" tabindex="0" role="region" aria-label="Forecast and actual credits by wave"><table><caption class="sr">Public quote for each wave and signed offers revealed so far, in net credits.</caption><thead><tr><th scope="col">Wave</th><th scope="col">Low / high</th><th scope="col">High chance</th><th scope="col">Mean</th><th scope="col">Actual</th></tr></thead><tbody id="forecast"></tbody></table></div>
+          <p class="signal-guide">Both agents learned on the same freight shifts and see the current offer and forecast. The history agent can also use earlier signed offers and bulletins.</p>
+        </div>
+      </div>
+      <div class="shift-foot"><p id="current-score"></p><div><a id="share" href="./closes.html">Link to this run</a><button id="reset" type="button">Restart shift</button></div></div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <details id="config"><summary>Choose another shift</summary>
+        <form id="case-form"><label>Blind case<select id="family" name="family"></select></label><label>Shift seed<input type="text" inputmode="numeric" name="seed" id="seed" maxlength="10" pattern="[0-9]{1,10}" required></label><button type="submit">Load shift</button></form>
+      </details>
+      <details id="compare"><summary>Reveal the ending and compare agents</summary>
+        <p class="description">Reveal all eight offers, the underlying demand and each booking decision. On a fresh case, you can also play its matched ending.</p>
+        <div id="comparison"></div>
+      </details>
+    </section>
+    <section class="lab-section" id="benchmark" aria-labelledby="benchmark-title">
+      <h2 id="benchmark-title">Does history help on fresh reversals?</h2>
+      <p class="description">Each fresh demand pattern has two endings. Half of each pattern’s shifts close hot and half close cold. All agents and planners face the same offers and booking rules.</p>
+      <div id="scorecard"></div>
+      <div class="section-links"><a href="./data/closes/results.json">Raw results JSON</a><a href="https://github.com/Arhaan2/evalsim-dispatch/tree/closes-v1.0.0/training/closes">Training protocol ↗</a></div>
+    </section>
+    <section class="lab-section" id="own-agent" aria-labelledby="agent-title">
+      <h2 id="agent-title">Benchmark your agent</h2><p class="description">Clone DISPATCH and run the example in Node.js 22 or later. Replace its booking rule with your own. The runner gives each agent the current offer, posted forecast and revealed history. Every agent gets the same held-out shifts.</p>
+      <pre><code>git clone --branch closes-v1.0.0 https://github.com/Arhaan2/evalsim-dispatch.git
+cd evalsim-dispatch
+node tools/reserve.mjs --suite closes --policy ./examples/reserve-agent.mjs --out closes.json
+node tools/reserve.mjs --verify closes.json</code></pre>
+      <div class="section-links"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/closes-v1.0.0/CLOSES.md">Benchmark guide ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/closes-v1.0.0/examples/reserve-agent.mjs">Example agent ↗</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Discuss your workflow ↗</a></div>
+      <div id="upload" hidden><label for="report-file"><strong>Compare your saved result</strong></label><p class="description" id="upload-help">Choose the JSON written by the command above. Your browser replays every decision locally and verifies the scores.</p><input type="file" id="report-file" accept=".json,application/json" aria-describedby="upload-help"><p id="report-status" role="status"></p><div id="report-result"></div></div>
+    </section>
+    <footer><span>EvalSim DISPATCH</span><a href="./turns.html">Previous demand turns study</a></footer>
+  </main>
+</div>
+</body>
+</html>
