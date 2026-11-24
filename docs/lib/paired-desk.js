@@ -95,3 +95,20 @@ export function pairedDesk({ suite, patterns, world, policies, names, compareKey
   }
   return { picker, renderPair, reportGroups };
 }
+
+// Browser verification is CPU-bound. Keep booking and the status announcement
+// responsive while rebuilding the submitted ledger on its fixed manifest.
+export async function verifyInWorker(script, report, weights) {
+  const worker = new Worker(script, { type: "module" });
+  try {
+    await new Promise((resolve, reject) => {
+      worker.onmessage = ({ data }) => data.verified ? resolve() : reject(new Error(data.error));
+      worker.onerror = () => reject(new Error("The verification worker could not finish. Reload or use the local verifier."));
+      worker.onmessageerror = () => reject(new Error("The verification response could not be read."));
+      worker.postMessage({ report, weights });
+    });
+    return report;
+  } finally {
+    worker.terminate();
+  }
+}

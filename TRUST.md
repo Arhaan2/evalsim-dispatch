@@ -77,3 +77,5 @@ npm run audit:trust
 ```
 
 [Training protocol and results](training/trust/) · [MIT license](LICENSE)
+
+The follow-up experiment fits a demand model to distinguish brief rallies from lasting turns. Try the new runner on the earlier Trust patterns with fresh seeds using `--suite rally --split archive`. [Rally benchmark](RALLY.md)

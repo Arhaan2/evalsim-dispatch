@@ -4,7 +4,7 @@ import { trustDecision } from "./lib/trust-policy.js";
 import { trustReferences, trustWeights } from "./lib/trust-benchmark.js";
 import { $, num, scrollTable, signed, table, text } from "./lib/freight-view.js";
 import { dataRow, exampleLinks, mountDemandDesk } from "./lib/demand-desk.js";
-import { pairedDesk, interval, note } from "./lib/paired-desk.js";
+import { pairedDesk, interval, note, verifyInWorker } from "./lib/paired-desk.js";
 
 const names = { rl: "Router", binary: "Two-expert router", votes: "Expert-votes router",
   closes: "Closes RL", stochastic: "Distribution planner", drift: "Drift RL", turns: "Turns RL", adaptive: "Adaptive planner" };
@@ -59,23 +59,6 @@ function renderReplay(target, config, weights) {
   }
   details.append(scrollTable(ledger));
   target.append(details);
-}
-
-// Browser verification is CPU-bound. Keep booking and the status announcement
-// responsive while rebuilding the submitted ledger on its fixed manifest.
-async function verifyInWorker(report, weights) {
-  const worker = new Worker(new URL("./lib/trust-report-worker.js", import.meta.url), { type: "module" });
-  try {
-    await new Promise((resolve, reject) => {
-      worker.onmessage = ({ data }) => data.verified ? resolve() : reject(new Error(data.error));
-      worker.onerror = () => reject(new Error("The verification worker could not finish. Reload or use the local verifier."));
-      worker.onmessageerror = () => reject(new Error("The verification response could not be read."));
-      worker.postMessage({ report, weights });
-    });
-    return report;
-  } finally {
-    worker.terminate();
-  }
 }
 
 function historyExample(weights) {
@@ -176,5 +159,6 @@ function renderEvidence(release, weights) {
 mountDemandDesk({
   suite: TRUST_SUITE, patterns: TRUST_PATTERNS, picker: paired.picker, names, checkpoints: ["trust", "closes", "drift", "turns"],
   weightsFrom: releases => trustWeights(...releases), world, policies, renderSignal, renderPair: renderReplay,
-  renderEvidence, reportGroups: paired.reportGroups, verifyReport: verifyInWorker,
+  renderEvidence, reportGroups: paired.reportGroups,
+  verifyReport: (report, weights) => verifyInWorker(new URL("./lib/trust-report-worker.js", import.meta.url), report, weights),
 });

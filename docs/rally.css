@@ -1,0 +1,14 @@
+.rally .turn-signal { padding: 0 0 1.1rem; }
+.rally .turn-signal h4 { margin: 0; }
+.rally #signal-reading { font-variant-numeric: tabular-nums; }
+.rally #persistence-meter { display: block; width: min(100%, 20rem); height: .65rem; appearance: none; margin: .5rem 0 .7rem; background: #526c5c; color: var(--lime); border: 0; }
+.rally #persistence-meter::-webkit-meter-bar { background: #526c5c; border: 0; border-radius: 0; height: 100%; }
+.rally #persistence-meter::-webkit-meter-optimum-value { background: var(--lime); }
+.rally #persistence-meter::-moz-meter-bar { background: var(--lime); }
+.rally #rally-detection { margin-top: 1.5rem; }
+.rally .turn-signal[hidden] { display: none; }
+.rally .paired-forecast { margin-top: 1rem; }
+.rally .paired-forecast table :is(th, td):not(:first-child) { text-align: right; }
+.rally #scorecard .test-results td:nth-child(2),
+.rally #scorecard .test-results td:nth-child(3) { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rally #matched-decision { margin-top: 1.4rem; }
