@@ -1,0 +1,13 @@
+{
+  "name": "evalsim-dispatch",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A seeded logistics environment, RL experiment and public checkpoint explorer.",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "test": "node --test test/*.test.mjs",
+    "audit:results": "node training/audit.mjs"
+  }
+}

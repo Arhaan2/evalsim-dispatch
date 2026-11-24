@@ -1,0 +1,47 @@
+# Local environments, editor state, and secrets
+.venv/
+venv/
+.vscode/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json
+.DS_Store
+
+# Build, test, notebook, and tool caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.ipynb_checkpoints/
+.coverage
+.coverage.*
+htmlcov/
+build/
+dist/
+
+# Generated assets only; small intentional test fixtures remain trackable
+/artifacts/
+/_setup_artifacts/
+/outputs/
+/logs/
+/runs/
+/models/
+/datasets/
+/checkpoints/
+/data/raw/
+/data/generated/
+/audio/generated/
+
+# Local experiment state and review captures
+/training/runs/
+/.taste-skill/
+node_modules/
+*.gguf
+*.safetensors
+*.tgz

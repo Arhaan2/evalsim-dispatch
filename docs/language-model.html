@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6f3">
+  <meta name="description" content="Inspect a Qwen3-4B reinforcement learning pilot in EvalSim DISPATCH. Compare the base model, its trained adapter, and a dispatcher on the same freight commitments.">
+  <title>Language-model pilot · EvalSim DISPATCH</title>
+  <link rel="icon" href="./assets/mark.svg" type="image/svg+xml">
+  <link rel="preload" href="./assets/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./language-model.css">
+  <script type="module" src="./language-model.js"></script>
+</head>
+<body class="pilot">
+<a class="skip" href="#pilot">Skip to experiment</a>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand-row"><a class="brand" href="./" aria-label="EvalSim Dispatch simulator"><img src="./assets/mark.svg" width="28" height="29" alt=""><span>EvalSim</span></a><span class="product">Dispatch</span></div>
+    <nav class="primary-nav" aria-label="Workspace">
+      <a href="./#simulator">Simulator</a><a href="./#evidence">Training evidence</a><a class="current" aria-current="page" href="#pilot">Language-model pilot</a>
+    </nav>
+    <nav class="resource-nav" aria-label="Project"><a href="https://github.com/Arhaan2/evalsim-dispatch">Source code ↗</a></nav>
+  </aside>
+  <main id="pilot" class="pilot-main">
+    <header class="page-heading">
+      <h1>Language-model pilot</h1>
+      <p>Can a language model learn which freight tool to call? Compare Qwen3-4B before and after reinforcement learning on the same harbor disruptions.</p>
+    </header>
+    <section class="results-block" aria-labelledby="results-title">
+      <h2 id="results-title">Paired test results</h2>
+      <p class="explain">A shift succeeds when every committed unit arrives on time and the inventory, capacity, and budget checks pass.</p>
+      <div id="run-status" class="run-status" role="status" aria-live="polite">Loading the published experiment…</div>
+      <button type="button" class="quiet retry" id="retry" hidden>Check again</button>
+      <noscript><p class="run-status">Enable JavaScript to load the recorded comparisons, or read the experiment files on GitHub.</p></noscript>
+      <div id="verified" hidden>
+        <p class="finding" id="finding"></p>
+        <div class="pilot-table-wrap" tabindex="0" role="region" aria-label="Aggregate results by operator">
+          <table class="pilot-table">
+            <thead><tr><th scope="col">Operator</th><th scope="col">Successful shifts</th><th scope="col">On-time units</th><th scope="col">Tool calls</th></tr></thead>
+            <tbody id="aggregates"></tbody>
+          </table>
+        </div>
+        <details class="case-list"><summary>Inspect all paired scenarios</summary>
+          <div class="pilot-table-wrap" tabindex="0" role="region" aria-label="On-time units in every test scenario">
+            <table class="pilot-table"><caption>On-time units / committed units</caption><thead><tr><th scope="col">Scenario</th><th scope="col">Base</th><th scope="col">With adapter</th><th scope="col">Dispatcher</th></tr></thead><tbody id="cases"></tbody></table>
+          </div>
+        </details>
+      </div>
+    </section>
+    <section id="recording" class="pilot-section" aria-labelledby="recorded-title" hidden>
+      <h2 id="recorded-title">A shift, decision by decision</h2>
+      <p class="explain" id="trace-intro"></p>
+      <div class="transport" id="transport" hidden>
+        <button type="button" id="previous" aria-label="Previous decision" title="Previous decision">←</button>
+        <label for="decision"><span id="position">Decision</span><input id="decision" type="range" min="1" max="1" value="1"></label>
+        <button type="button" id="next-decision" aria-label="Next decision" title="Next decision">→</button>
+      </div>
+      <div class="comparison" id="comparison" aria-live="polite" aria-atomic="false"></div>
+      <p id="replay-availability" role="status" class="explain"></p>
+    </section>
+    <section class="pilot-section" aria-labelledby="design-title">
+      <h2 id="design-title">How the pilot works</h2>
+      <dl class="method">
+        <div><dt>One letter per decision</dt><dd>Qwen reads the orders, stock reports, freight in transit, and recent events. It selects one of up to eight typed calls labeled A–H. The menu supplies quantities and costs. The simulator executes the selected call.</dd></div>
+        <div><dt>What learns</dt><dd>The four-billion-parameter model stays frozen. A rank-4 adapter reads its final hidden state and adjusts the scores for the eight action letters. Training starts from the original model’s scores, with no supervised warm start.</dd></div>
+        <div><dt>72 training episodes</dt><dd>Each of 24 scenarios gets three sampled runs. A group-relative policy gradient updates the adapter using each run’s return relative to its two peers. Reward favors on-time arrivals and full completion, with deductions for spend and rejected calls.</dd></div>
+        <div><dt>20 paired test scenarios</dt><dd>The frozen model, final adapter, and hand-written dispatcher each face the same 20 fresh seeds. Four episodes per family cover closures, delays, demand surges, combined shocks, and a changed supplier network. This pilot uses one training seed.</dd></div>
+      </dl>
+    </section>
+    <section class="pilot-section" aria-labelledby="artifacts-title">
+      <h2 id="artifacts-title">Experiment files</h2>
+      <p id="compute" class="explain" hidden></p>
+      <ul class="artifact-list">
+        <li><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/main/training/language-model/protocol.json">Fixed protocol ↗</a></li>
+        <li><a href="https://github.com/Arhaan2/evalsim-dispatch/tree/main/training/language-model">Training implementation ↗</a></li>
+      </ul>
+      <ul class="artifact-list" id="downloads"></ul>
+    </section>
+    <footer><span>EvalSim DISPATCH</span><a href="./#simulator">Return to simulator</a></footer>
+  </main>
+</div>
+</body>
+</html>

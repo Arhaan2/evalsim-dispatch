@@ -1,0 +1,1 @@
+{"episodes":100,"hardware":{"node":"v24.18.0","platform":"darwin","arch":"arm64","cpu":"Apple M4 Pro","device":"CPU"},"seconds":0.022294,"episodesPerSecond":4485.545196,"peakResidentMiB":58.359375,"fulfillment":0.72614,"success":0.04,"cost":75.01,"toolCalls":22.17,"violations":0}
