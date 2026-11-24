@@ -1,0 +1,11 @@
+.lastslot .market-results { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:clamp(1rem,3vw,2.5rem); margin:1.2rem 0 .6rem; }
+.lastslot .market-results section { border-block-start:1px solid var(--border); padding-block:.7rem; min-width:0; }
+.lastslot .market-results h4 { font-weight:500; margin:.05rem 0 .4rem; }
+.lastslot .market-results td { font-variant-numeric:tabular-nums; }
+.lastslot #scorecard .market-results :is(th,td) { white-space:normal; }
+.lastslot .market-select { display:flex; align-items:center; gap:.8rem; margin:.45rem 0; }
+.lastslot #worked-examples section { padding:.85rem 0; border-block-start:1px solid var(--border); }
+.lastslot #worked-examples a { display:inline-flex; align-items:center; min-height:44px; }
+.lastslot #worked-examples table { min-width:33rem; }
+@media(max-width:1100px){.lastslot .market-results{grid-template-columns:minmax(0,1fr)}}
+.lastslot #scorecard .market-results table { min-width:0; }

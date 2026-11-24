@@ -55,3 +55,5 @@ Every tape runs at 0, 5, 10, 25, 50, 75 and 100 cents. Each fresh stratum includ
 | stochastic, booking, survey, rally, trust, drift, turns | Historical policies with their published freight rules; each skips the survey |
 
 For a custom run, import `runTariffCase` from `evalsim-dispatch/tariff` and pass a config such as `{seed: 42, priceCents: 17}` plus your decision function. Official reports use the complete seven-price schedule. [Training and results](training/tariff/) · [One-credit study](PAID.md) · [License](LICENSE)
+
+The follow-up trains the purchase decision specifically for one remaining slot and compares it with always skipping on fresh, paired markets. [Play Last Slot](https://arhaan2.github.io/evalsim-dispatch/lastslot.html) · [Run the benchmark](LASTSLOT.md)
