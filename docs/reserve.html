@@ -41,7 +41,7 @@
           <div class="actions" id="actions"><button id="accept" type="button">Book load</button><button id="pass" type="button">Pass</button><button id="again" type="button" hidden>Play again</button></div>
         </div>
         <div class="forecast-panel"><h3>Demand forecast</h3><p id="forecast-note"></p>
-          <table id="forecast-table"><caption class="sr">Forecast for each remaining wave. All offer amounts are net credits.</caption><thead><tr><th scope="col">Wave</th><th scope="col">Low / high</th><th scope="col">High chance</th><th scope="col">Mean</th></tr></thead><tbody id="forecast"></tbody></table>
+          <div class="grid-scroll" tabindex="0" role="region" aria-label="Demand forecast"><table id="forecast-table"><caption class="sr">Forecast for each remaining wave. All offer amounts are net credits.</caption><thead><tr><th scope="col">Wave</th><th scope="col">Low / high</th><th scope="col">High chance</th><th scope="col">Mean</th></tr></thead><tbody id="forecast"></tbody></table></div>
         </div>
       </div>
       <div class="shift-foot"><p id="current-score"></p><div><a id="share" href="./reserve.html">Link to this run</a><button id="reset" type="button">Restart shift</button></div></div>
