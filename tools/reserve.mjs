@@ -36,7 +36,11 @@ import { LASTSLOT_SUITE,lastslotCases } from "../docs/lib/lastslot.js";
 import { benchmarkLoadchoice, loadchoiceReferences, verifyLoadchoiceReport, LOADCHOICE_EVALUATION_SPLITS } from "../docs/lib/loadchoice-benchmark.js";
 import { LOADCHOICE_SUITE, loadchoiceCases } from "../docs/lib/loadchoice.js";
 
+import { benchmarkWaitcost, waitcostReferences, verifyWaitcostReport, WAITCOST_EVALUATION_SPLITS } from "../docs/lib/waitcost-benchmark.js";
+import { WAITCOST_SUITE, waitcostCases } from "../docs/lib/waitcost.js";
+
 const labs = {
+  waitcost: { id: WAITCOST_SUITE.id, cases: waitcostCases, references: waitcostReferences, benchmark: benchmarkWaitcost, verify: verifyWaitcostReport, splits: WAITCOST_EVALUATION_SPLITS },
   loadchoice: { id: LOADCHOICE_SUITE.id, cases: loadchoiceCases, references: loadchoiceReferences, benchmark: benchmarkLoadchoice, verify: verifyLoadchoiceReport, splits: LOADCHOICE_EVALUATION_SPLITS },
   lastslot: {id:LASTSLOT_SUITE.id,cases:lastslotCases,references:lastslotReferences,benchmark:benchmarkLastslot,verify:verifyLastslotReport,splits:LASTSLOT_EVALUATION_SPLITS},
   tariff: { id:TARIFF_SUITE.id, cases:tariffCases, references:tariffReferences, benchmark:benchmarkTariff, verify:verifyTariffReport, splits:TARIFF_EVALUATION_SPLITS },
@@ -68,6 +72,7 @@ async function loadCheckpoint(name) {
 }
 
 function pricedStudy(lab) {
+  if (lab === labs.waitcost) return "waitcost";
   return lab === labs.loadchoice ? "loadchoice" : lab === labs.lastslot ? "lastslot" : null;
 }
 
@@ -149,6 +154,8 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --suite tariff --policy ./examples/tariff-agent.mjs --out tariff.json
   node tools/reserve.mjs --suite tariff --split retention --policy planner
   node tools/reserve.mjs --suite tariff --out python-tariff.json -- python3 examples/tariff_agent.py
+  node tools/reserve.mjs --suite waitcost --policy ./examples/lastslot-agent.mjs --out waitcost.json
+  node tools/reserve.mjs --suite waitcost --split validation -- python3 examples/lastslot_agent.py
   node tools/reserve.mjs --suite loadchoice --policy ./examples/lastslot-agent.mjs --out choice.json
   node tools/reserve.mjs --suite loadchoice --split validation -- python3 examples/lastslot_agent.py
   node tools/reserve.mjs --suite lastslot --policy ./examples/lastslot-agent.mjs --out lastslot.json
@@ -157,13 +164,14 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --manifest
   node tools/reserve.mjs --verify my-result.json
 
---suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff, lastslot or loadchoice.
+--suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff, lastslot, loadchoice or waitcost.
 --split NAME              test or validation. Turns, Closes, Trust, Rally, Survey and Booking also offer retention.
                           The Trust archive replays all eight previous Closes patterns on new seeds.
                           The Rally archive replays the eight previous Trust test patterns on new seeds.
                           The Survey archive replays the eight previous Rally test patterns on new seeds.
                           The Booking archive replays the eight previous Survey test patterns on new seeds.
                           Paid offers test, validation, retention, archive (Booking) and surveyArchive (Survey).
+                          Waitcost compares survey-induced deferrals with skipping, unguarded bookings and the planner.
                           Loadchoice evaluates post-survey bookings on fresh, original and archived Last Slot markets.
                           Lastslot offers validation, test, retention and archive, including an always-skip specialist (rlNever).
                           Tariff crosses seven prices with each validation, test, retention or archived Paid tape.
@@ -252,13 +260,15 @@ function display(report) {
     rally: "Rally agent", always: "always use survey", never: "never use survey", survey: "Survey agent",
     equal: "equal-weight learner", earlyPlanner: "planner then Survey", earlyRally: "Rally then Survey" };
   const isPaid = report.suite === PAID_SUITE.id;
-  const isLoadchoice = report.suite === LOADCHOICE_SUITE.id;
+  const isWaitcost = report.suite === WAITCOST_SUITE.id;
+  const isLoadchoice = isWaitcost || report.suite === LOADCHOICE_SUITE.id;
   const isLastslot = isLoadchoice || report.suite === LASTSLOT_SUITE.id;
   const isTariff = report.suite === TARIFF_SUITE.id || isLastslot;
   if (isPaid || isTariff) Object.assign(labels, { planner: "paid survey planner", booking: "Booking agent", rlNever: "RL skip", rlAlways: "RL buy",
     rlFree: "RL free survey", plannerNever: "planner skip", plannerAlways: "planner buy", plannerFree: "planner free survey", paid: "previous Paid agent" });
   if(isLastslot) Object.assign(labels,{rl:"one-slot specialist",rlAlways:"buy with one slot",tariff:"previous Tariff agent"});
   if (isLoadchoice) Object.assign(labels,{rl:"load-choice learner",lastslot:"previous Last Slot specialist"});
+  if (isWaitcost) Object.assign(labels,{rl:"learned wait policy",loadchoice:"previous Load Choice agent",unguarded:"same gate without the stopping rule",unguardedAlways:"forced buy without the stopping rule",alwaysStop:"stop at all eligible disagreements",alwaysStopForced:"forced buy and stop at all disagreements"});
   console.log(report.suite + " / " + report.split + " / " + report.policy);
   console.log("Mean net credits per shift");
   console.table(Object.entries({ all: report.summary.all, ...report.summary.byFamily }).map(([family, group]) => ({

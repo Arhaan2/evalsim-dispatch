@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f8f1">
+  <meta name="description" content="Can a learned booking rule recognize an expensive wait after a fresh demand survey? Replay the freight offers and benchmark your own dispatcher.">
+  <meta property="og:title" content="When to stop waiting · EvalSim DISPATCH">
+  <meta property="og:description" content="Set the survey price and benchmark your agent on the same freight shifts as the trained dispatcher and planner.">
+  <meta property="og:type" content="website">
+  <title>When to stop waiting · EvalSim DISPATCH</title>
+  <link rel="icon" href="./assets/mark.svg?v=2" type="image/svg+xml">
+  <link rel="preload" href="./assets/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./reserve.css">
+  <link rel="stylesheet" href="./closes.css">
+  <link rel="stylesheet" href="./paid.css">
+  <link rel="stylesheet" href="./tariff.css">
+  <link rel="stylesheet" href="./lastslot.css">
+  <link rel="stylesheet" href="./loadchoice.css">
+  <noscript><style>#load-status{display:none}</style></noscript>
+  <script type="module" src="./waitcost.js"></script>
+</head>
+<body class="reserve closes paid tariff lastslot loadchoice">
+<a class="skip" href="#desk">Skip to study</a>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand-row"><a class="brand" href="./" aria-label="EvalSim DISPATCH home"><img src="./assets/mark.svg?v=2" width="28" height="28" alt=""><span>EvalSim<span class="brand-period" aria-hidden="true">.</span></span></a><span class="product">Dispatch</span></div>
+    <nav class="primary-nav" aria-label="Workspace"><a href="./studies.html">Study library</a><a href="./waitcost.html" class="current" aria-current="page">When to stop waiting</a><a href="./loadchoice.html">Previous load-choice study</a><a href="./index.html">DISPATCH simulator</a></nav>
+    <nav class="resource-nav" aria-label="Project"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/waitcost-v1.0.0/WAITCOST.md">Benchmark guide ↗</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Contact EvalSim ↗</a></nav>
+  </aside>
+  <main id="desk">
+    <header class="page-heading"><h1>When to stop waiting</h1>
+      <p>A survey can persuade a dispatcher to pass a paying offer. With one slot left, can it learn when waiting for the next load costs more than booking now?</p>
+      <nav class="section-links" aria-label="In this study"><a href="#benchmark">Results</a><a href="#load-decisions">Costly waits</a><a href="#slot-example">Paired replays</a><a href="#methods">Methods</a><a href="#session">Play a shift</a><a href="#own-agent">Test your agent</a></nav>
+    </header>
+    <section id="benchmark" class="lab-section" aria-labelledby="score-title"><h2 id="score-title">Earnings after fees</h2>
+      <p class="description">Each dispatcher starts at wave one. On fresh cold reversals, compare the agent with always skipping and the fee-aware planner. On fresh hot drops, test whether the previous win over the planner holds.</p>
+      <p class="study-verdict" id="study-verdict">On fresh cold reversals, the agent beat the planner. Always skipping earned slightly more because every purchased reading led to the same load as skipping. On fresh hot drops, the earlier win over the planner did not repeat. The original interrupted-drop gains held.</p>
+      <noscript id="static-evidence"><p>Each target covers 24,576 priced shifts. Differences are net credits per shift, followed by paired 95% intervals. On cold reversals the agent earned +0.280 [+0.150, +0.416] versus the planner and −0.000153 [−0.000250, −0.000073] versus skipping. On hot drops it earned +0.0008 [−0.0726, +0.0750] versus the planner and −0.0026 [−0.0097, +0.0038] versus skipping.</p><p>On the original interrupted-drop pattern, the agent earned +11.71 [+10.84, +12.56] over the historical planner. The current price-aware planner led the agent by 0.43 credits per shift. <a href="./data/waitcost/results.json">Download all results</a>.</p></noscript>
+      <p id="load-status" role="status">Loading trained policies and scores…</p><div id="scorecard"></div>
+      <div class="section-links"><a href="./data/waitcost/results.json">Download results JSON</a><a href="https://github.com/Arhaan2/evalsim-dispatch/tree/waitcost-v1.0.0/training/waitcost">Training study ↗</a></div>
+    </section>
+    <section id="load-decisions" class="lab-section" aria-labelledby="value-title">
+      <h2 id="value-title">Which waits cost freight earnings?</h2>
+      <p class="description">For the same one-slot opening, compare three bookings. One agent skips, one buys and follows its previous booking rule, and one buys and applies the learned check before waiting.</p>
+      <p class="study-verdict">With 50 paid cold-reversal surveys, the check stopped two costly waits on one tape played at two prices. Across those purchases the agent booked the same loads as skipping and paid 3.75 credits. On hot drops it stopped eight profitable waits on three tapes, giving up 80 credits compared with the previous booking rule at the same fees.</p>
+      <div id="wait-mechanism"></div>
+      <div id="load-mechanism"></div>
+      <div id="acquisition"></div>
+    </section>
+    <section id="slot-example" class="lab-section" aria-labelledby="example-title"><h2 id="example-title">Replay the decision to wait</h2><p class="description">Each example shows a single signed freight tape. Compare the booked wave, freight pay and fee with the reading hidden, with it visible, and with the learned check on waiting.</p><div id="worked-examples"></div></section>
+    <section id="methods" class="lab-section" aria-labelledby="methods-title"><h2 id="methods-title">How to read this experiment</h2>
+      <dl class="method-list">
+        <dt>What was trained?</dt><dd id="policy-method">On its final slot the previous agent sometimes passed an offer that it would have booked without the reading. The new agent learns the return and downside of waiting for that disagreement. Seed 13 selected a penalty of 0.5 credits per credit of expected downside. The agent waits only if the adjusted gain is positive. A separate set of training shifts fits the purchase price after the booking rule is fixed.</dd>
+        <dt>What counts as a win?</dt><dd>On cold reversals, the lower paired 95% bound must exceed zero against both always skipping and the planner. On hot drops, retaining the win requires the lower bound against the planner to exceed zero. On original interrupted drops, all prespecified historical retention margins must hold. The six positive prices enter the primary comparisons equally. Free surveys are a separate control.</dd>
+        <dt>What counts as a new shift?</dt><dd>Eight unseen openings each have a hot and a cold ending. Each opening and seed shares its five-wave history across endings. The same underlying offers and potential readings repeat across prices. Bootstrap intervals resample whole seeds, keeping the prices and endings together.</dd>
+        <dt>Which comparison isolates buying?</dt><dd>Always skipping uses the same freight policy as the trained agent. The independent planner chooses its own bookings and survey decisions. The comparison without the waiting check keeps the purchase rule fixed and uses the previous freight policy after buying. The common-opening comparison gives each policy the same opening and unused slot.</dd>
+      </dl>
+      <details id="training-runs">
+        <summary>Across the five training runs</summary>
+        <p class="description">All five fits beat the planner on cold reversals under the paired interval test. None beat always skipping there. No fit established a fresh hot-drop win over the planner. Training seed 13 was designated for release before testing. Each cell is the mean difference in net credits per positive-price shift. The results file includes all paired intervals.</p>
+        <div class="grid-scroll" tabindex="0" role="region" aria-label="All five independent fits compared with both controls">
+          <table><caption class="sr">Mean net credits per shift above the control on each fresh target</caption>
+            <thead><tr><th scope="col">Training seed</th><th scope="col">Cold vs skip</th><th scope="col">Cold vs planner</th><th scope="col">Hot vs skip</th><th scope="col">Hot vs planner</th></tr></thead><tbody>
+            <tr><th scope="row">13 · release</th><td>−0.000153</td><td>+0.279799</td><td>−0.002598</td><td>+0.000777</td></tr>
+            <tr><th scope="row">37</th><td>−0.000018</td><td>+0.279934</td><td>+0.001835</td><td>+0.005210</td></tr>
+            <tr><th scope="row">73</th><td>−0.000153</td><td>+0.279799</td><td>−0.005271</td><td>−0.001896</td></tr>
+            <tr><th scope="row">101</th><td>+0.000000</td><td>+0.279952</td><td>−0.002423</td><td>+0.000952</td></tr>
+            <tr><th scope="row">211</th><td>−0.000024</td><td>+0.279928</td><td>−0.002386</td><td>+0.000989</td></tr>
+          </tbody></table>
+        </div>
+      </details>
+      <div class="section-links"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/7014382951f66b70c3a7c91397c133f92ac2aaa7/training/waitcost/protocol.mjs">Protocol frozen before training ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/waitcost-v1.0.0/training/waitcost/audit.mjs">Independent audit code ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch/tree/waitcost-v1.0.0/training/waitcost">Reproduce the fits ↗</a><a href="./loadchoice.html#benchmark">Previous load-choice results →</a></div>
+    </section>
+    <noscript><p>The paired replay and interactive shift use JavaScript. The <a href="https://github.com/Arhaan2/evalsim-dispatch/blob/waitcost-v1.0.0/WAITCOST.md">offline benchmark guide</a> includes both starters.</p></noscript>
+    <section id="session" hidden aria-labelledby="session-heading" data-ui>
+      <div class="section-line"><h2 id="session-heading">Play the survey decision</h2><span id="active-config"></span></div>
+      <form id="price-form"><div class="price-control"><label for="price">Survey price in credits</label><output id="price-label" for="price">0.10</output><input id="price" type="range" min="0" max="100" step="1" value="10" aria-describedby="price-help"><span class="range-low" aria-hidden="true">0</span><span class="range-high" aria-hidden="true">1 credit</span></div><div class="price-submit"><button type="submit" id="apply-price">Apply price</button><p id="price-help">Changing the price keeps your opening and reopens the survey window if you have passed it.</p></div></form>
+      <div class="desk-grid">
+        <div class="offer-panel">
+          <div class="offer-head"><h3 id="offer-heading" tabindex="-1"></h3><span id="wave"></span></div>
+          <div id="amount"><strong id="net-offer"></strong><span id="amount-label"></span></div>
+          <p id="offer-detail"></p>
+          <div id="received" hidden><span id="reading-marks" aria-hidden="true"></span><p id="received-reading"></p></div>
+          <details id="advice" hidden><summary>Inspect decision values</summary><div id="live-estimates"></div></details>
+          <div id="slot-board"><span id="slot-tiles" aria-hidden="true"></span><p id="slot-count"></p></div>
+          <div class="actions"><button type="button" id="accept"></button><button type="button" id="pass"></button><button type="button" id="again" hidden>Play from wave one</button></div>
+        </div>
+        <div class="forecast-panel"><h3>Freight board</h3><p id="forecast-note">The public bulletin updates at waves four and seven and reflects demand two waves earlier.</p>
+          <div class="grid-scroll" tabindex="0" role="region" aria-label="Forecast and revealed offers by wave"><table><caption class="sr">Public price range, posted chance of a high offer, signed price and your decisions</caption><thead><tr><th scope="col">Wave</th><th scope="col">Low / high</th><th scope="col">High chance</th><th scope="col">Offer</th><th scope="col">Your call</th></tr></thead><tbody id="forecast"></tbody></table></div>
+        </div>
+      </div>
+      <div class="shift-foot"><p id="current-score"></p><div><a id="share" href="./waitcost.html">Link to this run</a><button id="reset" type="button">Start at wave one</button></div></div>
+      <p class="status" id="status" role="status"></p>
+      <details id="config"><summary>Choose another shift</summary>
+        <form id="case-form"><label>Blind case<select id="family"></select></label><label>Shift seed<input type="text" inputmode="numeric" id="seed" maxlength="10" pattern="[0-9]{1,10}" required></label><button type="submit">Load shift</button></form>
+      </details>
+      <p class="result-note" id="reveal-hint">After your survey decision, you can reveal the shift and compare agents.</p>
+      <details id="compare" hidden><summary>Reveal the shift and compare agents</summary>
+        <p class="description">Reveal all eight freight offers, the survey reading and each dispatcher’s ledger.</p><div id="comparison"></div>
+      </details>
+    </section>
+    <section id="own-agent" class="lab-section" aria-labelledby="agent-title"><h2 id="agent-title">Benchmark your agent</h2>
+      <p class="description">Run your own JavaScript or Python dispatcher on the same shifts. Start on validation, then score the fresh test bank. Your dispatcher sees the price from wave one. After five offers, it returns <code>buy</code> or <code>skip</code> before it sees the sixth offer.</p>
+      <pre><code>git clone --branch waitcost-v1.0.0 https://github.com/Arhaan2/evalsim-dispatch.git
+cd evalsim-dispatch
+node tools/reserve.mjs --suite waitcost --split validation --policy ./examples/lastslot-agent.mjs --out validation.json
+node tools/reserve.mjs --suite waitcost --split test --policy ./examples/lastslot-agent.mjs --out test.json
+node tools/reserve.mjs --verify test.json</code></pre>
+      <div class="section-links"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/waitcost-v1.0.0/WAITCOST.md">Benchmark guide ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/waitcost-v1.0.0/examples/lastslot-agent.mjs">JavaScript starter ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/waitcost-v1.0.0/examples/lastslot_agent.py">Python starter ↗</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Discuss your workflow ↗</a></div>
+      <div id="upload" hidden><label for="report-file"><strong>Verify your report</strong></label><p class="description" id="upload-help">Choose a validation, test, retention or archive report. Your browser replays the decisions locally and checks the charges against the published bank.</p><input type="file" id="report-file" accept=".json,application/json" aria-describedby="upload-help"><p id="report-status" role="status"></p><div id="report-result"></div></div>
+    </section>
+    <footer><a href="./studies.html">Return to the study library</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Contact EvalSim ↗</a></footer>
+  </main>
+</div>
+</body>
+</html>

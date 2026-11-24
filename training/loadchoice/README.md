@@ -97,7 +97,7 @@ git clone --branch loadchoice-v1.0.0 https://github.com/Arhaan2/evalsim-dispatch
 cd evalsim-dispatch
 npm run audit:loadchoice
 npm run audit:loadchoice:ledgers
-node tools/reserve.mjs --suite loadchoice --split validation --policy ./examples/loadchoice-agent.mjs --out validation.json
+node tools/reserve.mjs --suite loadchoice --split validation --policy ./examples/lastslot-agent.mjs --out validation.json
 node tools/reserve.mjs --verify validation.json
 ```
 
