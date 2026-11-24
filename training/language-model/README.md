@@ -25,4 +25,6 @@ node training/language-model/audit.mjs docs/data/llm-curriculum
 node training/language-model/play.mjs /tmp/dispatch-encode /path/to/model.gguf docs/data/llm/adapter.json compound 42
 ```
 
-The runner hashes its source, protocol and world implementation. It checkpoints each training group and test case, and resumes compatible progress when invoked again. Device and library behavior can change floating-point results. The CPU-only audit replays every published action sequence and checks the final verified metrics. It does not rerun the model. [Original Qwen model card](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507)
+The runner hashes its source, protocol and world implementation. It checkpoints each training group and test case, and resumes compatible progress when invoked again. Device and library behavior can change floating-point results. The CPU-only audit replays every published action sequence and checks the final verified metrics.
+
+Qwen supplied the original language model under Apache 2.0. Unsloth supplied the quantized GGUF. DISPATCH trained the additional action-selection matrices. Downloads from this repository include those small adapter weights. [Original Qwen model card](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) · [Upstream license](QWEN-LICENSE.txt)

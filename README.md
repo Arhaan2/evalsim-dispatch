@@ -27,6 +27,10 @@ The adaptive sampler uses recent operator failures to change how frequently each
 
 We also trained a scenario-selection policy to choose feasible disruptions and opening demand levels that exposed weaknesses in its operator. Each of six runs had a budget of exactly 32,768 operator calls. The learned challenger's operators achieved 75.2% complete success on a fresh test suite, compared with 77.4% under matched uniform sampling. Visitors can sample a scenario from the saved challenger. [Protocol, results and reproduction](training/challenger/README.md)
 
+## What changed for a 4B language model
+
+On twenty fresh scenarios, frozen Qwen3-4B delivered 467 of 657 units on time and completed zero shifts. A rank-four action-selection adapter trained on 72 balanced episodes delivered 542 units on time and completed two shifts. The dispatcher delivered 647 units on time and completed sixteen shifts. These are paired pilot measurements from one training seed. See the model's tool calls, including rejected bookings, in the [recorded comparison](https://arhaan2.github.io/evalsim-dispatch/language-model.html). [Per-case results](docs/data/llm/results.json) · [Model, method and local inference](training/language-model/README.md)
+
 ## Inside the harbor
 
 - Two suppliers, two warehouses and four customer destinations share limited inventory, transport capacity, shipping budget and time. Stock and capacity reports can go stale.

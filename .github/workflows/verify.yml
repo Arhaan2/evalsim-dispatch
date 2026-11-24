@@ -14,3 +14,4 @@ jobs:
           node-version: '24.18.0'
       - run: npm test
       - run: npm run audit:results
+      - run: node training/language-model/audit.mjs
