@@ -17,7 +17,7 @@ async function runCase(world, config, decide) {
   return { actions, score };
 }
 
-function summarize(rows, referenceKeys, stratum) {
+function summarize(rows, referenceKeys, stratum, ending) {
   function group(cases) {
     const mean = key => cases.reduce((sum, row) => sum + row[key], 0) / cases.length;
     const references = {};
@@ -26,17 +26,21 @@ function summarize(rows, referenceKeys, stratum) {
     }
     return { shifts: cases.length, mean: mean("net"), references };
   }
-  function grouped(keyOf) {
+  function grouped(cases, keyOf, summarizeGroup = group) {
     const groups = new Map();
-    for (const row of rows) {
+    for (const row of cases) {
       const key = keyOf(row.family);
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(row);
     }
-    return Object.fromEntries([...groups].map(([key, cases]) => [key, group(cases)]));
+    return Object.fromEntries([...groups].map(([key, members]) => [key, summarizeGroup(members)]));
   }
-  const summary = { all: group(rows), byFamily: grouped(family => family) };
-  if (stratum) summary.byStratum = grouped(stratum);
+  const summary = { all: group(rows), byFamily: grouped(rows, family => family) };
+  if (stratum) summary.byStratum = grouped(rows, stratum);
+  if (ending) {
+    summary.byEnding = grouped(rows, ending);
+    summary.byStratumEnding = grouped(rows, stratum, members => grouped(members, ending));
+  }
   return summary;
 }
 
@@ -61,7 +65,7 @@ async function benchmark(lab, { split = "test", policy, createPolicy, weights })
     }
   }
   return { format: lab.format, suite: lab.id, split, policy,
-    summary: summarize(cases, references.map(([key]) => key), lab.stratum), cases };
+    summary: summarize(cases, references.map(([key]) => key), lab.stratum, lab.ending), cases };
 }
 
 function sameJson(left, right) {

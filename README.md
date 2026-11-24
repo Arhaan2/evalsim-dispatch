@@ -1,10 +1,23 @@
 # EvalSim DISPATCH
 
-[Play Demand Turns](https://arhaan2.github.io/evalsim-dispatch/turns.html) · [Benchmark your agent](TURNS.md) · [Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html) · [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+[Play hot and cold closes](https://arhaan2.github.io/evalsim-dispatch/closes.html) · [Benchmark your agent](CLOSES.md) · [Play Demand Turns](https://arhaan2.github.io/evalsim-dispatch/turns.html) · [Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html) · [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+
+## Does history help when the market can finish hot or cold?
+
+Two shifts open with the same freight offers. Demand then diverges, and your two truck slots can be worth very different amounts at closing. This benchmark crosses every new market opening with both endings. The released history agent and its no-history counterpart trained on identical freight tapes. Each competes against the distribution-aware planner on 2,048 fresh reversals and 2,048 fresh interrupted drops.
+
+On fresh reversals the history agent earned **49.72 credits per shift**, the no-history agent **49.61** and the planner **49.11**. History added 0.70 credits on cold endings and cost 0.47 on hot endings. Across both endings its contribution was +0.11, with a paired 95% interval of −0.01 to +0.25. The history agent kept a 4.23-credit lead over the planner on fresh interrupted drops overall. Hot-ending drops favored the planner by 4.50. On the original interrupted-drop pattern it lost 2.46 credits against the earlier Turns agent, missing the retention target. [Results and paired intervals](training/closes/)
+
+```sh
+node tools/reserve.mjs --suite closes --policy ./examples/reserve-agent.mjs --out closes.json
+node tools/reserve.mjs --verify closes.json
+```
+
+Try both endings in the browser, or score a JavaScript or Python agent on the full test and the three historical interrupted-drop patterns. [Agent guide](CLOSES.md) · [Study results](training/closes/)
 
 ## Can an agent recognize a turn in demand?
 
-On 1,024 fresh shifts with early or late turns, the new policy earned **48.88 net credits per shift**, ahead of the previous Drift policy at **47.88** and the distribution-aware planner at **44.48**. On reversals alone it recovered 2.49 credits against Drift and trailed the planner by 0.69. It kept the original interrupted-drop advantage. On fresh rebounds its lead over the planner was 9.47 credits, but the measured range against Drift narrowly missed the study’s retention target.
+On 1,024 fresh shifts with early or late turns, the Turns policy earned **48.88 net credits per shift**, ahead of the previous Drift policy at **47.88** and the distribution-aware planner at **44.48**. On reversals alone it recovered 2.49 credits against Drift and trailed the planner by 0.69. It kept the original interrupted-drop advantage. On fresh rebounds its lead over the planner was 9.47 credits, but the measured range against Drift narrowly missed the study’s retention target.
 
 Removing the agent’s history features and refitting it on the same freight offers increased average earnings by 0.54 credits. History helped on fresh rebounds. All four test markets cooled before closing, so the benchmark also rewards learning the shift clock. [Paired results and training method](training/turns/)
 

@@ -1,5 +1,7 @@
 # Benchmark an agent on demand turns
 
+Every fresh market in this study closed cold. A follow-up pairs each opening with a hot and a cold finish and retrains both agents on those markets. [Hot and cold closes benchmark](CLOSES.md)
+
 Two truck slots, eight expiring offers, and a market bulletin that trails demand. The earlier Drift policy often waited through a hot market and booked after it cooled. This study compares a newly trained policy with the released Drift policy and both public planners on identical freight offers. [Play Demand Turns](https://arhaan2.github.io/evalsim-dispatch/turns.html) · [Study results](training/turns/)
 
 ## Run the public benchmark

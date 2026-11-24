@@ -13,27 +13,35 @@ import { DRIFT_SUITE, driftCases } from "../docs/lib/drift.js";
 import { benchmarkTurns, turnsReferences, verifyTurnsReport, TURNS_EVALUATION_SPLITS } from "../docs/lib/turns-benchmark.js";
 import { TURNS_SUITE, turnsCases } from "../docs/lib/turns.js";
 import { chooseTurns } from "../docs/lib/turns-policy.js";
+import { benchmarkCloses, closesReferences, verifyClosesReport, CLOSES_EVALUATION_SPLITS } from "../docs/lib/closes-benchmark.js";
+import { CLOSES_SUITE, closesCases } from "../docs/lib/closes.js";
 
 const labs = {
   reserve: { id: RESERVE_SUITE.id, cases: reserveCases, references: reserveReferences, benchmark: benchmarkReserve, verify: verifyReserveReport },
   drift: { id: DRIFT_SUITE.id, cases: driftCases, references: driftReferences, benchmark: benchmarkDrift, verify: verifyDriftReport },
   turns: { id: TURNS_SUITE.id, cases: turnsCases, references: turnsReferences, benchmark: benchmarkTurns,
     verify: verifyTurnsReport, splits: TURNS_EVALUATION_SPLITS },
+  closes: { id: CLOSES_SUITE.id, cases: closesCases, references: closesReferences, benchmark: benchmarkCloses,
+    verify: verifyClosesReport, splits: CLOSES_EVALUATION_SPLITS },
 };
 
 async function loadCheckpoint(name) {
   const url = new URL("../docs/data/" + name + "/results.json", import.meta.url);
-  return JSON.parse(await readFile(url, "utf8")).checkpoint.weights;
+  return JSON.parse(await readFile(url, "utf8")).checkpoint;
 }
 
 async function loadWeights(lab) {
-  if (lab === labs.reserve) return loadCheckpoint("reserve");
+  if (lab === labs.reserve) return (await loadCheckpoint("reserve")).weights;
+  if (lab === labs.closes) {
+    const [closes, turns, drift] = await Promise.all(["closes", "turns", "drift"].map(loadCheckpoint));
+    return { closes: closes.weights, ablated: closes.ablatedWeights, turns: turns.weights, drift: drift.weights };
+  }
   if (lab === labs.turns) {
     const [turns, drift] = await Promise.all([loadCheckpoint("turns"), loadCheckpoint("drift")]);
-    return { turns, drift };
+    return { turns: turns.weights, drift: drift.weights };
   }
   const [drift, legacy] = await Promise.all([loadCheckpoint("drift"), loadCheckpoint("reserve")]);
-  return { drift, legacy };
+  return { drift: drift.weights, legacy: legacy.weights };
 }
 
 const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+).
@@ -44,15 +52,18 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --suite turns --policy ./examples/reserve-agent.mjs --out turns.json
   node tools/reserve.mjs --suite turns --split retention --policy rl
   node tools/reserve.mjs --suite drift --policy turns --out turns-on-drift.json
+  node tools/reserve.mjs --suite closes --policy ./examples/reserve-agent.mjs --out closes.json
+  node tools/reserve.mjs --suite closes --split retention --policy rl
   node tools/reserve.mjs --out python-result.json -- python3 examples/reserve_agent.py
   node tools/reserve.mjs --manifest
   node tools/reserve.mjs --verify my-result.json
 
---suite NAME              reserve (default), drift or turns.
---split NAME              test or validation. Turns also offers retention on the original drop pattern with new seeds.
+--suite NAME              reserve (default), drift, turns or closes.
+--split NAME              test or validation. Turns and Closes also offer retention on earlier drop patterns with new seeds.
 --policy NAME|PATH        Local ES module, or a reference. Every suite offers rl and stochastic.
                           Reserve adds planner. Drift adds adaptive, legacy and the new turns policy.
                           Turns adds adaptive and the previous drift policy. rl selects the new agent.
+                          Closes adds ablated (same training without history), turns, drift and adaptive.
 --name LABEL              Set the display name stored in the report.
 --out PATH                Save the full replayable JSON report.
 -- PROGRAM [ARG ...]      Run a local agent using one JSON request and response per line.
@@ -99,7 +110,7 @@ async function programAgent(command, timeout) {
 
 async function moduleAgent(policy, builtins) {
   if (Object.hasOwn(builtins, policy)) return { createPolicy: () => builtins[policy] };
-  if (["planner", "adaptive", "legacy", "turns", "drift"].includes(policy)) throw new Error("Policies in this suite: " + Object.keys(builtins).join(", "));
+  if (["planner", "adaptive", "legacy", "turns", "drift", "ablated"].includes(policy)) throw new Error("Policies in this suite: " + Object.keys(builtins).join(", "));
   const module = await import(pathToFileURL(resolve(policy)).href);
   if (typeof module.createPolicy === "function") return { createPolicy: module.createPolicy };
   if (typeof module.default === "function") return { createPolicy: () => module.default };
@@ -118,7 +129,8 @@ async function saveReport(path, report) {
 
 function display(report) {
   const number = n => n.toFixed(2);
-  const labels = { rl: "RL", planner: "point planner", stochastic: "stochastic planner", adaptive: "adaptive planner", legacy: "original RL", drift: "previous Drift RL" };
+  const labels = { rl: "RL", planner: "point planner", stochastic: "stochastic planner", adaptive: "adaptive planner",
+    legacy: "original RL", drift: "previous Drift RL", turns: "previous Turns RL", ablated: "RL without history" };
   console.log(report.suite + " / " + report.split + " / " + report.policy);
   console.log("Mean net credits per shift");
   console.table(Object.entries({ all: report.summary.all, ...report.summary.byFamily }).map(([family, group]) => ({
@@ -140,6 +152,19 @@ function display(report) {
       "95% interval vs Drift": group.references.drift.interval95.map(number).join(" to "),
     })));
   }
+  if (report.summary.byStratumEnding) {
+    console.log("Paired differences across hot and cold endings");
+    const comparisons = [];
+    for (const [pattern, endings] of Object.entries(report.summary.byStratumEnding)) {
+      for (const [ending, group] of Object.entries(endings)) {
+        const planner = group.references.stochastic, ablated = group.references.ablated;
+        comparisons.push({ pattern, ending, shifts: group.shifts, agent: number(group.mean),
+          "agent minus planner": number(planner.delta), "95% vs planner": planner.interval95.map(number).join(" to "),
+          "agent minus RL without history": number(ablated.delta), "95% vs no history": ablated.interval95.map(number).join(" to ") });
+      }
+    }
+    console.table(comparisons);
+  }
 }
 
 async function main() {
@@ -153,7 +178,7 @@ async function main() {
   if (values.help) return console.log(usage);
   if (separator >= 0 && !command.length) throw new Error("Provide a program after --.");
   const suite = values.suite ?? "reserve";
-  if (!Object.hasOwn(labs, suite)) throw new Error("Choose --suite reserve, drift or turns.");
+  if (!Object.hasOwn(labs, suite)) throw new Error("Choose --suite " + Object.keys(labs).join(", ") + ".");
   const lab = labs[suite];
   if (values.verify !== undefined) {
     if (separator >= 0 || Object.keys(values).some(k => !["verify", "suite"].includes(k))) throw new Error("Use --verify with only an optional --suite.");
@@ -180,7 +205,7 @@ async function main() {
   const available = lab.references(weights);
   if (lab === labs.turns) available.turns = available.rl;
   if (lab === labs.drift && policy === "turns" && !command.length) {
-    const turnsWeights = await loadCheckpoint("turns");
+    const { weights: turnsWeights } = await loadCheckpoint("turns");
     available.turns = observation => chooseTurns(observation, turnsWeights);
   }
   const agent = command.length ? await programAgent(command, timeout) : await moduleAgent(policy, available);
