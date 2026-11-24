@@ -1,6 +1,14 @@
 # EvalSim DISPATCH
 
-[Play the rally lab](https://arhaan2.github.io/evalsim-dispatch/rally.html) · [Benchmark your agent](RALLY.md) · [Play expert routing](https://arhaan2.github.io/evalsim-dispatch/trust.html) · [Play hot and cold closes](https://arhaan2.github.io/evalsim-dispatch/closes.html) · [Play Demand Turns](https://arhaan2.github.io/evalsim-dispatch/turns.html) · [Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html) · [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+[Play the survey lab](https://arhaan2.github.io/evalsim-dispatch/survey.html) · [Benchmark your agent](SURVEY.md) · [Play the rally lab](https://arhaan2.github.io/evalsim-dispatch/rally.html) · [Play expert routing](https://arhaan2.github.io/evalsim-dispatch/trust.html) · [Play hot and cold closes](https://arhaan2.github.io/evalsim-dispatch/closes.html) · [Play Demand Turns](https://arhaan2.github.io/evalsim-dispatch/turns.html) · [Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html) · [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+
+## Can the dispatcher recognize a misleading survey?
+
+At wave seven a noisy survey arrives with information about wave five. The new agent estimates when that reading points toward the wrong closing market, then weighs the signed offer against the value of keeping a truck slot. Play matched shifts with the same posted odds and see how newer freight prices affect the decision. [Play the public lab](https://arhaan2.github.io/evalsim-dispatch/survey.html#matched-survey)
+
+On 8,192 fresh shifts the new agent reduced the gap between confidence and ending accuracy from 30.8 percentage points to 3.3. It beat the planner by **0.84 credits per cold-ending reversal** and trailed it by **1.04 per hot-ending drop**. On the original interrupted drop the agent beat the planner by 8.88 credits and lost 2.95 against Rally, missing the one-credit retention target. A control using signed offers alone had comparable ending forecast error. [Read the results and controls](training/survey/)
+
+Run your own Python or JavaScript policy on the same fresh, original and archived markets with the survey suite. [Benchmark guide](SURVEY.md)
 
 ## Is this rally a lasting demand turn?
 
