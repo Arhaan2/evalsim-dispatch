@@ -69,6 +69,10 @@ function validateResults(data) {
       throw new Error("Test split mismatch");
     }
   }
+  validateSummaries(data);
+}
+
+function validateSummaries(data) {
   for (const mode of modes) {
     const computed = resultSummary(data.cases, mode);
     if (Object.keys(computed).some((k) => data.summary[mode][k] !== computed[k])) throw new Error("Summary mismatch");
@@ -90,28 +94,34 @@ function rowHeader(title) {
   return th;
 }
 
-function showResults(data) {
-  byId("run-status").hidden = true;
-  byId("verified").hidden = false;
-  const base = data.summary.base, trained = data.summary.trained;
-  byId("finding").textContent = "The adapter completed " + trained.successes + " of " + trained.episodes
-    + " shifts. Frozen Qwen completed " + base.successes + " on the same seeds.";
-  byId("aggregates").replaceChildren(...modes.map((mode) => {
+function renderOutcomeTables(data, summaryBody, casesBody, showSpend = false) {
+  summaryBody.replaceChildren(...modes.map((mode) => {
     const s = data.summary[mode];
     const tr = node("tr");
     if (mode === "trained") tr.className = "trained-row";
     const score = node("td", s.successes + " / " + s.episodes);
     const arrivals = node("td", percent(s.onTime, s.demand));
     arrivals.append(node("small", count(s.onTime) + " / " + count(s.demand)));
-    tr.append(rowHeader(modeName[mode]), score, arrivals, node("td", count(s.toolCalls)));
+    const calls = node("td", count(s.toolCalls));
+    if (showSpend) calls.append(node("small", count(s.spend) + " credits"));
+    tr.append(rowHeader(modeName[mode]), score, arrivals, calls);
     return tr;
   }));
-  byId("cases").replaceChildren(...data.cases.map((r) => {
+  casesBody.replaceChildren(...data.cases.map((r) => {
     const tr = node("tr"), head = rowHeader(familyName[r.family] ?? r.family);
     head.append(node("small", "Seed " + r.seed));
     tr.append(head, ...modes.map((m) => node("td", r[m].fulfilled + " / " + r[m].totalDemand)));
     return tr;
   }));
+}
+
+function showResults(data) {
+  byId("run-status").hidden = true;
+  byId("verified").hidden = false;
+  const base = data.summary.base, trained = data.summary.trained;
+  byId("finding").textContent = "The adapter completed " + trained.successes + " of " + trained.episodes
+    + " shifts. Frozen Qwen completed " + base.successes + " on the same seeds.";
+  renderOutcomeTables(data, byId("aggregates"), byId("cases"));
   const c = data.compute;
   if (c && Number.isFinite(c.trainingSeconds) && Number.isFinite(c.evaluationSeconds)) {
     byId("compute").hidden = false;
@@ -260,10 +270,38 @@ async function compareCurricula(balanced) {
   byId("compare-training-link").hidden = false;
 }
 
+async function loadCreditExperiment() {
+  const section = byId("decision-credit");
+  const link = byId("credit-link");
+  section.hidden = link.hidden = true;
+  const data = await readJson("results.json", "./data/llm-credit/");
+  const { protocol, cases, compute } = data;
+  if (protocol.trainEpisodes !== 60 || protocol.testSeedsPerFamily !== 3 || protocol.testFamilies.length !== 7
+    || !Array.isArray(cases) || cases.length !== 21 || new Set(cases.map((r) => r.seed)).size !== 21
+    || cases.some((r) => !Number.isSafeInteger(r.seed) || r.seed < protocol.testSeedStart
+      || r.seed >= protocol.testSeedStart + cases.length || r.base.totalDemand !== r.trained.totalDemand
+      || r.base.totalDemand !== r.dispatcher.totalDemand)
+    || protocol.testFamilies.some((family) => cases.filter((row) => row.family === family).length !== 3)
+    || !["counterfactualBranches", "counterfactualToolCalls", "trainingToolCalls"].every((key) =>
+      Number.isSafeInteger(compute?.[key]) && compute[key] >= 0)) return;
+  validateSummaries(data);
+  renderOutcomeTables(data, byId("credit-scores"), byId("credit-cases"), true);
+  const gained = cases.filter((row) => row.trained.success && !row.base.success).length;
+  const lost = cases.filter((row) => row.base.success && !row.trained.success).length;
+  const paired = (n) => n + (n === 1 ? " shift" : " shifts");
+  byId("credit-finding").textContent = "On " + cases.length + " fresh test scenarios, the adapter completed " + paired(gained)
+    + " that frozen Qwen missed. Frozen Qwen completed " + paired(lost) + " that the adapter missed.";
+  byId("credit-cost").textContent = "Collecting " + protocol.trainEpisodes + " training episodes used "
+    + count(compute.trainingToolCalls) + " tool calls. Scoring the alternatives took another "
+    + count(compute.counterfactualToolCalls) + " simulated calls across " + count(compute.counterfactualBranches) + " branches.";
+  section.hidden = link.hidden = false;
+}
+
 async function load() {
   if (loading) return;
   loading = true;
   byId("retry").hidden = true;
+  const credit = loadCreditExperiment().catch(() => {});
   try {
     const data = await readJson("results.json");
     validateResults(data);
@@ -290,7 +328,10 @@ async function load() {
       ? "The protocol is available. Verified results and recorded decisions will appear here when the experiment is published."
       : "Published results could not be verified. Check again or open the training implementation below.";
     byId("retry").hidden = false;
-  } finally { loading = false; }
+  } finally {
+    await credit;
+    loading = false;
+  }
 }
 
 byId("decision").addEventListener("input", (event) => { stepIndex = Number(event.target.value) - 1; renderDecision(); });

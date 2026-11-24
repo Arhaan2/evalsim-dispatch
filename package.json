@@ -7,7 +7,7 @@
   "engines": { "node": ">=22" },
   "scripts": {
     "start": "node tools/serve.mjs",
-    "test": "node --test test/*.test.mjs",
+    "test": "node --test test/*.test.mjs training/language-model/decision-credit/gradient.test.mjs",
     "audit:results": "node training/audit.mjs && node training/challenger/audit.mjs"
   }
 }

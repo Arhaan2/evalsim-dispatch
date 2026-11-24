@@ -42,6 +42,7 @@
           </table>
         </div>
         <a class="download-link" id="compare-training-link" href="#curriculum" hidden>Compare the Qwen training schedules</a>
+        <a class="download-link" id="credit-link" href="#decision-credit" hidden>Inspect decision-level credit</a>
         <details class="case-list"><summary>Inspect all paired scenarios</summary>
           <div class="pilot-table-wrap" tabindex="0" role="region" aria-label="On-time units in every test scenario">
             <table class="pilot-table"><caption>On-time units / committed units</caption><thead><tr><th scope="col">Scenario</th><th scope="col">Base</th><th scope="col">With adapter</th><th scope="col">Dispatcher</th></tr></thead><tbody id="cases"></tbody></table>
@@ -72,6 +73,34 @@
       </div>
       <p id="threshold" class="explain"></p>
       <a class="download-link" href="./data/llm-curriculum/results.json" download="adaptive-qwen-results.json">Adaptive Qwen results and training history ↓</a>
+    </section>
+    <section class="pilot-section" id="decision-credit" aria-labelledby="credit-title" hidden>
+      <h2 id="credit-title">Decision-level credit</h2>
+      <p class="explain">This follow-up uses fresh training and test seeds. During training, the simulator tried alternative tool calls from the same state and let the dispatcher finish each shift. At test time, the adapter chose actions from its own observations.</p>
+      <p class="finding" id="credit-finding"></p>
+      <div class="pilot-table-wrap" tabindex="0" role="region" aria-label="Decision-level credit results by operator">
+        <table class="pilot-table">
+          <thead><tr><th scope="col">Operator</th><th scope="col">Successful shifts</th><th scope="col">On-time units</th><th scope="col">Calls and spend</th></tr></thead>
+          <tbody id="credit-scores"></tbody>
+        </table>
+      </div>
+      <p class="explain" id="credit-cost"></p>
+      <details class="case-list"><summary>Inspect the follow-up scenarios</summary>
+        <div class="pilot-table-wrap" tabindex="0" role="region" aria-label="Paired decision-level credit test scenarios">
+          <table class="pilot-table"><caption>On-time units / committed units for each operator on the same seed</caption>
+            <thead><tr><th scope="col">Scenario</th><th scope="col">Base</th><th scope="col">With adapter</th><th scope="col">Dispatcher</th></tr></thead>
+            <tbody id="credit-cases"></tbody>
+          </table>
+        </div>
+      </details>
+      <ul class="artifact-list">
+        <li><a href="https://github.com/Arhaan2/evalsim-dispatch/tree/main/training/language-model/decision-credit">Decision-level method ↗</a></li>
+        <li><a href="./data/llm-credit/results.json" download="decision-level-results.json">Follow-up results ↓</a></li>
+        <li><a href="./data/llm-credit/adapter.json" download="decision-level-adapter.json">Follow-up adapter ↓</a></li>
+        <li><a href="./data/llm-credit/trace-base.json" download="decision-level-base-trace.json">Frozen Qwen trace ↓</a></li>
+        <li><a href="./data/llm-credit/trace-trained.json" download="decision-level-trained-trace.json">Adapter trace ↓</a></li>
+        <li><a href="./data/llm-credit/trace-dispatcher.json" download="decision-level-dispatcher-trace.json">Dispatcher trace ↓</a></li>
+      </ul>
     </section>
     <section class="pilot-section" aria-labelledby="design-title">
       <h2 id="design-title">How the pilot works</h2>
