@@ -1,6 +1,12 @@
 # EvalSim DISPATCH
 
-[Play the booking lab](https://arhaan2.github.io/evalsim-dispatch/booking.html) · [Benchmark your agent](BOOKING.md) · [Play the survey lab](https://arhaan2.github.io/evalsim-dispatch/survey.html) · [Play the rally lab](https://arhaan2.github.io/evalsim-dispatch/rally.html) · [Play expert routing](https://arhaan2.github.io/evalsim-dispatch/trust.html) · [Play hot and cold closes](https://arhaan2.github.io/evalsim-dispatch/closes.html) · [Play Demand Turns](https://arhaan2.github.io/evalsim-dispatch/turns.html) · [Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html) · [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+[Play the paid survey lab](https://arhaan2.github.io/evalsim-dispatch/paid.html) · [Benchmark your agent](PAID.md) · [Play the booking lab](https://arhaan2.github.io/evalsim-dispatch/booking.html) · [Play the survey lab](https://arhaan2.github.io/evalsim-dispatch/survey.html) · [Play the rally lab](https://arhaan2.github.io/evalsim-dispatch/rally.html) · [Play expert routing](https://arhaan2.github.io/evalsim-dispatch/trust.html) · [Play hot and cold closes](https://arhaan2.github.io/evalsim-dispatch/closes.html) · [Play Demand Turns](https://arhaan2.github.io/evalsim-dispatch/turns.html) · [Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html) · [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+
+## Is a fresh demand survey worth buying?
+
+Before wave six, both dispatchers can purchase a fresh six-sample reading. Play the choice with one truck slot open, then compare the fee with what the next load actually earned. [Play the desk](https://arhaan2.github.io/evalsim-dispatch/paid.html)
+
+At one credit, both the trained agent and the survey-aware planner skipped all 8,192 fresh surveys. When the agent was forced to buy, it changed 185 booking sequences and lost 1.04 net credits per shift. Against the survey-aware planner it earned +0.02 on fresh hot-ending drops (paired 95% interval −0.02 to +0.06) and −0.21 on fresh cold-ending reversals (−0.33 to −0.09). It recovered the historical interrupted-drop gains and finished 0.01 behind the survey-aware planner there (−0.08 to +0.05). [Study results](training/paid/) · [Run your own agent](PAID.md)
 
 ## When should a dispatcher book before the final survey?
 

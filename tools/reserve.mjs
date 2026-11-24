@@ -24,7 +24,12 @@ import { SURVEY_SUITE, surveyCases } from "../docs/lib/survey.js";
 import { benchmarkBooking, bookingReferences, bookingWeights, verifyBookingReport, BOOKING_EVALUATION_SPLITS } from "../docs/lib/booking-benchmark.js";
 import { BOOKING_SUITE, bookingCases } from "../docs/lib/booking.js";
 
+import { benchmarkPaid, paidReferences, paidWeights, verifyPaidReport, PAID_EVALUATION_SPLITS } from "../docs/lib/paid-benchmark.js";
+import { PAID_SUITE, paidCases } from "../docs/lib/paid.js";
+
 const labs = {
+  paid: { id: PAID_SUITE.id, cases: paidCases, references: paidReferences, benchmark: benchmarkPaid,
+    verify: verifyPaidReport, splits: PAID_EVALUATION_SPLITS },
   reserve: { id: RESERVE_SUITE.id, cases: reserveCases, references: reserveReferences, benchmark: benchmarkReserve, verify: verifyReserveReport },
   drift: { id: DRIFT_SUITE.id, cases: driftCases, references: driftReferences, benchmark: benchmarkDrift, verify: verifyDriftReport },
   turns: { id: TURNS_SUITE.id, cases: turnsCases, references: turnsReferences, benchmark: benchmarkTurns,
@@ -51,6 +56,10 @@ async function loadCheckpoint(name) {
 }
 
 async function loadWeights(lab) {
+  if (lab === labs.paid) {
+    const releases = await Promise.all(["paid", "booking", "survey", "rally", "trust", "closes", "drift", "turns"].map(loadRelease));
+    return paidWeights(...releases);
+  }
   if (lab === labs.booking) {
     const releases = await Promise.all(["booking", "survey", "rally", "trust", "closes", "drift", "turns"].map(loadRelease));
     return bookingWeights(...releases);
@@ -102,17 +111,24 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --suite booking --policy ./examples/reserve-agent.mjs --out booking.json
   node tools/reserve.mjs --suite booking --split retention --policy rl
   node tools/reserve.mjs --suite booking --split archive --policy survey
+  node tools/reserve.mjs --suite paid --policy ./examples/paid-agent.mjs --out paid.json
+  node tools/reserve.mjs --suite paid --split retention --policy planner
+  node tools/reserve.mjs --suite paid --split archive -- python3 examples/paid_agent.py
   node tools/reserve.mjs --out python-result.json -- python3 examples/reserve_agent.py
   node tools/reserve.mjs --manifest
   node tools/reserve.mjs --verify my-result.json
 
---suite NAME              reserve (default), drift, turns, closes, trust, rally, survey or booking.
+--suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking or paid.
 --split NAME              test or validation. Turns, Closes, Trust, Rally, Survey and Booking also offer retention.
                           The Trust archive replays all eight previous Closes patterns on new seeds.
                           The Rally archive replays the eight previous Trust test patterns on new seeds.
                           The Survey archive replays the eight previous Rally test patterns on new seeds.
                           The Booking archive replays the eight previous Survey test patterns on new seeds.
+                          Paid offers test, validation, retention, archive (Booking) and surveyArchive (Survey).
 --policy NAME|PATH        Local ES module, or a reference. Every suite offers rl and stochastic.
+                          Paid uses planner for the optional survey planner. Its rlNever, rlAlways,
+                          plannerNever and plannerAlways force the purchase decision at the one-credit fee.
+                          Free controls are shown alongside every report at a separate zero fee.
                           Reserve adds planner. Drift adds adaptive, legacy and the new turns policy.
                           Turns adds adaptive and the previous drift policy. rl selects the new agent.
                           Closes adds ablated (same training without history), turns, drift and adaptive.
@@ -192,6 +208,9 @@ function display(report) {
     binary: "two-expert router", votes: "reduced-input router", closes: "Closes history RL", trust: "Trust router",
     rally: "Rally agent", always: "always use survey", never: "never use survey", survey: "Survey agent",
     equal: "equal-weight learner", earlyPlanner: "planner then Survey", earlyRally: "Rally then Survey" };
+  const isPaid = report.suite === PAID_SUITE.id;
+  if (isPaid) Object.assign(labels, { planner: "paid survey planner", booking: "Booking agent", rlNever: "RL skip", rlAlways: "RL buy",
+    rlFree: "RL free survey", plannerNever: "planner skip", plannerAlways: "planner buy", plannerFree: "planner free survey" });
   console.log(report.suite + " / " + report.split + " / " + report.policy);
   console.log("Mean net credits per shift");
   console.table(Object.entries({ all: report.summary.all, ...report.summary.byFamily }).map(([family, group]) => ({
@@ -203,6 +222,10 @@ function display(report) {
     console.log(reference + ": " + number(result.delta) + " credits (95% interval " +
       result.interval95.map(number).join(" to ") + "); " + result.wins + " wins / " +
       result.ties + " ties / " + result.losses + " losses");
+  }
+  if (isPaid) {
+    const fees = report.cases.reduce((total,row) => total + row.feePaid,0);
+    console.log("Survey purchases: " + fees + " / " + report.cases.length + " shifts. Total survey fees: " + fees + " credits.");
   }
   if (report.summary.byStratum) {
     console.log("Mean paired differences by demand pattern type");
@@ -221,7 +244,7 @@ function display(report) {
     const intervalHeading = { survey: "95% vs Survey", rally: "95% vs Rally", trust: "95% vs Trust", closes: "95% vs Closes", ablated: "95% vs no history" }[other];
     for (const [pattern, endings] of Object.entries(report.summary.byStratumEnding)) {
       for (const [ending, group] of Object.entries(endings)) {
-        const planner = group.references.stochastic;
+        const planner = group.references[isPaid ? "planner" : "stochastic"];
         const paired = group.references[other];
         comparisons.push({ pattern, ending, shifts: group.shifts, agent: number(group.mean),
           "agent minus planner": number(planner.delta), "95% vs planner": planner.interval95.map(number).join(" to "),
@@ -272,6 +295,9 @@ async function main() {
   if (lab === labs.drift && policy === "turns" && !command.length) {
     const { weights: turnsWeights } = await loadCheckpoint("turns");
     available.turns = observation => chooseTurns(observation, turnsWeights);
+  }
+  if (lab === labs.paid && !command.length && ["rlFree","plannerFree"].includes(policy)) {
+    throw new Error("The official tariff is one credit. Both zero-fee controls appear in every paid benchmark report.");
   }
   const agent = command.length ? await programAgent(command, timeout) : await moduleAgent(policy, available);
   try {

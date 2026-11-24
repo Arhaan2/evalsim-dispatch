@@ -2,6 +2,8 @@
 
 Two trucks can accept two of the eight offers in a shift. The final survey arrives at wave seven. The new agent learns when to book and when to wait during the first six waves. The released Survey agent handles the last two decisions with whatever capacity the early policy leaves. [Play the desk](https://arhaan2.github.io/evalsim-dispatch/booking.html) · [Open the scorecard](https://arhaan2.github.io/evalsim-dispatch/booking.html#benchmark)
 
+The follow-up study gives the learned dispatcher and the planner a priced option to get fresh information before the sixth signed offer. [Try the paid survey benchmark](PAID.md)
+
 ## What the published agent earned
 
 | Market | Shifts | Mean advantage over the planner in credits | Paired 95% interval |
