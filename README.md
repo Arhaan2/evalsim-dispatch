@@ -1,6 +1,12 @@
 # EvalSim DISPATCH
 
-[Play the one-slot survey lab](https://arhaan2.github.io/evalsim-dispatch/lastslot.html) · [Benchmark your agent on Last Slot](LASTSLOT.md) · [Play the variable-price lab](https://arhaan2.github.io/evalsim-dispatch/tariff.html) · [Benchmark your agent](TARIFF.md) · [Play the paid survey lab](https://arhaan2.github.io/evalsim-dispatch/paid.html) · [Play the booking lab](https://arhaan2.github.io/evalsim-dispatch/booking.html) · [Play the survey lab](https://arhaan2.github.io/evalsim-dispatch/survey.html) · [Play the rally lab](https://arhaan2.github.io/evalsim-dispatch/rally.html) · [Play expert routing](https://arhaan2.github.io/evalsim-dispatch/trust.html) · [Play hot and cold closes](https://arhaan2.github.io/evalsim-dispatch/closes.html) · [Play Demand Turns](https://arhaan2.github.io/evalsim-dispatch/turns.html) · [Play Demand Shift](https://arhaan2.github.io/evalsim-dispatch/drift.html) · [Play Freight Reserve](https://arhaan2.github.io/evalsim-dispatch/reserve.html) · [Play Inventory Cutoff](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/)
+[Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Play the load-choice lab](https://arhaan2.github.io/evalsim-dispatch/loadchoice.html) · [Benchmark your own agent](LOADCHOICE.md) · [Open the original simulator](https://arhaan2.github.io/evalsim-dispatch/)
+
+## Does the survey change which load the dispatcher books?
+
+The latest agent learns when to book or wait on each of the final offers with one truck slot left. On fresh cold reversals, its paid surveys changed the booked load 21 times. Six changes earned more freight credits and 15 earned fewer. On hot-ending drops, 64 of its 101 changes increased freight earnings.
+
+Across six positive fees, the agent gained **0.204 net credits per hot drop** against the fee-aware planner (paired 95% interval +0.112 to +0.301). It trailed the planner by **0.052 per cold reversal** (−0.098 to −0.002). Neither target established a gain over the identical agent forced to skip. On the original interrupted drop it preserved the historical gains, earning 10.80 more credits than the legacy planner and 1.40 more than Booking. [Study results](https://arhaan2.github.io/evalsim-dispatch/loadchoice.html#benchmark) · [Replay changed loads](https://arhaan2.github.io/evalsim-dispatch/loadchoice.html#slot-example) · [Methods and independent audit](training/loadchoice/)
 
 ## When is a survey worth buying with one truck slot left?
 

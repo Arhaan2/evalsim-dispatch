@@ -1,0 +1,15 @@
+.loadchoice .page-heading p { font-size:clamp(1.08rem,2vw,1.33rem); max-width:59ch; }
+.loadchoice .page-heading .section-links { margin-top:.45rem; }
+.loadchoice .page-heading .section-links a { font-weight:550; }
+.loadchoice #benchmark { margin-top:1.4rem; }
+.loadchoice .study-verdict { background:var(--accent-ink); color:var(--white); margin:.85rem 0; padding:1.1rem 1.35rem; font-size:1.12rem; max-width:65rem; line-height:1.5; }
+.loadchoice #session { margin-top:clamp(2rem,4vw,4rem); }
+.loadchoice :is(#load-mechanism,#acquisition) > h3, .loadchoice .method-list dt { margin:.95rem 0 .25rem; }
+.loadchoice .method-list { max-width:74ch; }
+.loadchoice .method-list dt { font-weight:640; }
+.loadchoice .method-list dd { margin:0; color:var(--muted); }
+.loadchoice #worked-examples table { min-width:24rem; }
+.loadchoice .section-links a { white-space:normal; }
+.loadchoice #worked-examples section h3 { margin-top:.3rem; }
+.loadchoice #load-mechanism .grid-scroll, .loadchoice #worked-examples .grid-scroll { margin-block:.55rem; }
+@media(max-width:700px){.loadchoice #worked-examples table { min-width:0; } .loadchoice #worked-examples :is(th,td) { white-space:normal; } }

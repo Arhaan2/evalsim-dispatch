@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f8f1">
+  <meta name="description" content="Does a fresh survey change which load an agent books? Compare trained and always-skip policies, inspect matched offers and benchmark your own agent.">
+  <meta property="og:title" content="Choosing the final load · EvalSim DISPATCH">
+  <meta property="og:description" content="Set the survey price and benchmark your agent on the same freight shifts as the trained dispatcher and planner.">
+  <meta property="og:type" content="website">
+  <title>Choosing the final load · EvalSim DISPATCH</title>
+  <link rel="icon" href="./assets/mark.svg?v=2" type="image/svg+xml">
+  <link rel="preload" href="./assets/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./reserve.css">
+  <link rel="stylesheet" href="./closes.css">
+  <link rel="stylesheet" href="./paid.css">
+  <link rel="stylesheet" href="./tariff.css">
+  <link rel="stylesheet" href="./lastslot.css">
+  <link rel="stylesheet" href="./loadchoice.css">
+  <script type="module" src="./loadchoice.js"></script>
+</head>
+<body class="reserve closes paid tariff lastslot loadchoice">
+<a class="skip" href="#desk">Skip to study</a>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand-row"><a class="brand" href="./" aria-label="EvalSim DISPATCH home"><img src="./assets/mark.svg?v=2" width="28" height="28" alt=""><span>EvalSim<span class="brand-period" aria-hidden="true">.</span></span></a><span class="product">Dispatch</span></div>
+    <nav class="primary-nav" aria-label="Workspace"><a href="./studies.html">Study library</a><a href="./loadchoice.html" class="current" aria-current="page">Choosing the final load</a><a href="./lastslot.html">Previous one-slot study</a><a href="./index.html">DISPATCH simulator</a></nav>
+    <nav class="resource-nav" aria-label="Project"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/loadchoice-v1.0.0/LOADCHOICE.md">Benchmark guide ↗</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Contact EvalSim ↗</a></nav>
+  </aside>
+  <main id="desk">
+    <header class="page-heading"><h1>Choosing the final load</h1>
+      <p>One slot is open. Three offers remain. Can a trained dispatcher use a six-sample demand survey to book a more valuable load?</p>
+      <nav class="section-links" aria-label="In this study"><a href="#benchmark">Results</a><a href="#load-decisions">Load changes</a><a href="#slot-example">Paired replays</a><a href="#methods">Methods</a><a href="#session">Play a shift</a><a href="#own-agent">Test your agent</a></nav>
+    </header>
+    <section id="benchmark" class="lab-section" aria-labelledby="score-title"><h2 id="score-title">Earnings after fees</h2>
+      <p class="description">Each dispatcher starts at wave one. On each target market the trained agent must beat its own always-skip policy and the independently acting planner, after paying for information.</p>
+      <p class="study-verdict" id="study-verdict">After fees, the agent beat the planner on fresh hot drops. The planner led on cold reversals. Neither market showed a reliable gain over always skipping. The original interrupted-drop gains held.</p>
+      <noscript><p>Across 24,576 priced shifts per target, cold reversals averaged −0.052 credits versus the planner (paired 95% interval −0.098 to −0.002) and −0.0103 versus always skipping (−0.0234 to +0.0004). Hot drops averaged +0.204 versus the planner (+0.112 to +0.301) and +0.0038 versus skipping (−0.0138 to +0.0201).</p><p>On the original interrupted drop the agent led the historical planner by 10.80 credits and Booking by 1.40. The current fee-aware planner led by 0.29. See the <a href="https://github.com/Arhaan2/evalsim-dispatch/tree/loadchoice-v1.0.0/training/loadchoice">full training record and all comparisons</a>.</p></noscript>
+      <p id="load-status" role="status">Loading trained policies and scores…</p><div id="scorecard"></div>
+      <div class="section-links"><a href="./data/loadchoice/results.json">Download results JSON</a><a href="https://github.com/Arhaan2/evalsim-dispatch/tree/loadchoice-v1.0.0/training/loadchoice">Training study ↗</a></div>
+    </section>
+    <section id="load-decisions" class="lab-section" aria-labelledby="value-title">
+      <h2 id="value-title">Which purchases changed the last load?</h2>
+      <p class="description">Replay the same freight twice, with the reading visible and hidden. A different booking can earn more, earn less or yield the same freight credits.</p>
+      <div id="load-mechanism"></div>
+      <div id="acquisition"></div>
+    </section>
+    <section id="slot-example" class="lab-section" aria-labelledby="example-title"><h2 id="example-title">Trace a pair of bookings</h2><p class="description">The study selects the first higher- and lower-paying examples in each target where possible, giving actual purchases priority. The counts above show how frequently each outcome occurred.</p><div id="worked-examples"></div></section>
+    <section id="methods" class="lab-section" aria-labelledby="methods-title"><h2 id="methods-title">How to read this experiment</h2>
+      <dl class="method-list">
+        <dt>What was trained?</dt><dd id="policy-method">The agent learns booking values from sampled freight earnings on separate sets of training shifts, working backward from the final offer. It learns the returns from using a purchased reading and from using public history alone. A separate training set prices the difference. Five seeds were fit and seed 13 was designated for release before testing.</dd>
+        <dt>What counts as a win?</dt><dd>On both fresh targets, the lower paired 95% bound must exceed zero against each control. On original interrupted drops, all prespecified historical retention margins must hold. The six positive prices enter the primary comparisons equally. Free surveys are a separate control.</dd>
+        <dt>What counts as a new shift?</dt><dd>Eight unseen openings each have a hot and a cold ending. Each opening and seed shares its five-wave history across endings. The same underlying offers and potential readings repeat across prices. Bootstrap intervals resample whole seeds, keeping the prices and endings together.</dd>
+        <dt>Which comparison isolates buying?</dt><dd>Always skipping uses the same freight policy as the trained agent. The independent planner chooses its own bookings and survey decisions. The one-slot comparison also gives each policy the same opening and the same unused slot.</dd>
+      </dl>
+      <details id="training-runs">
+        <summary>Across the five training runs</summary>
+        <p class="description">Training seed 13 was fixed for release before evaluation. Two of five fits earned more than the planner on hot drops and none earned more on cold reversals. Each cell is a mean difference in net credits per positive-price shift. The full results file includes each fit’s paired 95% interval.</p>
+        <div class="grid-scroll" tabindex="0" role="region" aria-label="All five independent fits compared with both controls">
+          <table><caption class="sr">Mean net credits per shift above the control on each fresh target</caption>
+            <thead><tr><th scope="col">Training seed</th><th scope="col">Cold vs skip</th><th scope="col">Cold vs planner</th><th scope="col">Hot vs skip</th><th scope="col">Hot vs planner</th></tr></thead><tbody>
+              <tr><th scope="row">13 · release</th><td>−0.0103</td><td>−0.0521</td><td>+0.0038</td><td>+0.2041</td></tr>
+              <tr><th scope="row">37</th><td>−0.0080</td><td>−0.0454</td><td>+0.0016</td><td>+0.2289</td></tr>
+              <tr><th scope="row">73</th><td>−0.0057</td><td>−0.0906</td><td>+0.0030</td><td>−0.0555</td></tr>
+              <tr><th scope="row">101</th><td>+0.0213</td><td>−0.0821</td><td>+0.0094</td><td>−0.0539</td></tr>
+              <tr><th scope="row">211</th><td>−0.0180</td><td>−0.0652</td><td>+0.0040</td><td>−0.0544</td></tr>
+            </tbody></table>
+        </div>
+      </details>
+      <div class="section-links"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/b5d2012/training/loadchoice/protocol.mjs">Protocol frozen before training ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/loadchoice-v1.0.0/training/loadchoice/audit.mjs">Independent audit code ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch/tree/loadchoice-v1.0.0/training/loadchoice">Reproduce the fits ↗</a><a href="./lastslot.html#benchmark">Previous one-slot results →</a></div>
+    </section>
+    <noscript><p>The paired replay and interactive shift use JavaScript. The <a href="https://github.com/Arhaan2/evalsim-dispatch/blob/loadchoice-v1.0.0/LOADCHOICE.md">offline benchmark guide</a> includes both starters.</p></noscript>
+    <section id="session" hidden aria-labelledby="session-heading" data-ui>
+      <div class="section-line"><h2 id="session-heading">Play the final slot</h2><span id="active-config"></span></div>
+      <form id="price-form"><div class="price-control"><label for="price">Survey price in credits</label><output id="price-label" for="price">0.10</output><input id="price" type="range" min="0" max="100" step="1" value="10" aria-describedby="price-help"><span class="range-low" aria-hidden="true">0</span><span class="range-high" aria-hidden="true">1 credit</span></div><div class="price-submit"><button type="submit" id="apply-price">Apply price</button><p id="price-help">Changing the price keeps your opening and reopens the survey window if you have passed it.</p></div></form>
+      <div class="desk-grid">
+        <div class="offer-panel">
+          <div class="offer-head"><h3 id="offer-heading" tabindex="-1"></h3><span id="wave"></span></div>
+          <div id="amount"><strong id="net-offer"></strong><span id="amount-label"></span></div>
+          <p id="offer-detail"></p>
+          <div id="received" hidden><span id="reading-marks" aria-hidden="true"></span><p id="received-reading"></p></div>
+          <details id="advice" hidden><summary>Inspect decision values</summary><div id="live-estimates"></div></details>
+          <div id="slot-board"><span id="slot-tiles" aria-hidden="true"></span><p id="slot-count"></p></div>
+          <div class="actions"><button type="button" id="accept"></button><button type="button" id="pass"></button><button type="button" id="again" hidden>Play from wave one</button></div>
+        </div>
+        <div class="forecast-panel"><h3>Freight board</h3><p id="forecast-note">The public bulletin updates at waves four and seven and reflects demand two waves earlier.</p>
+          <div class="grid-scroll" tabindex="0" role="region" aria-label="Forecast and revealed offers by wave"><table><caption class="sr">Public price range, posted chance of a high offer, signed price and your decisions</caption><thead><tr><th scope="col">Wave</th><th scope="col">Low / high</th><th scope="col">High chance</th><th scope="col">Offer</th><th scope="col">Your call</th></tr></thead><tbody id="forecast"></tbody></table></div>
+        </div>
+      </div>
+      <div class="shift-foot"><p id="current-score"></p><div><a id="share" href="./lastslot.html">Link to this run</a><button id="reset" type="button">Start at wave one</button></div></div>
+      <p class="status" id="status" role="status"></p>
+      <details id="config"><summary>Choose another shift</summary>
+        <form id="case-form"><label>Blind case<select id="family"></select></label><label>Shift seed<input type="text" inputmode="numeric" id="seed" maxlength="10" pattern="[0-9]{1,10}" required></label><button type="submit">Load shift</button></form>
+      </details>
+      <p class="result-note" id="reveal-hint">After your survey decision, you can reveal the shift and compare agents.</p>
+      <details id="compare" hidden><summary>Reveal the shift and compare agents</summary>
+        <p class="description">Reveal all eight freight offers, the survey reading and each dispatcher’s ledger.</p><div id="comparison"></div>
+      </details>
+    </section>
+    <section id="own-agent" class="lab-section" aria-labelledby="agent-title"><h2 id="agent-title">Benchmark your agent</h2>
+      <p class="description">Run your own JavaScript or Python dispatcher on the same shifts. Start on validation, then score the fresh test bank. Your dispatcher sees the price from wave one. After five offers, it returns <code>buy</code> or <code>skip</code> before it sees the sixth offer.</p>
+      <pre><code>git clone --branch loadchoice-v1.0.0 https://github.com/Arhaan2/evalsim-dispatch.git
+cd evalsim-dispatch
+node tools/reserve.mjs --suite loadchoice --split validation --policy ./examples/lastslot-agent.mjs --out validation.json
+node tools/reserve.mjs --suite loadchoice --split test --policy ./examples/lastslot-agent.mjs --out test.json
+node tools/reserve.mjs --verify test.json</code></pre>
+      <div class="section-links"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/loadchoice-v1.0.0/LOADCHOICE.md">Benchmark guide ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/loadchoice-v1.0.0/examples/lastslot-agent.mjs">JavaScript starter ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/loadchoice-v1.0.0/examples/lastslot_agent.py">Python starter ↗</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Discuss your workflow ↗</a></div>
+      <div id="upload" hidden><label for="report-file"><strong>Verify your report</strong></label><p class="description" id="upload-help">Choose a validation, test, retention or archive report. Your browser replays the decisions locally and checks the charges against the published bank.</p><input type="file" id="report-file" accept=".json,application/json" aria-describedby="upload-help"><p id="report-status" role="status"></p><div id="report-result"></div></div>
+    </section>
+    <footer><a href="./studies.html">Return to the study library</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Contact EvalSim ↗</a></footer>
+  </main>
+</div>
+</body>
+</html>
