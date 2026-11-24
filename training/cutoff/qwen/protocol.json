@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "name": "Qwen cutoff imitation and RL",
+  "replicates": [1709, 4201, 7919],
+  "demoStart": 110000,
+  "rlStart": 120000,
+  "replicateStride": 100,
+  "demoSeeds": 6,
+  "demoPasses": 2,
+  "demoBatch": 6,
+  "rlSeeds": 8,
+  "rolloutsPerGroup": 4,
+  "temperature": 1.6,
+  "testStart": 300000,
+  "testSeeds": 24,
+  "families": ["urgent", "uncertain"],
+  "variants": [0, 1],
+  "bootstrapDraws": 2000,
+  "bootstrapSeed": 52601,
+  "selection": "Use the final imitation checkpoint and its final RL continuation in every replicate. Freeze all training checkpoints before any test episode.",
+  "primary": "Greedy strict shift success on identical paired cases. Estimate the mean RL-minus-imitation difference over three training replicates and 24 seed clusters; resample replicates and seed clusters with replacement, preserving all paired arms, families, and twins."
+}

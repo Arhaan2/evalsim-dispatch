@@ -15,14 +15,14 @@
 .pilot-table tbody td, .pilot-table tbody th { padding-top: .7rem; padding-bottom: .7rem; }
 .pilot-table caption { text-align: left; font-size: .85rem; color: var(--muted); margin: 0 0 .4rem; }
 .pilot-table small { display: block; color: var(--muted); font-size: max(12px, .79rem); font-weight: 420; }
-.pilot-table .trained-row th { color: var(--blue); }
+.pilot-table .trained-row th { color: var(--accent-ink); }
 .case-list { margin-top: .55rem; }
 .pilot summary { cursor: pointer; width: fit-content; font-size: .86rem; font-weight: 520; padding: .6rem 0; }
 .transport { display: flex; align-items: center; gap: .8rem; padding: .62rem .75rem; border: 1px solid var(--border); border-radius: 5px; background: var(--soft); width: min(100%, 45rem); margin: 1rem 0 .55rem; }
 .transport button { font-size: 1.16rem; width: 42px; height: 42px; border: 1px solid var(--border); background: white; border-radius: 4px; }
 .transport button:hover:enabled { border-color: var(--muted); }
 .transport label { display: flex; flex-wrap: wrap; align-items: center; flex: 1; min-width: 0; gap: .48rem 1rem; font-size: .86rem; font-variant-numeric: tabular-nums; }
-.transport input { accent-color: var(--blue); flex: 1; min-width: 65px; cursor: pointer; margin: 0; }
+.transport input { accent-color: var(--accent-ink); flex: 1; min-width: 65px; cursor: pointer; margin: 0; }
 .comparison { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 0 1.4rem; }
 .record { min-width: 0; padding: .9rem 0 .45rem; }
 .record header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: .15rem .45rem; }

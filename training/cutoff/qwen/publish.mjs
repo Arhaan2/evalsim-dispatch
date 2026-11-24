@@ -1,0 +1,21 @@
+import { matchedCpu } from './matched-cpu.mjs';
+import { behavior, callCounts } from './behavior.mjs';
+import { readFile, rename, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { hash } from './model.mjs';
+
+const resultFile = process.argv[2];
+if (!resultFile) throw new Error('Usage: node publish.mjs RESULT_JSON');
+const result = JSON.parse(await readFile(resultFile));
+if (result.transcript) throw new Error('This result already contains a transcript reference.');
+const { training, evaluations, ...report } = result;
+const transcript = JSON.stringify({ training, evaluations }) + '\n';
+const folder = dirname(resultFile), file = 'qwen/transcript.json';
+await writeFile(join(folder, file + '.tmp'), transcript);
+await rename(join(folder, file + '.tmp'), join(folder, file));
+report.matchedCpu = await matchedCpu();
+report.callCounts = callCounts(training, evaluations);
+report.behavior = behavior(evaluations);
+report.transcript = { file, sha256: hash(transcript) };
+await writeFile(resultFile + '.tmp', JSON.stringify(report, null, 2) + '\n');
+await rename(resultFile + '.tmp', resultFile);

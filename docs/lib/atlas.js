@@ -244,7 +244,7 @@ function terminal(x, y, small = false) {
     '<path d="m-29 3 17-8 15 5-17 9z" fill="#839a9a"/><path d="m-29 3 15 6v4l-15-6z" fill="#859486"/><path d="m-14 9 17-9v4l-17 9z" fill="#697e77"/>';
   out +=
     '<path d="m-25 2 13-6m-9 8 13-6m-9 8 13-6" stroke="#acb9b3" fill="none" stroke-width=".7"/>';
-  const colors = ["#ac7960", "#678c97", "#b49b66", "#8b9990", "#8a7161"];
+  const colors = ["#87977f", "#668372", "#b8c994", "#8b9990", "#52665b"];
   for (let row = 0; row < 3; row++)
     for (let col = 0; col < 4; col++) {
       const tx = -6 + col * 7 - row * 5,
@@ -318,7 +318,7 @@ function terrain(key) {
       x.toFixed(1) +
       " " +
       y.toFixed(1) +
-      'q3 -1 7 -.4" stroke="#a0c3c6" opacity=".8" fill="none" stroke-width=".8"/>';
+      'q3 -1 7 -.4" stroke="#9ebba8" opacity=".8" fill="none" stroke-width=".8"/>';
   }
   let streets = "";
   for (const d of [
@@ -348,16 +348,16 @@ function terrain(key) {
     north +
     '"/><path d="' +
     south +
-    '"/></clipPath></defs><rect width="800" height="366" fill="#b9d8d8"/>' +
+    '"/></clipPath></defs><rect width="800" height="366" fill="#bad0c0"/>' +
     ripples +
     [north, south, island]
       .map(
         (d) =>
           '<path d="' +
           d +
-          '" fill="#cfdbc4" stroke="#c6e2df" stroke-width="13" stroke-linejoin="round"/><path d="' +
+          '" fill="#e5eade" stroke="#d1dfd0" stroke-width="13" stroke-linejoin="round"/><path d="' +
           d +
-          '" fill="#d8deca" stroke="#a9bbaa" stroke-width="1"/>',
+          '" fill="#e5eade" stroke="#a9bbaa" stroke-width="1"/>',
       )
       .join("") +
     '<g clip-path="url(#' +
@@ -438,7 +438,7 @@ export function createAtlas(svg, key) {
     Object.entries(locations)
       .map(([id, node]) => marker(id, node))
       .join("") +
-    '</g><g class="compass" transform="translate(768 33)" aria-hidden="true"><circle r="15" fill="#fafbf1" opacity=".93"/><path d="m0-10 4 14-4-3-4 3z" fill="#3c5050"/><text y="26" text-anchor="middle">N</text></g>';
+    '</g><g class="compass" transform="translate(768 33)" aria-hidden="true"><circle r="15" fill="#fffefa" opacity=".93"/><path d="m0-10 4 14-4-3-4 3z" fill="#3c5050"/><text y="26" text-anchor="middle">N</text></g>';
   let previousRoutes = "",
     previousTick = null,
     animation = 0;
@@ -531,7 +531,7 @@ export function createAtlas(svg, key) {
           escapeText(sh.quantity) +
           " units · " +
           locations[sh.destination].name +
-          '</title><rect x="-6" y="-4" width="12" height="8" rx="1.8" fill="#fff" stroke="#183e66" stroke-width="1.5"/><path d="M-4-2h5v4h-5zM2 0h2v2H2z" fill="#226aa2"/></g>',
+          '</title><rect x="-6" y="-4" width="12" height="8" rx="1.8" fill="#fff" stroke="#142b23" stroke-width="1.5"/><path d="M-4-2h5v4h-5zM2 0h2v2H2z" fill="#375d48"/></g>',
       );
       moving.push({
         path,

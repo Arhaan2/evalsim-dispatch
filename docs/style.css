@@ -12,14 +12,17 @@
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
-  color: #202521;
-  background: #fff;
-  --ink: #202521;
-  --muted: #59635e;
-  --subtle: #68716c;
-  --border: #dfe3dd;
-  --soft: #f5f6f3;
-  --blue: #216ea5;
+  color: var(--ink);
+  background: var(--paper);
+  --paper: #f8f8f1;
+  --white: #fffefa;
+  --lime: #dbf985;
+  --ink: #142b23;
+  --muted: #4d6054;
+  --subtle: #4d6054;
+  --border: #c6cfc1;
+  --soft: #e5eade;
+  --accent-ink: #1d382e;
   --pad: clamp(1.1rem, 2.8vw, 3.5rem);
   --side: clamp(13.5rem, 17.8vw, 17rem);
   font-synthesis: none;
@@ -70,7 +73,7 @@ input:focus-visible,
 select:focus-visible,
 summary:focus-visible,
 .station:focus-visible {
-  outline: 3px solid #206da9;
+  outline: 3px solid var(--ink);
   outline-offset: 3px;
 }
 button:active:not(:disabled) {
@@ -89,7 +92,7 @@ button:active:not(:disabled) {
 }
 .skip:focus {
   position: absolute;
-  background: #fff;
+  background: var(--white);
   z-index: 10;
   padding: 10px;
 }
@@ -112,7 +115,7 @@ button:active:not(:disabled) {
   min-height: 100svh;
 }
 .sidebar {
-  background: #f4f6f3;
+  background: var(--paper);
   border-right: 1px solid var(--border);
   height: 100svh;
   position: sticky;
@@ -189,13 +192,13 @@ footer a,
   color: var(--muted);
 }
 .primary-nav a.current {
-  background: #e6eae4;
+  background: var(--soft);
   color: var(--ink);
   font-weight: 560;
 }
 .primary-nav a:hover,
 .resource-nav a:hover {
-  background: #e9ece7;
+  background: var(--soft);
   color: var(--ink);
 }
 .setup {
@@ -218,8 +221,8 @@ footer a,
 .setup input,
 .speed select,
 .inspect-select select {
-  border: 1px solid #cfd6cd;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--white);
   border-radius: 5px;
   padding: 0 0.67rem;
   font-size: 0.91rem;
@@ -233,7 +236,7 @@ footer a,
 .inspect-select select {
   padding-right: 1.6rem;
   appearance: none;
-  background: #fff
+  background: var(--white)
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%234a544e' stroke-width='1.4'/%3E%3C/svg%3E")
     no-repeat right 8px center;
 }
@@ -262,8 +265,8 @@ footer a,
   appearance: none;
 }
 .icon-button {
-  background: #fff;
-  border: 1px solid #cfd6cd;
+  background: transparent;
+  border: 1px solid var(--border);
   border-radius: 5px;
   height: 37px;
   width: 38px;
@@ -278,9 +281,9 @@ footer a,
   justify-content: center;
   gap: 7px;
   min-height: 39px;
-  background: #242c26;
-  color: #fff;
-  border: 1px solid #242c26;
+  background: var(--lime);
+  color: var(--ink);
+  border: 1px solid var(--lime);
   border-radius: 5px;
   font-weight: 570;
   font-size: 0.91rem;
@@ -288,7 +291,7 @@ footer a,
   margin-top: 1.3rem;
 }
 .primary:hover:not(:disabled) {
-  background: #344336;
+  background: #e6f8a8;
 }
 .resource-nav {
   margin-top: auto;
@@ -361,7 +364,7 @@ h3 {
   justify-content: center;
   border: 1px solid #d6dcd5;
   border-radius: 5px;
-  background: #fff;
+  background: var(--white);
   font-size: 0.84rem;
   gap: 6px;
   min-height: 32px;
@@ -378,7 +381,7 @@ h3 {
 .maps {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  background: #d6ddc8;
+  background: var(--soft);
 }
 .maps.split {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -412,14 +415,14 @@ h3 {
   overflow: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  scrollbar-color: #869286 #d6ddc8;
+  scrollbar-color: #869286 var(--soft);
 }
 .atlas {
   display: block;
   width: 100%;
   height: auto;
   max-height: clamp(250px, 31.1vw, 490px);
-  background: #d7dfcb;
+  background: var(--soft);
 }
 .maps.split .atlas {
   max-height: none;
@@ -448,8 +451,8 @@ h3 {
 .key-diamond {
   width: 8px;
   height: 8px;
-  border: 1.5px solid #274b60;
-  background: #3d6c7b;
+  border: 1.5px solid #142b23;
+  background: #285341;
 }
 .key-diamond {
   transform: rotate(45deg);
@@ -461,7 +464,7 @@ h3 {
   height: 8px;
   border: 1.5px solid #47574d;
   border-radius: 100%;
-  background: #fff;
+  background: var(--white);
 }
 .key-broken {
   width: 15px;
@@ -480,7 +483,7 @@ h3 {
 }
 .playback {
   gap: 0.55rem;
-  background: #f7f8f6;
+  background: var(--paper);
   border-top: 1px solid var(--border);
   padding: 0.6rem 0.95rem;
 }
@@ -489,9 +492,9 @@ h3 {
   height: 33px;
 }
 .playback #play {
-  background: #253128;
+  background: var(--ink);
   color: #fff;
-  border-color: #253128;
+  border-color: var(--ink);
 }
 .timeline {
   display: flex;
@@ -510,7 +513,7 @@ h3 {
   color: var(--ink);
 }
 input[type="range"] {
-  accent-color: #34493b;
+  accent-color: var(--ink);
   min-width: 0;
   height: 22px;
   flex: 1;
@@ -523,7 +526,7 @@ input[type="range"] {
 }
 .node-detail {
   position: relative;
-  background: #f0f4ed;
+  background: var(--soft);
   padding: 0.6rem 0.95rem;
   display: flex;
   gap: 0.55rem;
@@ -563,7 +566,7 @@ input[type="range"] {
   stroke-width: 1.8;
 }
 .station.depot .marker {
-  fill: #3d6c7b;
+  fill: #285341;
   stroke: #eff7ed;
   stroke-width: 2.2;
 }
@@ -575,7 +578,7 @@ input[type="range"] {
 .station.selected .station-label,
 .station:focus-visible .station-label,
 .station:hover .station-label {
-  fill: #203d50;
+  fill: var(--ink);
   opacity: 1;
 }
 .station.selected text,
@@ -605,12 +608,12 @@ input[type="range"] {
   opacity: 0.75;
 }
 .route-line {
-  stroke: #557f8a;
+  stroke: #365b49;
   stroke-width: 1.7;
   opacity: 0.9;
 }
 .inbound .route-line {
-  stroke: #557668;
+  stroke: #4d6054;
   stroke-dasharray: 2.4 3.3;
 }
 .closed .route-line {
@@ -674,11 +677,11 @@ tbody th {
   width: 8px;
   height: 8px;
   border-radius: 2px;
-  background: #2876a7;
+  background: var(--ink);
   margin: -2px 0.45rem 0 0;
 }
 .policy-mark.alt {
-  background: #97a198;
+  background: #718579;
 }
 .xx {
   color: var(--muted);
@@ -807,7 +810,7 @@ tbody th {
 .chart-key i {
   width: 14px;
   height: 2px;
-  background: var(--blue);
+  background: var(--accent-ink);
 }
 .chart-key span + span i {
   height: 0;
@@ -923,7 +926,7 @@ footer > span {
   .brand-row {
     order: 0;
     padding: 1rem 1rem 0.85rem;
-    background: #f4f6f3;
+    background: var(--paper);
     gap: 0.65rem;
   }
   .brand {
@@ -936,8 +939,9 @@ footer > span {
   .primary-nav {
     order: 1;
     display: flex;
+    flex-wrap: wrap;
     gap: 0.35rem;
-    background: #f4f6f3;
+    background: var(--paper);
     padding: 0 0.8rem 0.6rem;
     margin: 0;
     border-bottom: 1px solid var(--border);

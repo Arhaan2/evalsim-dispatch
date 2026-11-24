@@ -1,0 +1,429 @@
+{
+  "version": 1,
+  "protocol": {
+    "version": 1,
+    "name": "Qwen cutoff imitation and RL",
+    "replicates": [
+      1709,
+      4201,
+      7919
+    ],
+    "demoStart": 110000,
+    "rlStart": 120000,
+    "replicateStride": 100,
+    "demoSeeds": 6,
+    "demoPasses": 2,
+    "demoBatch": 6,
+    "rlSeeds": 8,
+    "rolloutsPerGroup": 4,
+    "temperature": 1.6,
+    "testStart": 300000,
+    "testSeeds": 24,
+    "families": [
+      "urgent",
+      "uncertain"
+    ],
+    "variants": [
+      0,
+      1
+    ],
+    "bootstrapDraws": 2000,
+    "bootstrapSeed": 52601,
+    "selection": "Use the final imitation checkpoint and its final RL continuation in every replicate. Freeze all training checkpoints before any test episode.",
+    "primary": "Greedy strict shift success on identical paired cases. Estimate the mean RL-minus-imitation difference over three training replicates and 24 seed clusters; resample replicates and seed clusters with replacement, preserving all paired arms, families, and twins."
+  },
+  "model": {
+    "upstream": "Qwen/Qwen3-4B-Instruct-2507",
+    "sha256": "3605803b982cb64aead44f6c1b2ae36e3acdb41d8e46c8a94c6533bc4c67e597",
+    "runtime": "llama.cpp b12657"
+  },
+  "source": {
+    "protocol.json": "95075919ea8b6ee99309f57d4542be52c7ac9c822c31097ac6d3b236973a1fa9",
+    "model.mjs": "e375b326d657f02ad872659503e639356db295444bcf4be2e3b5bc942a7a0fbe",
+    "experiment.mjs": "22cece5c09c4998744beff4ead1c2416e7e4eab8f7508d3fec663705ff4b1129",
+    "run.mjs": "b25e1d69b1574efa0ec17d1698d7e6c90b579eb3e35a60da3728e251a1c51cfc",
+    "../../language-model/worker.mjs": "276784ddcf425593506e222276de4ff2598447c5618b6feebef191fd9f071933",
+    "../../language-model/adapter.mjs": "2c87721dc66dc935b3fc480f88c8da880beca45bf9f6deaef4d8badbe0ce3238",
+    "../../language-model/protocol.json": "21a381ceb20e6fcb5110892333d61312592d51f0cbb08318b44e74c556c689e8",
+    "../../language-model/encode.cpp": "70f589eb65470196490e0a6dab36ee822050706ad3e73ace78f81f0f9dfb8067",
+    "../../../docs/lib/cutoff.js": "2a8630b2ab56eb738d2f258b5d5342213703d0bdfe050dd060f3ae3a34f5d342"
+  },
+  "checkpoints": [
+    {
+      "sft": {
+        "file": "seed-1709-sft.json",
+        "sha256": "72e414d97bfe0d7d552eead39786d656715f35d3c2d00f52ee3001a519ef7745"
+      },
+      "rl": {
+        "file": "seed-1709-rl.json",
+        "sha256": "da778146030c7c057244dc4af37bc28aa23212af2d526401cce55bff78aa2b7a"
+      }
+    },
+    {
+      "sft": {
+        "file": "seed-4201-sft.json",
+        "sha256": "b2ecb50b3314392aa47fbc3a3fa6752a0ee87759a2367c20307f823f5e638392"
+      },
+      "rl": {
+        "file": "seed-4201-rl.json",
+        "sha256": "2fdd831056ee89f204f0f6cf5e5cf768e5a7661fe3260109a36f4850f468607e"
+      }
+    },
+    {
+      "sft": {
+        "file": "seed-7919-sft.json",
+        "sha256": "5045562371615a572cc47be5b70ac04905373b1408657b6ee4e447b28c32792e"
+      },
+      "rl": {
+        "file": "seed-7919-rl.json",
+        "sha256": "cd13850e3811a94ab9fb18a5e1b77803a98bd6b2c4717653d121e17fc8a23d99"
+      }
+    }
+  ],
+  "summary": {
+    "testCases": 96,
+    "trainingReplicates": 3,
+    "policies": {
+      "planner": {
+        "successes": [
+          96
+        ],
+        "successRate": 1,
+        "perFamily": {
+          "urgent": 1,
+          "uncertain": 1
+        },
+        "inspectionRate": {
+          "urgent": 0,
+          "uncertain": 1
+        }
+      },
+      "noCheck": {
+        "successes": [
+          72
+        ],
+        "successRate": 0.75,
+        "perFamily": {
+          "urgent": 1,
+          "uncertain": 0.5
+        },
+        "inspectionRate": {
+          "urgent": 0,
+          "uncertain": 0
+        }
+      },
+      "frozen": {
+        "successes": [
+          22
+        ],
+        "successRate": 0.22916666666666666,
+        "perFamily": {
+          "urgent": 0,
+          "uncertain": 0.4583333333333333
+        },
+        "inspectionRate": {
+          "urgent": 1,
+          "uncertain": 1
+        }
+      },
+      "sft": {
+        "successes": [
+          48,
+          47,
+          48
+        ],
+        "successRate": 0.49652777777777773,
+        "perFamily": {
+          "urgent": 0.5,
+          "uncertain": 0.4930555555555556
+        },
+        "inspectionRate": {
+          "urgent": 1,
+          "uncertain": 1
+        }
+      },
+      "rl": {
+        "successes": [
+          48,
+          48,
+          48
+        ],
+        "successRate": 0.5,
+        "perFamily": {
+          "urgent": 0.5,
+          "uncertain": 0.5
+        },
+        "inspectionRate": {
+          "urgent": 1,
+          "uncertain": 1
+        }
+      }
+    },
+    "paired": {
+      "wins": 1,
+      "losses": 0,
+      "ties": 287,
+      "meanDifference": 0.003472222222222222,
+      "interval95": [
+        0,
+        0.020833333333333332
+      ]
+    }
+  },
+  "compute": {
+    "node": "v24.18.0",
+    "machine": "Apple M4 Pro",
+    "arch": "arm64",
+    "osRelease": "25.6.0",
+    "training": [
+      {
+        "imitation": {
+          "requests": 60,
+          "forwardPasses": 54,
+          "promptTokens": 16212,
+          "evaluatedTokens": 12608,
+          "cacheHits": 6,
+          "wallSeconds": 20.650183958
+        },
+        "rl": {
+          "requests": 384,
+          "forwardPasses": 81,
+          "promptTokens": 25027,
+          "evaluatedTokens": 19507,
+          "cacheHits": 303,
+          "wallSeconds": 28.890203334
+        }
+      },
+      {
+        "imitation": {
+          "requests": 60,
+          "forwardPasses": 54,
+          "promptTokens": 16290,
+          "evaluatedTokens": 12618,
+          "cacheHits": 6,
+          "wallSeconds": 18.92677995799999
+        },
+        "rl": {
+          "requests": 384,
+          "forwardPasses": 81,
+          "promptTokens": 24883,
+          "evaluatedTokens": 19363,
+          "cacheHits": 303,
+          "wallSeconds": 28.236466209
+        }
+      },
+      {
+        "imitation": {
+          "requests": 60,
+          "forwardPasses": 54,
+          "promptTokens": 16266,
+          "evaluatedTokens": 12594,
+          "cacheHits": 6,
+          "wallSeconds": 18.770371624999996
+        },
+        "rl": {
+          "requests": 385,
+          "forwardPasses": 82,
+          "promptTokens": 25230,
+          "evaluatedTokens": 19606,
+          "cacheHits": 303,
+          "wallSeconds": 29.908210624999995
+        }
+      }
+    ],
+    "evaluation": {
+      "requests": 2304,
+      "forwardPasses": 481,
+      "promptTokens": 156828,
+      "evaluatedTokens": 124090,
+      "cacheHits": 1823,
+      "wallSeconds": 205.12231825000003
+    },
+    "total": {
+      "requests": 3637,
+      "forwardPasses": 887,
+      "promptTokens": 280736,
+      "evaluatedTokens": 220386,
+      "cacheHits": 2750,
+      "wallSeconds": 350.51491366700003
+    }
+  },
+  "matchedCpu": {
+    "testCases": 96,
+    "sourceSha256": "3dc5e06cb6ee30bf8878dfd118f8f059c6e9c8cff7d741bcc09f3c819c2aade4",
+    "runs": [
+      {
+        "seed": 13,
+        "mode": "uniform",
+        "successes": 96,
+        "calls": 358
+      },
+      {
+        "seed": 13,
+        "mode": "progress",
+        "successes": 96,
+        "calls": 380
+      },
+      {
+        "seed": 37,
+        "mode": "uniform",
+        "successes": 96,
+        "calls": 358
+      },
+      {
+        "seed": 37,
+        "mode": "progress",
+        "successes": 96,
+        "calls": 380
+      },
+      {
+        "seed": 73,
+        "mode": "uniform",
+        "successes": 96,
+        "calls": 358
+      },
+      {
+        "seed": 73,
+        "mode": "progress",
+        "successes": 96,
+        "calls": 358
+      },
+      {
+        "seed": 101,
+        "mode": "uniform",
+        "successes": 96,
+        "calls": 380
+      },
+      {
+        "seed": 101,
+        "mode": "progress",
+        "successes": 96,
+        "calls": 358
+      },
+      {
+        "seed": 211,
+        "mode": "uniform",
+        "successes": 96,
+        "calls": 358
+      },
+      {
+        "seed": 211,
+        "mode": "progress",
+        "successes": 96,
+        "calls": 358
+      }
+    ]
+  },
+  "callCounts": {
+    "demonstrations": [
+      62,
+      70,
+      66
+    ],
+    "onPolicyRL": [
+      433,
+      401,
+      409
+    ],
+    "test": {
+      "planner": [
+        358
+      ],
+      "noCheck": [
+        360
+      ],
+      "frozen": [
+        432
+      ],
+      "sft": [
+        428,
+        429,
+        428
+      ],
+      "rl": [
+        428,
+        428,
+        428
+      ]
+    }
+  },
+  "behavior": {
+    "planner": [
+      {
+        "uncertainPairs": 24,
+        "succeededOnBoth": 24,
+        "inspectedBothAndAdapted": 24,
+        "urgentCases": 48,
+        "urgentImmediateExpress": 48
+      }
+    ],
+    "noCheck": [
+      {
+        "uncertainPairs": 24,
+        "succeededOnBoth": 0,
+        "inspectedBothAndAdapted": 0,
+        "urgentCases": 48,
+        "urgentImmediateExpress": 48
+      }
+    ],
+    "frozen": [
+      {
+        "uncertainPairs": 24,
+        "succeededOnBoth": 0,
+        "inspectedBothAndAdapted": 0,
+        "urgentCases": 48,
+        "urgentImmediateExpress": 0
+      }
+    ],
+    "sft": [
+      {
+        "uncertainPairs": 24,
+        "succeededOnBoth": 0,
+        "inspectedBothAndAdapted": 0,
+        "urgentCases": 48,
+        "urgentImmediateExpress": 48
+      },
+      {
+        "uncertainPairs": 24,
+        "succeededOnBoth": 0,
+        "inspectedBothAndAdapted": 0,
+        "urgentCases": 48,
+        "urgentImmediateExpress": 48
+      },
+      {
+        "uncertainPairs": 24,
+        "succeededOnBoth": 0,
+        "inspectedBothAndAdapted": 0,
+        "urgentCases": 48,
+        "urgentImmediateExpress": 48
+      }
+    ],
+    "rl": [
+      {
+        "uncertainPairs": 24,
+        "succeededOnBoth": 0,
+        "inspectedBothAndAdapted": 0,
+        "urgentCases": 48,
+        "urgentImmediateExpress": 48
+      },
+      {
+        "uncertainPairs": 24,
+        "succeededOnBoth": 0,
+        "inspectedBothAndAdapted": 0,
+        "urgentCases": 48,
+        "urgentImmediateExpress": 48
+      },
+      {
+        "uncertainPairs": 24,
+        "succeededOnBoth": 0,
+        "inspectedBothAndAdapted": 0,
+        "urgentCases": 48,
+        "urgentImmediateExpress": 48
+      }
+    ]
+  },
+  "transcript": {
+    "file": "qwen/transcript.json",
+    "sha256": "d0bf6055f06295565764c61ce195592a7744440ea886aabd142999bccbd6916a"
+  }
+}

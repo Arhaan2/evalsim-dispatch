@@ -1,6 +1,20 @@
 # EvalSim DISPATCH
 
-[Run the public simulator](https://arhaan2.github.io/evalsim-dispatch/) · [See the training evidence](https://arhaan2.github.io/evalsim-dispatch/#evidence) · [Inspect the language-model pilot](https://arhaan2.github.io/evalsim-dispatch/language-model.html)
+[Play the free Cutoff lab](https://arhaan2.github.io/evalsim-dispatch/cutoff.html) · [Run your own agent](LAB.md) · [Explore Meridian Harbor](https://arhaan2.github.io/evalsim-dispatch/) · [Inspect the original Qwen pilot](https://arhaan2.github.io/evalsim-dispatch/language-model.html)
+
+## Can your agent decide when to buy information?
+
+One express truck leaves soon. Two customers need a delivery. Checking inventory costs a credit and a tick. Play a shift yourself, switch which yard has stock and see whether the same strategy works. Try the public planner and trained policies against the same shift, or plug in a local JavaScript agent.
+
+```sh
+node tools/lab.mjs --policy ./examples/earliest-deadline.mjs --seed 42 --pairs 16
+```
+
+The command runs a 64-shift comparison from this checkout using Node.js 22+. The original code is [MIT licensed](LICENSE) for commercial reuse. The [lab guide](LAB.md) covers the observation and action API, trace verification, self-hosting, third-party notices and a public channel to suggest a workflow for evaluation. The [CPU experiment](training/cutoff/) and [matched Qwen experiment](training/cutoff/qwen/) include their protocols, results and reproduction instructions.
+
+On 192 held-out shifts the trained CPU policies and the observation-only planner delivered both orders in every case. Disabling the planner's inventory check reduced success to 144/192. Both curricula needed a median of 768 calls to sustain the validation target. On a common 96-case subset, frozen Qwen solved 22 shifts. Imitation solved 48, 47 and 48 across three training runs. Adding on-policy RL yielded 48 in each run. None of the Qwen checkpoints solved both halves of an uncertain pair. These measurements concern a two-order synthetic network. [Discuss a workflow with EvalSim](https://arhaan2.github.io/evalsim-site/#contact)
+
+## Meridian Harbor
 
 [![The Meridian Harbor map, with the East Yard to Old Town lane closed](docs/assets/dispatch-preview.png)](https://arhaan2.github.io/evalsim-dispatch/)
 
@@ -18,8 +32,9 @@ We trained a 34-feature linear action policy with REINFORCE in a partially obser
 | Hand-coded dispatcher | 74.4% | **83.3%** | 96.7% |
 | Uniform RL | **82.5%** | 61.8% | **98.1%** |
 | Adaptive RL | 78.4% | 50.0% | 97.4% |
+| Harbor planner, created after evaluating v1 | **100%** | **100%** | **100%** |
 
-“All orders on time” requires every committed unit to reach the correct destination by its deadline and all resource checks to pass. The two trained rows average three runs over the same 168 scenarios. The unfamiliar cases combine closure with demand surge, or change supplier connections while delaying inbound freight and cutting carrier capacity. The dispatcher handled those combinations most reliably.
+“All orders on time” requires every committed unit to reach the correct destination by its deadline and all resource checks to pass. The two trained rows average three runs over the same 168 scenarios. The unfamiliar cases combine closure with demand surge, or change supplier connections while delaying inbound freight and cutting carrier capacity. The later planner used public observations and knowledge of the v1 scenario structure. It also completed 700/700 additional shifts drawn from that generator. [Planner method](training/harbor-planner/) · [Frozen v1](https://github.com/Arhaan2/evalsim-dispatch/tree/harbor-v1.0.0)
 
 The adaptive sampler uses recent operator failures to change how frequently each scenario family appears. Both mean validation curves first crossed the prespecified 85% all-orders threshold at 1,728 episodes. Adaptive practice crossed earlier in two individual seed pairs and tied the third. This experiment establishes learning in this world. A general training-speed advantage remains an open question. [Technical report](training/RESULTS.md) · [Protocol and reproduction](training/README.md) · [Every held-out outcome](docs/data/test-outcomes.json)
 
@@ -59,6 +74,7 @@ Node.js 22 or later runs the simulator tests, benchmark and local preview with n
 npm test
 npm run audit:results
 npm run audit:models
+npm run audit:labs
 npm start
 ```
 

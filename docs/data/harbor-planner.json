@@ -1,0 +1,40 @@
+{
+  "worldVersion": "1.0.0",
+  "protocol": "harbor-planner-v1",
+  "original": {
+    "cases": 168,
+    "successes": 168,
+    "rejections": 0,
+    "success": 1,
+    "toolCalls": 9.761904761904763,
+    "cost": 76.17261904761905,
+    "fulfillment": 1
+  },
+  "unseenFamilies": {
+    "cases": 48,
+    "successes": 48,
+    "rejections": 0,
+    "success": 1,
+    "toolCalls": 10.395833333333334,
+    "cost": 99.3125,
+    "fulfillment": 1
+  },
+  "additional": {
+    "cases": 700,
+    "successes": 700,
+    "rejections": 0,
+    "success": 1,
+    "toolCalls": 9.754285714285714,
+    "cost": 76.52142857142857,
+    "fulfillment": 1
+  },
+  "additionalDispatcher": {
+    "cases": 700,
+    "successes": 504,
+    "rejections": 563,
+    "success": 0.72,
+    "toolCalls": 14.522857142857143,
+    "cost": 76.51571428571428,
+    "fulfillment": 0.9659082975319548
+  }
+}

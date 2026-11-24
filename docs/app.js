@@ -8,6 +8,7 @@ import {
   snapshot,
 } from "./lib/world.js";
 import { chooseAction } from "./lib/policy.js";
+import { createHarborPlanner } from "./lib/harbor-planner.js";
 import { drawChallenge } from "./lib/challenger.js";
 import { createAtlas, locations } from "./lib/atlas.js";
 
@@ -17,6 +18,7 @@ const names = {
   uniform: "Uniform RL",
   untrained: "Before training",
   dispatcher: "Dispatcher",
+  planner: "Harbor planner",
   "challenger-trained": "Challenger-trained RL",
   "challenger-uniform": "Matched uniform RL",
 };
@@ -34,6 +36,7 @@ const textElement = (tag, value, className) => {
 let checkpoints,
   challenger,
   challengerReport,
+  plannerReport,
   report,
   runs = [],
   frameIndex = 0,
@@ -64,6 +67,8 @@ function policyObject(key) {
 
 function execute(config, policy) {
   const world = createWorld(makeScenario(config.seed, config.kind));
+  const select = policy === "planner" ? createHarborPlanner()
+    : (observation) => chooseAction(observation, policyObject(policy));
   const frames = [
     {
       state: snapshot(world),
@@ -75,7 +80,7 @@ function execute(config, policy) {
   ];
   while (!world.done) {
     const observation = observe(world);
-    const action = chooseAction(observation, policyObject(policy));
+    const action = select(observation);
     const result = step(world, action);
     frames.push({
       state: snapshot(world),
@@ -90,8 +95,8 @@ function execute(config, policy) {
     frames,
     policy,
     name: names[policy],
-    experiment: paired ? challengerReport.signature : report.signature,
-    trainingSeed: ["dispatcher", "untrained"].includes(policy)
+    experiment: policy === "planner" ? plannerReport.protocol : paired ? challengerReport.signature : report.signature,
+    trainingSeed: ["dispatcher", "untrained", "planner"].includes(policy)
       ? null
       : paired
         ? challengerReport.seed
@@ -437,7 +442,7 @@ function addChart(series) {
         y(n) +
         "H" +
         (W - R) +
-        '" stroke="#dce2da"/><text x="' +
+        '" stroke="#c6cfc1"/><text x="' +
         (L - 7) +
         '" y="' +
         (y(n) + 3) +
@@ -472,7 +477,7 @@ function addChart(series) {
         '<polyline points="' +
         pts +
         '" fill="none" stroke="' +
-        (i ? "#216ea5" : "#69736b") +
+        (i ? "#142b23" : "#687b70") +
         '" stroke-width="' +
         (i ? "2.3" : "2") +
         '" ' +
@@ -514,7 +519,8 @@ function addChart(series) {
 function renderHeldOut() {
   const subset = $("test-scope").value === "unseen";
   $("evidence-scores").replaceChildren(
-    ...report.summary.map((r) => {
+    ...[...report.summary, { ...plannerReport.original, label: "Harbor planner (post-hoc)",
+      unseenFamilies: plannerReport.unseenFamilies }].map((r) => {
       const tr = document.createElement("tr");
       const name = textElement("th", r.label);
       name.scope = "row";
@@ -541,13 +547,14 @@ function renderHeldOut() {
     pct(byId.uniform.success) +
     " of episodes. On the " +
     unseen +
-    " cases combining unfamiliar disruptions or network changes, the dispatcher led at " +
+    " cases combining unfamiliar disruptions or network changes, the original dispatcher reached " +
     pct(byId.dispatcher.unseenFamilies.success) +
     ", followed by uniform RL at " +
     pct(byId.uniform.unseenFamilies.success) +
     " and adaptive RL at " +
     pct(byId.adaptive.unseenFamilies.success) +
-    ".";
+    ". A zero-training planner built after inspecting v1 solved all " + plannerReport.original.successes +
+    " published cases and all " + plannerReport.additional.successes + " additional shifts from the same generator.";
 }
 
 function renderEvidence() {
@@ -726,11 +733,12 @@ async function initialize() {
   const seed = query.get("seed");
   if (seed !== null && /^\d{1,10}$/.test(seed) && Number(seed) <= 4294967295)
     $("seed").value = Number(seed);
-  [checkpoints, report, challenger, challengerReport] = await Promise.all([
+  [checkpoints, report, challenger, challengerReport, plannerReport] = await Promise.all([
     getJSON("./data/checkpoints.json"),
     getJSON("./data/experiment.json"),
     getJSON("./data/challenger/checkpoint.json"),
     getJSON("./data/challenger/experiment.json"),
+    getJSON("./data/harbor-planner.json"),
   ]);
   if (checkpoints.history?.length) {
     const group = document.createElement("optgroup");

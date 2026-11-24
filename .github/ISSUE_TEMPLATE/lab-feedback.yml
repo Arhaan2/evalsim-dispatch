@@ -1,0 +1,29 @@
+name: Share a lab result or suggest a workflow
+description: Tell EvalSim what you tried and which operating decision you would like to test.
+title: "[Lab] "
+body:
+  - type: markdown
+    attributes:
+      value: This report is public. A synthetic scenario or share link is enough to reproduce a result. Keep customer names, shipments and credentials private.
+  - type: dropdown
+    id: purpose
+    attributes:
+      label: What would you like to share?
+      options:
+        - A result from my policy
+        - A workflow I would like to evaluate with EvalSim
+        - A problem running the lab
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: What did you try, or what decision should the agent learn?
+      placeholder: Describe the decision, the information available to the operator and what counts as a successful outcome.
+    validations:
+      required: true
+  - type: input
+    id: episode
+    attributes:
+      label: Episode link or lab version (optional)
+      placeholder: Paste the share link from the public lab.

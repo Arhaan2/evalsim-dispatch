@@ -1,12 +1,19 @@
 {
   "name": "evalsim-dispatch",
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "license": "MIT",
+  "exports": {
+    ".": "./docs/lib/lab.js",
+    "./*": "./*"
+  },
   "private": true,
   "type": "module",
-  "description": "A seeded logistics environment, RL experiment and public checkpoint explorer.",
+  "description": "Free logistics RL labs, a local agent interface and reproducible dispatch benchmarks.",
   "engines": { "node": ">=22" },
   "scripts": {
     "start": "node tools/serve.mjs",
+    "lab": "node tools/lab.mjs",
+    "audit:labs": "node training/harbor-planner/audit.mjs && node training/cutoff/run.mjs --check && node training/cutoff/qwen/audit.mjs",
     "test": "node --test test/*.test.mjs training/language-model/decision-credit/gradient.test.mjs",
     "audit:results": "node training/audit.mjs && node training/challenger/audit.mjs",
     "audit:models": "node training/language-model/audit.mjs && node training/language-model/audit.mjs docs/data/llm-curriculum && node training/language-model/decision-credit/audit.mjs"

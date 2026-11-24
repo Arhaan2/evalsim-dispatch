@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f6f7f6" />
+    <meta name="theme-color" content="#f8f8f1" />
     <meta
       name="description"
       content="Run a reinforcement learning policy in a changing harbor. Compare dispatch decisions, track cargo, and inspect held-out results from EvalSim DISPATCH."
@@ -95,6 +95,8 @@
             ><svg class="icon"><use href="#i-map" /></svg>Simulator</a
           ><a href="#evidence"
             ><svg class="icon"><use href="#i-chart" /></svg>Training evidence</a
+          ><a href="./cutoff.html"
+            ><svg class="icon"><use href="#i-harbor" /></svg>Cutoff lab</a
           ><a href="./language-model.html"
             ><svg class="icon"><use href="#i-book" /></svg>Qwen pilot</a
           >
@@ -139,12 +141,14 @@
             <option value="trained">Adaptive RL</option>
             <option value="uniform">Uniform RL</option>
             <option value="dispatcher">Dispatcher</option>
+            <option value="planner">Harbor planner</option>
             <option value="untrained">Before training</option>
           </select>
           <label for="rival">Compare with</label
           ><select id="rival">
             <option value="untrained">Before training</option>
             <option value="dispatcher">Dispatcher</option>
+            <option value="planner">Harbor planner</option>
             <option value="uniform">Uniform RL</option>
             <option value="trained">Adaptive RL</option>
           </select>
@@ -404,7 +408,8 @@
             </table>
           </div>
           <div class="cases">
-            <p>Two selected test episodes</p>
+            <p>Selected test episodes</p>
+            <a href="?seed=3000000&amp;scenario=compound&amp;operator=planner&amp;compare=uniform">Compare the planner with RL <svg class="icon"><use href="#i-arrow" /></svg></a>
             <a
               href="?seed=3000008&amp;scenario=route-closure&amp;operator=trained&amp;compare=dispatcher"
               >A successful reroute
