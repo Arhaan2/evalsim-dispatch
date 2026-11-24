@@ -1,11 +1,12 @@
 {
   "name": "evalsim-dispatch",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "license": "MIT",
   "exports": {
     ".": "./docs/lib/lab.js",
     "./reserve": "./docs/lib/reserve-benchmark.js",
     "./drift": "./docs/lib/drift-benchmark.js",
+    "./turns": "./docs/lib/turns-benchmark.js",
     "./*": "./*"
   },
   "private": true,
@@ -18,7 +19,8 @@
     "reserve": "node tools/reserve.mjs",
     "audit:reserve": "node training/reserve/run.mjs --check",
     "audit:drift": "node training/drift/run.mjs --check",
-    "audit:labs": "node training/harbor-planner/audit.mjs && node training/cutoff/run.mjs --check && node training/cutoff/qwen/audit.mjs && npm run audit:reserve && npm run audit:drift",
+    "audit:turns": "node training/turns/run.mjs --check",
+    "audit:labs": "node training/harbor-planner/audit.mjs && node training/cutoff/run.mjs --check && node training/cutoff/qwen/audit.mjs && npm run audit:reserve && npm run audit:drift && npm run audit:turns",
     "test": "node --test test/*.test.mjs training/language-model/decision-credit/gradient.test.mjs",
     "audit:results": "node training/audit.mjs && node training/challenger/audit.mjs",
     "audit:models": "node training/language-model/audit.mjs && node training/language-model/audit.mjs docs/data/llm-curriculum && node training/language-model/decision-credit/audit.mjs"

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f8f1">
+  <meta name="description" content="Test a freight agent trained to respond to demand turns. Compare reversals and interrupted drops against the previous RL agent and both planners.">
+  <meta property="og:title" content="Demand turns lab · EvalSim DISPATCH">
+  <meta property="og:description" content="Compare a turn-aware RL agent with the original distribution planner on fresh reversals and interrupted drops. Play a matched shift and benchmark your own policy.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="EvalSim DISPATCH">
+  <title>Demand turns lab · EvalSim DISPATCH</title>
+  <link rel="icon" href="./assets/mark.svg?v=2" type="image/svg+xml">
+  <link rel="preload" href="./assets/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./reserve.css">
+  <link rel="stylesheet" href="./turns.css">
+  <script type="module" src="./turns.js"></script>
+</head>
+<body class="reserve">
+<a class="skip" href="#desk">Skip to dispatch desk</a>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand-row"><a class="brand" href="./" aria-label="EvalSim DISPATCH home"><img src="./assets/mark.svg?v=2" width="28" height="28" alt=""><span>EvalSim<span class="brand-period" aria-hidden="true">.</span></span></a><span class="product">Dispatch</span></div>
+    <nav class="primary-nav" aria-label="Workspace"><a class="current" aria-current="page" href="./turns.html">Demand turns</a><a href="./drift.html">Demand shifts</a><a href="./reserve.html">Freight reserve</a><a href="./cutoff.html">Inventory cutoff</a><a href="./index.html">Harbor simulator</a><a href="./language-model.html">Qwen pilot</a></nav>
+    <nav class="resource-nav" aria-label="Project"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/main/TURNS.md">Benchmark guide ↗</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Contact EvalSim ↗</a></nav>
+  </aside>
+  <main id="desk">
+    <header class="page-heading"><h1>Demand turns lab</h1><p>Demand can turn before the freight forecast catches up. Watch a trained agent weigh recent offers, then choose which two loads to book.</p>
+      <div class="section-links"><a href="#benchmark">See the reversal results ↓</a><a href="#own-agent">Test your agent ↓</a></div>
+    </header>
+    <noscript><p>This desk needs JavaScript to play a shift. You can also <a href="https://github.com/Arhaan2/evalsim-dispatch/blob/main/TURNS.md">run the benchmark locally</a>.</p></noscript>
+    <p id="load-status" role="status"></p>
+    <section id="session" hidden aria-labelledby="session-heading" data-ui>
+      <div class="section-line"><h2 id="session-heading">Dispatch desk</h2><span id="active-config"></span></div>
+      <div class="desk-grid">
+        <div class="offer-panel">
+          <div class="offer-head"><h3 id="offer-heading" tabindex="-1">Signed freight offer</h3><span id="wave"></span></div>
+          <div id="amount"><strong id="net-offer"></strong><span id="amount-label"></span></div>
+          <p id="offer-detail"></p><p id="capacity-note"></p>
+          <div class="turn-signal"><h4>What the agent sees</h4><p id="signal-reading"></p><p id="signal-decision"></p></div>
+          <div id="slot-board"><span id="slot-tiles" aria-hidden="true"></span><p id="slot-count"></p></div>
+          <div class="actions" id="actions"><button id="accept" type="button">Book load</button><button id="pass" type="button">Pass</button><button id="again" type="button" hidden>Play again</button></div>
+        </div>
+        <div class="forecast-panel"><h3>Forecast and actual</h3><p id="forecast-note">The board updates at waves 4 and 7 using a delayed survey. Earlier rows keep their original quote. Later rows show the latest outlook.</p>
+          <div class="grid-scroll" tabindex="0" role="region" aria-label="Forecast and actual credits by wave"><table><caption class="sr">Public quote for each wave and signed offers revealed so far, in net credits.</caption><thead><tr><th scope="col">Wave</th><th scope="col">Low / high</th><th scope="col">High chance</th><th scope="col">Mean</th><th scope="col">Actual</th></tr></thead><tbody id="forecast"></tbody></table></div>
+          <p class="signal-guide">A high offer pays the upper quoted amount. The agent compares the latest two signed offers, including the current one, with earlier offers. Both estimates start with one observation at the opening forecast odds.</p>
+        </div>
+      </div>
+      <div class="shift-foot"><p id="current-score"></p><div><a id="share" href="./turns.html">Link to this run</a><button id="reset" type="button">Restart shift</button></div></div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <details id="config"><summary>Change shift</summary>
+        <form id="case-form"><label>Demand pattern<select id="family" name="family"></select></label><label>Shift seed<input type="text" inputmode="numeric" name="seed" id="seed" maxlength="10" pattern="[0-9]{1,10}" required></label><button type="submit">Load shift</button></form>
+      </details>
+      <details id="compare"><summary>Reveal and compare the full shift</summary>
+        <p class="description">This replay reveals all eight signed offers and each operator’s bookings, including waves you have yet to play.</p>
+        <div id="comparison"></div>
+      </details>
+    </section>
+    <section class="lab-section" id="benchmark" aria-labelledby="benchmark-title">
+      <h2 id="benchmark-title">Can the agent handle a reversal?</h2>
+      <p class="description">Four fresh patterns test whether the new RL agent beats the distribution planner and keeps the earlier agent’s gains on interrupted drops. Both planners and both agents see identical offers.</p>
+      <div id="scorecard" data-ui></div>
+      <div class="section-links"><a href="./data/turns/results.json">Raw results JSON</a><a href="https://github.com/Arhaan2/evalsim-dispatch/tree/main/training/turns">Training protocol ↗</a></div>
+    </section>
+    <section class="lab-section" id="own-agent" aria-labelledby="agent-title">
+      <h2 id="agent-title">Benchmark your agent</h2><p class="description">Clone DISPATCH and run the example in Node.js 22 or later. Replace its booking rule with your own. The runner gives each agent the current offer, posted forecast and revealed history. Every agent gets the same held-out shifts.</p>
+      <pre><code>git clone --branch turns-v1.0.0 https://github.com/Arhaan2/evalsim-dispatch.git
+cd evalsim-dispatch
+node tools/reserve.mjs --suite turns --policy ./examples/reserve-agent.mjs --out turns.json</code></pre>
+      <div class="section-links"><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/main/TURNS.md">Benchmark guide ↗</a><a href="https://github.com/Arhaan2/evalsim-dispatch/blob/main/examples/reserve-agent.mjs">Example agent ↗</a><a href="https://arhaan2.github.io/evalsim-site/#contact">Discuss your workflow ↗</a></div>
+      <div id="upload" hidden><label for="report-file"><strong>Compare your saved result</strong></label><p class="description" id="upload-help">Choose the JSON written by the command above. Your browser replays every decision locally and verifies the scores.</p><input type="file" id="report-file" accept=".json,application/json" aria-describedby="upload-help"><p id="report-status" role="status"></p><div id="report-result"></div></div>
+    </section>
+    <footer><span>EvalSim DISPATCH</span><a href="./reserve.html">Freight reserve lab</a></footer>
+  </main>
+</div>
+</body>
+</html>

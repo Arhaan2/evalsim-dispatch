@@ -17,7 +17,7 @@ async function runCase(world, config, decide) {
   return { actions, score };
 }
 
-function summarize(rows, referenceKeys) {
+function summarize(rows, referenceKeys, stratum) {
   function group(cases) {
     const mean = key => cases.reduce((sum, row) => sum + row[key], 0) / cases.length;
     const references = {};
@@ -26,16 +26,23 @@ function summarize(rows, referenceKeys) {
     }
     return { shifts: cases.length, mean: mean("net"), references };
   }
-  const families = [...new Set(rows.map(row => row.family))];
-  return {
-    all: group(rows),
-    byFamily: Object.fromEntries(families.map(family => [family, group(rows.filter(row => row.family === family))])),
-  };
+  function grouped(keyOf) {
+    const groups = new Map();
+    for (const row of rows) {
+      const key = keyOf(row.family);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(row);
+    }
+    return Object.fromEntries([...groups].map(([key, cases]) => [key, group(cases)]));
+  }
+  const summary = { all: group(rows), byFamily: grouped(family => family) };
+  if (stratum) summary.byStratum = grouped(stratum);
+  return summary;
 }
 
 /** Re-run all comparators so a development split works exactly like the public scorecard. */
 async function benchmark(lab, { split = "test", policy, createPolicy, weights }) {
-  if (!["validation", "test"].includes(split)) throw new RangeError("Choose validation or test.");
+  if (!lab.splits.includes(split)) throw new RangeError("Choose an evaluation split: " + lab.splits.join(", "));
   if (typeof policy !== "string" || !policy.trim() || policy.length > 160) throw new Error("Use a policy name of 1–160 characters.");
   const cases = [];
   const references = Object.entries(lab.references(weights));
@@ -54,7 +61,7 @@ async function benchmark(lab, { split = "test", policy, createPolicy, weights })
     }
   }
   return { format: lab.format, suite: lab.id, split, policy,
-    summary: summarize(cases, references.map(([key]) => key)), cases };
+    summary: summarize(cases, references.map(([key]) => key), lab.stratum), cases };
 }
 
 function sameJson(left, right) {
@@ -69,7 +76,7 @@ function sameJson(left, right) {
 /** Reconstruct the exact manifest, replay every claimed action, and regenerate all reference scores. */
 async function verifyReport(lab, report, weights) {
   if (report?.format !== lab.format || report.suite !== lab.id ||
-      !["validation", "test"].includes(report.split)) throw new Error("Unrecognized report or suite version for " + lab.id + ".");
+      !lab.splits.includes(report.split)) throw new Error("Unrecognized report or suite version for " + lab.id + ".");
   const manifest = lab.cases(report.split);
   if (!Array.isArray(report.cases) || report.cases.length !== manifest.length) throw new Error("The report must contain the complete split.");
   for (const [i, config] of manifest.entries()) {
@@ -91,7 +98,8 @@ async function verifyReport(lab, report, weights) {
   return replayed;
 }
 
-export function createFreightBenchmark(lab) {
+export function createFreightBenchmark(config) {
+  const lab = { splits: ["validation", "test"], ...config };
   return {
     runCase: (config, decide) => runCase(lab.world, config, decide),
     benchmark: options => benchmark(lab, options),

@@ -10,10 +10,15 @@ import { benchmarkReserve, reserveReferences, verifyReserveReport } from "../doc
 import { reserveCases, RESERVE_SUITE } from "../docs/lib/reserve-policy.js";
 import { benchmarkDrift, driftReferences, verifyDriftReport } from "../docs/lib/drift-benchmark.js";
 import { DRIFT_SUITE, driftCases } from "../docs/lib/drift.js";
+import { benchmarkTurns, turnsReferences, verifyTurnsReport, TURNS_EVALUATION_SPLITS } from "../docs/lib/turns-benchmark.js";
+import { TURNS_SUITE, turnsCases } from "../docs/lib/turns.js";
+import { chooseTurns } from "../docs/lib/turns-policy.js";
 
 const labs = {
   reserve: { id: RESERVE_SUITE.id, cases: reserveCases, references: reserveReferences, benchmark: benchmarkReserve, verify: verifyReserveReport },
   drift: { id: DRIFT_SUITE.id, cases: driftCases, references: driftReferences, benchmark: benchmarkDrift, verify: verifyDriftReport },
+  turns: { id: TURNS_SUITE.id, cases: turnsCases, references: turnsReferences, benchmark: benchmarkTurns,
+    verify: verifyTurnsReport, splits: TURNS_EVALUATION_SPLITS },
 };
 
 async function loadCheckpoint(name) {
@@ -23,23 +28,31 @@ async function loadCheckpoint(name) {
 
 async function loadWeights(lab) {
   if (lab === labs.reserve) return loadCheckpoint("reserve");
+  if (lab === labs.turns) {
+    const [turns, drift] = await Promise.all([loadCheckpoint("turns"), loadCheckpoint("drift")]);
+    return { turns, drift };
+  }
   const [drift, legacy] = await Promise.all([loadCheckpoint("drift"), loadCheckpoint("reserve")]);
   return { drift, legacy };
 }
 
-const usage = `Benchmark an agent on the fixed DISPATCH Reserve shifts (Node.js 22+).
+const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+).
   node tools/reserve.mjs --policy ./examples/reserve-agent.mjs --out my-result.json
   node tools/reserve.mjs --split validation --policy planner
   node tools/reserve.mjs --suite drift --policy ./examples/reserve-agent.mjs --out drift.json
   node tools/reserve.mjs --suite drift --policy adaptive
+  node tools/reserve.mjs --suite turns --policy ./examples/reserve-agent.mjs --out turns.json
+  node tools/reserve.mjs --suite turns --split retention --policy rl
+  node tools/reserve.mjs --suite drift --policy turns --out turns-on-drift.json
   node tools/reserve.mjs --out python-result.json -- python3 examples/reserve_agent.py
   node tools/reserve.mjs --manifest
   node tools/reserve.mjs --verify my-result.json
 
---suite reserve|drift     Original accurate forecasts (default), or unseen demand shifts.
---split test|validation   Use test for the released scorecard, validation for development.
---policy NAME|PATH        Local ES module, or a reference. Both suites offer rl and stochastic.
-                          Reserve also has planner. Drift also has adaptive and legacy.
+--suite NAME              reserve (default), drift or turns.
+--split NAME              test or validation. Turns also offers retention on the original drop pattern with new seeds.
+--policy NAME|PATH        Local ES module, or a reference. Every suite offers rl and stochastic.
+                          Reserve adds planner. Drift adds adaptive, legacy and the new turns policy.
+                          Turns adds adaptive and the previous drift policy. rl selects the new agent.
 --name LABEL              Set the display name stored in the report.
 --out PATH                Save the full replayable JSON report.
 -- PROGRAM [ARG ...]      Run a local agent using one JSON request and response per line.
@@ -86,7 +99,7 @@ async function programAgent(command, timeout) {
 
 async function moduleAgent(policy, builtins) {
   if (Object.hasOwn(builtins, policy)) return { createPolicy: () => builtins[policy] };
-  if (["planner", "adaptive", "legacy"].includes(policy)) throw new Error("References in this suite: " + Object.keys(builtins).join(", "));
+  if (["planner", "adaptive", "legacy", "turns", "drift"].includes(policy)) throw new Error("Policies in this suite: " + Object.keys(builtins).join(", "));
   const module = await import(pathToFileURL(resolve(policy)).href);
   if (typeof module.createPolicy === "function") return { createPolicy: module.createPolicy };
   if (typeof module.default === "function") return { createPolicy: () => module.default };
@@ -105,7 +118,7 @@ async function saveReport(path, report) {
 
 function display(report) {
   const number = n => n.toFixed(2);
-  const labels = { rl: "RL", planner: "point planner", stochastic: "stochastic planner", adaptive: "adaptive planner", legacy: "original RL" };
+  const labels = { rl: "RL", planner: "point planner", stochastic: "stochastic planner", adaptive: "adaptive planner", legacy: "original RL", drift: "previous Drift RL" };
   console.log(report.suite + " / " + report.split + " / " + report.policy);
   console.log("Mean net credits per shift");
   console.table(Object.entries({ all: report.summary.all, ...report.summary.byFamily }).map(([family, group]) => ({
@@ -117,6 +130,15 @@ function display(report) {
     console.log(reference + ": " + number(result.delta) + " credits (95% interval " +
       result.interval95.map(number).join(" to ") + "); " + result.wins + " wins / " +
       result.ties + " ties / " + result.losses + " losses");
+  }
+  if (report.summary.byStratum) {
+    console.log("Mean paired differences by demand pattern type");
+    console.table(Object.entries(report.summary.byStratum).map(([stratum, group]) => ({
+      stratum, shifts: group.shifts, "agent minus stochastic": number(group.references.stochastic.delta),
+      "95% interval": group.references.stochastic.interval95.map(number).join(" to "),
+      "agent minus Drift RL": number(group.references.drift.delta),
+      "95% interval vs Drift": group.references.drift.interval95.map(number).join(" to "),
+    })));
   }
 }
 
@@ -131,7 +153,7 @@ async function main() {
   if (values.help) return console.log(usage);
   if (separator >= 0 && !command.length) throw new Error("Provide a program after --.");
   const suite = values.suite ?? "reserve";
-  if (!Object.hasOwn(labs, suite)) throw new Error("Choose --suite reserve or drift.");
+  if (!Object.hasOwn(labs, suite)) throw new Error("Choose --suite reserve, drift or turns.");
   const lab = labs[suite];
   if (values.verify !== undefined) {
     if (separator >= 0 || Object.keys(values).some(k => !["verify", "suite"].includes(k))) throw new Error("Use --verify with only an optional --suite.");
@@ -143,7 +165,8 @@ async function main() {
     return console.log("Verified every action, ledger and comparison against the fixed manifest.");
   }
   const split = values.split ?? "test";
-  if (!["test", "validation"].includes(split)) throw new Error("Choose --split test or validation.");
+  const splits = lab.splits ?? ["test", "validation"];
+  if (!splits.includes(split)) throw new Error("Unknown --split. Choose " + splits.join(", ") + ".");
   if (values.manifest) {
     if (command.length || Object.keys(values).some(k => !["manifest", "split", "suite"].includes(k))) throw new Error("Use --manifest with only --suite and --split.");
     return console.log(JSON.stringify({ suite: lab.id, split, cases: lab.cases(split) }, null, 2));
@@ -154,7 +177,13 @@ async function main() {
       (values["timeout-ms"] !== undefined && !command.length)) throw new Error("Use a positive --timeout-ms with an external program.");
   const weights = await loadWeights(lab);
   const policy = values.policy ?? "rl";
-  const agent = command.length ? await programAgent(command, timeout) : await moduleAgent(policy, lab.references(weights));
+  const available = lab.references(weights);
+  if (lab === labs.turns) available.turns = available.rl;
+  if (lab === labs.drift && policy === "turns" && !command.length) {
+    const turnsWeights = await loadCheckpoint("turns");
+    available.turns = observation => chooseTurns(observation, turnsWeights);
+  }
+  const agent = command.length ? await programAgent(command, timeout) : await moduleAgent(policy, available);
   try {
     const report = await lab.benchmark({ split, weights, policy: values.name ?? basename(command[0] ?? policy), createPolicy: agent.createPolicy });
     if (values.out !== undefined) await saveReport(values.out, report);

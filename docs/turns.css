@@ -1,0 +1,5 @@
+.turn-signal { padding: .7rem 0; }
+.turn-signal h4 { margin: 0 0 .3rem; font-size: 1rem; font-weight: 620; }
+.turn-signal p { margin: .2rem 0; max-width: 52ch; font-size: .94rem; line-height: 1.4; }
+#signal-decision { font-variant-numeric: tabular-nums; }
+.signal-guide { margin: .85rem 0 0; color: var(--muted); font-size: .91rem; line-height: 1.45; }
