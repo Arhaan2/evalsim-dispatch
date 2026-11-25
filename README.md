@@ -1,6 +1,12 @@
 # EvalSim DISPATCH
 
-[Play the five-day fleet lab](https://arhaan2.github.io/evalsim-dispatch/fleetweek.html) · [Benchmark your fleet agent](FLEETWEEK.md) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+[Play the overnight truck decision](https://arhaan2.github.io/evalsim-dispatch/overnight.html) · [Benchmark your fleet agent](OVERNIGHT.md) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+
+## When is an overnight empty move worth it?
+
+On Monday through Thursday afternoons, a trained policy can move an idle truck or let it wait. The rolling planner assigns the freight. On **2,048 unseen weeks**, the agent averaged **338.09 net credits and 74.73% on-time service**, versus **338.36 and 74.63%** for the planner. The earnings difference was −0.27 credits per week (paired 95% interval −1.16 to +0.56). The service difference was +0.093 percentage points (−0.059 to +0.249). Both differences were inconclusive under the preregistered criteria.
+
+Allowing overnight empty moves earned **16.51 more net credits** and served **4.61 percentage points more contracts** than the same agent forced to wait. On 1,024 new weeks using the original double-return schedule, the new policy’s +0.37-credit difference from the planner was inconclusive. The former fleet agent retained a +4.81-credit advantage on those same weeks. [Results and paired forks](https://arhaan2.github.io/evalsim-dispatch/overnight.html#results) · [Five fits and reproduction](training/overnight/)
 
 ## Where should two trucks finish today?
 

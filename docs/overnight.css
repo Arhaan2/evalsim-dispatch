@@ -1,0 +1,44 @@
+.night main {max-width:74rem}
+.night .library-bar {padding-block:.6rem;min-height:3.2rem}
+.night .library-bar nav {gap:0 clamp(.8rem,2vw,1.45rem)}
+.night .night-title {margin:clamp(2rem,4.8vw,4rem) 0 1.7rem}
+.night .night-title h1 {font-size:clamp(2.1rem,4.3vw,3.45rem);letter-spacing:-.045em;line-height:1.05}
+.night .night-title p {max-width:59ch;font-size:clamp(1.05rem,1.8vw,1.23rem);margin:.8rem 0 0}
+.night .shift-sheet {padding:clamp(1rem,2.6vw,2.2rem);border:1px solid var(--border);background:var(--white);border-radius:.65rem}
+.night .shift-sheet>p,.night .study-group>p,.night details p {max-width:76ch}
+.night .shift-sheet h2,.night .study-group h2 {font-size:clamp(1.55rem,3vw,2.3rem)}
+.night h3 {font-size:1.17rem;line-height:1.22;margin:1.1rem 0 .35rem}
+.night .case-list {padding:.35rem 0 .7rem}.night label {font-weight:540}
+.night select,.night input[type=number]{min-height:44px;background:var(--white);border:1px solid var(--muted);border-radius:.25rem;padding:.4rem .6rem;font:inherit;max-width:100%}
+.night .case-list label {display:block;margin-bottom:.25rem}
+.night .night-case {margin-top:.4rem}
+.night .night-record {margin:.25rem 0 .6rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.night .public-board {background:var(--soft);padding:clamp(.85rem,2.2vw,1.4rem);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:.6rem 1.9rem}
+.night .public-board h4 {font-size:1rem;margin:0 0 .25rem}
+.night .public-board p {margin:0}
+.night .call-row {display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0 .75rem}
+.night button {color:var(--ink);font:inherit;background:var(--white);border:1px solid var(--muted);border-radius:.25rem;min-height:44px;padding:.45rem .875rem}
+.night button:hover {text-decoration:underline;text-underline-offset:.2em}
+.night button[aria-pressed=true],.night #report-replay {color:var(--white);background:var(--accent-ink);border-color:var(--accent-ink)}
+.night .call-status {font-weight:550;margin:.6rem 0}
+.night .call-status:empty,.night #report-status:empty {display:none}
+.night summary {cursor:pointer;font-weight:550;padding:.65rem 0;min-height:44px}
+.night details {margin:.55rem 0}
+.night .table-frame {max-width:100%;overflow:auto}
+.night table {border-collapse:collapse;width:100%;font-size:1rem;font-variant-numeric:tabular-nums}
+.night td,.night th {border-bottom:1px solid var(--border);padding:.52rem .5rem;text-align:right;vertical-align:top}
+.night th {font-weight:550}
+.night td:first-child,.night th:first-child,.night caption,.night .journey td {text-align:left}
+.night caption {margin:.5rem 0 .25rem}
+.night .study-group table,.night .shift-sheet table {max-width:65rem}
+.night .methods {margin-top:1.5rem}
+.night pre {background:var(--accent-ink);color:var(--white);padding:1rem;overflow:auto;font-size:.93rem;line-height:1.6}
+.night #verify-desk {background:var(--soft);padding:1.3rem}
+.night input[type=file] {max-width:100%}
+.night #verified {margin-top:.7rem}
+.night #report-week {width:6rem}
+.night #report-week-log {margin-top:1.7rem}
+.night .link-row {display:flex;flex-wrap:wrap;gap:.4rem 1rem}
+.night .link-row a {display:inline-flex;align-items:center;min-height:44px}
+@media(max-width:680px){.night .public-board {grid-template-columns:minmax(0,1fr)}.night .shift-sheet {border-radius:.3rem}.night table {font-size:.94rem}.night th,.night td {padding:.4rem .25rem}.night footer {display:flex;flex-wrap:wrap;gap:.4rem 1rem}.night #report-replay {margin-top:.4rem}.night .library-bar nav {column-gap:.9rem}.night .case-list select {width:100%}}
+@media(prefers-reduced-motion:reduce){.night button:active{transform:none}}
