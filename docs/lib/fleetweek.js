@@ -2,6 +2,7 @@
 import { OVERNIGHT_PATTERNS } from "./overnight-markets.js";
 import { OVERRIDE_PATTERNS } from "./override-markets.js";
 import { UNCERTAINTY_PATTERNS } from "./uncertainty-markets.js";
+import { LOSS_PATTERNS } from "./loss-markets.js";
 export const FLEET_DEPOTS = Object.freeze(["Harbor", "Inland", "Junction"]);
 export const FLEET_WEEK_EPOCHS = 10;
 export const FLEET_MISS_PENALTY = 34;
@@ -24,7 +25,7 @@ export const FLEET_FAMILIES = Object.freeze({
   test: Object.freeze(["friday-switch", "split-week", "midweek-pivot", "double-return"]),
 });
 export const FLEET_PATTERNS = patterns;
-const allPatterns = Object.freeze({ ...patterns, ...OVERNIGHT_PATTERNS, ...OVERRIDE_PATTERNS, ...UNCERTAINTY_PATTERNS });
+const allPatterns = Object.freeze({ ...patterns, ...OVERNIGHT_PATTERNS, ...OVERRIDE_PATTERNS, ...UNCERTAINTY_PATTERNS, ...LOSS_PATTERNS });
 
 function randomStream(seed) {
   let state = seed >>> 0;

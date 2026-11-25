@@ -1,6 +1,12 @@
 # EvalSim DISPATCH
 
-[Try the uncertainty decision](https://arhaan2.github.io/evalsim-dispatch/uncertainty.html#replays) · [Benchmark your fleet agent](UNCERTAINTY.md) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+[Replay an overnight override](https://arhaan2.github.io/evalsim-dispatch/loss.html#replays) · [Benchmark your fleet agent](LOSS.md) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+
+## Can the fleet agent recognize a losing override?
+
+The fleet agent earned **0.576 more net credits per week than the rolling planner** on 8,192 weeks from four unseen schedules (paired 95% interval +0.086 to +1.056). It also delivered a higher on-time rate than both the planner (+0.184 percentage points, +0.100 to +0.271) and the published constant penalty (+0.046 points, +0.010 to +0.083). The constant penalty earned 0.122 more credits per week on average. The agent-minus-penalty interval was −0.348 to +0.100, leaving that earnings comparison open. On 4,096 new double-return weeks, the agent kept its earnings win over the planner at **+2.111 credits per week** (+1.339 to +2.896).
+
+The agent saw 1,647 proposed overrides and predicted a 40–60% chance of loss for 1,637 of them. Its ranking score (AUROC) was 0.539, where 0.5 is chance. Replacing its learned probability with a constant changed 38 decisions and yielded a paired earnings difference of +0.036 credits per week in favor of the learned probability (−0.046 to +0.116). [Results and paired decisions](https://arhaan2.github.io/evalsim-dispatch/loss.html#results) · [Reproduce the study](training/loss/)
 
 ## Should the dispatcher trust this overnight override?
 

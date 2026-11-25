@@ -2,7 +2,7 @@ import {traceActions, roundName, familyName, dispatchText} from "./overnight-vie
 const byId = id => document.getElementById(id);
 const fmt = (n,d=2) => n.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
 
-export function installReportDesk({workerUrl,agentName}) {
+export function installReportDesk({workerUrl,agentName,comparator}) {
   byId("verify-desk").hidden=false;
   const input = byId("report"), weekNumber = byId("report-week");
   let activeWorker, submitted, generation=0, requested;
@@ -33,6 +33,10 @@ export function installReportDesk({workerUrl,agentName}) {
   function showWeek(row,reference) {
     const names=["Your agent",agentName,"Planner"];
     const policies=[row,reference.rl,reference.planner];
+    if (comparator) {
+      names.push(comparator.name);
+      policies.push(reference[comparator.key]);
+    }
     const traces=policies.map(p=>traceActions(row,p.actions));
     const title=el("h3",familyName(row.family)+" · week "+row.seed);title.tabIndex=-1;
     const final=reportTable("All ten rounds",["Dispatcher","Week net","On time","Empty miles"],
@@ -69,6 +73,11 @@ export function installReportDesk({workerUrl,agentName}) {
         byId("report-summary").textContent=fmt(p.net)+" net credits per week and "+fmt(p.onTime)+"% on time. Compared with the planner, the differences were "+
           fmt(pair.net)+" credits (95% interval "+pair.net95.map(n=>fmt(n)).join(" to ")+") and "+fmt(pair.servicePP,3)+
           " percentage points ("+pair.service95.map(n=>fmt(n,3)).join(" to ")+").";
+        if (comparator) {
+          const difference=all.comparisons[comparator.key];
+          byId("report-summary").textContent+=" Against the "+comparator.name.toLowerCase()+", your agent’s net difference was "+
+            fmt(difference.net)+" credits per week (paired 95% interval "+difference.net95.map(n=>fmt(n)).join(" to ")+").";
+        }
         weekNumber.max=report.cases.length;weekNumber.value=1;byId("verified").hidden=false;
       };
       worker.postMessage({type:"verify",report});
