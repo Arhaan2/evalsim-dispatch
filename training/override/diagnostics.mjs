@@ -1,21 +1,8 @@
+import {forkFleetWeek} from "../fleetweek/score-helpers.mjs";
 import {createFleetWeek} from "../../docs/lib/fleetweek.js";
 import {fleetLedger} from "../../docs/lib/fleetweek-study.js";
 import {inspectOverride, makeOverridePolicy} from "../../docs/lib/override-policy.js";
 import {isOvernight, sameFreight} from "../../docs/lib/overnight-policy.js";
-
-// Change only the current joint move. Both alternatives follow the same deployed gate thereafter.
-function oppositeBranch(config, prefix, first, decide) {
-  const week = createFleetWeek(config);
-  for (const id of prefix) week.step(id);
-  const suffix = [first];
-  week.step(first);
-  while (!week.done) {
-    const action = decide(week.observe(), week.legalActions());
-    week.step(action);
-    suffix.push(action);
-  }
-  return [suffix, week.ledger.net, week.ledger.served];
-}
 
 export function overrideBranches(config, path, checkpoint) {
   const state = createFleetWeek(config);
@@ -33,7 +20,7 @@ export function overrideBranches(config, path, checkpoint) {
           throw Error("A challenger must preserve the planner's signed assignments and change its empty placement.");
         }
         const opposite = chosen === plannerId ? proposalId : plannerId;
-        branches.push([epoch, plannerId, proposalId, ...oppositeBranch(config, path.actions.slice(0, epoch), opposite, decide)]);
+        branches.push([epoch, plannerId, proposalId, ...forkFleetWeek(config, path.actions.slice(0, epoch), opposite, decide)]);
       }
     }
     state.step(chosen);

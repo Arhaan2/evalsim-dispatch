@@ -1,6 +1,12 @@
 # EvalSim DISPATCH
 
-[Try the overnight override](https://arhaan2.github.io/evalsim-dispatch/override.html#replays) · [Benchmark your fleet agent](OVERRIDE.md) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+[Try the uncertainty decision](https://arhaan2.github.io/evalsim-dispatch/uncertainty.html#replays) · [Benchmark your fleet agent](UNCERTAINTY.md) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+
+## Should the dispatcher trust this overnight override?
+
+The preceding fleet agent proposes an empty-truck move. The trained dispatcher estimates how far its payoff might fall below forecast, then decides whether to keep the rolling planner's choice. Across **8,192 weeks from four unseen schedules**, it earned **334.13 net credits per week** and served **73.779%** of contracts on time, versus **333.69** and **73.744%** for the planner. The paired differences were +0.443 credits (95% interval −0.015 to +0.912) and +0.035 percentage points (−0.046 to +0.121). Both the fresh earnings advantage and the zero-shortfall service match remain unproven.
+
+On **4,096 fresh double-return weeks**, the new policy kept a **+1.525-credit** advantage over the planner (+0.788 to +2.274) and served **0.227 percentage points more contracts** (+0.090 to +0.347). The unfiltered override agent earned 1.779 more credits than the planner on those weeks. On the four unseen schedules the new policy kept the planner's move on 380 of 1,626 recommendations. The downside penalty accounted for 266 of those decisions. Its earnings differences against removing the penalty (+0.041 credits) and using a constant penalty (+0.006) both included zero in their paired intervals. [Results and four paired decisions](https://arhaan2.github.io/evalsim-dispatch/uncertainty.html#results) · [Training report](training/uncertainty/)
 
 ## When should the fleet agent override the planner?
 
