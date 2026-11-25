@@ -1,5 +1,6 @@
 // EvalSim DISPATCH · five-day fleet positioning. One epoch is one half-day.
 import { OVERNIGHT_PATTERNS } from "./overnight-markets.js";
+import { OVERRIDE_PATTERNS } from "./override-markets.js";
 export const FLEET_DEPOTS = Object.freeze(["Harbor", "Inland", "Junction"]);
 export const FLEET_WEEK_EPOCHS = 10;
 export const FLEET_MISS_PENALTY = 34;
@@ -22,7 +23,7 @@ export const FLEET_FAMILIES = Object.freeze({
   test: Object.freeze(["friday-switch", "split-week", "midweek-pivot", "double-return"]),
 });
 export const FLEET_PATTERNS = patterns;
-const allPatterns = Object.freeze({ ...patterns, ...OVERNIGHT_PATTERNS });
+const allPatterns = Object.freeze({ ...patterns, ...OVERNIGHT_PATTERNS, ...OVERRIDE_PATTERNS });
 
 function randomStream(seed) {
   let state = seed >>> 0;

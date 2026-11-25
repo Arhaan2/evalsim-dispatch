@@ -79,8 +79,12 @@ export function fleetWeekHubProjection(observation) {
 export function fleetPlannerContinuation(observation) {
   const { epoch, hub } = observation;
   if (epoch === FLEET_WEEK_EPOCHS - 1) return new Float64Array(6);
+  return fleetContinuationFromProjection(epoch, hub, fleetWeekHubProjection(observation));
+}
+
+// Integrate the existing public freight-board distribution under a supplied demand belief.
+export function fleetContinuationFromProjection(epoch, hub, posterior) {
   const tables = getRewardTables();
-  const posterior = fleetWeekHubProjection(observation);
   let next = new Float64Array(18);
   for (let t = FLEET_WEEK_EPOCHS - 1; t > epoch; t--) {
     // Condition the choice on the newly signed board before averaging the best feasible
