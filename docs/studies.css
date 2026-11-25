@@ -35,3 +35,8 @@
 #overnight + #fleet .load-bar i {background:var(--accent-ink)}
 #overnight + #fleet a:focus-visible {outline-color:var(--ink)}
 @media(prefers-reduced-motion:no-preference){.load-bar i { animation:fill-load .36s ease-out; } @keyframes fill-load {from {transform:scaleX(0)} to {transform:scaleX(1)}}}
+#override + #overnight {margin-top:1.2rem;background:var(--soft);color:var(--ink)}
+#override + #overnight :is(p,figcaption,.load-bin span,nav a) {color:var(--ink)}
+#override + #overnight .load-bar {background:var(--border)}
+#override + #overnight .load-bar i {background:var(--accent-ink)}
+#override + #overnight a:focus-visible {outline-color:var(--ink)}

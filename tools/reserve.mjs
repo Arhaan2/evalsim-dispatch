@@ -45,7 +45,12 @@ import { DECISION_MS, FLEET_SUITE, FLEET_SPLITS, fleetCases } from "../docs/lib/
 import {benchmarkOvernight,overnightReferences,verifyOvernightReport} from "../docs/lib/overnight-benchmark.js";
 import {OVERNIGHT_SUITE,OVERNIGHT_SPLITS,overnightCases} from "../docs/lib/overnight-study.js";
 
+import {benchmarkOverride, overrideReferences, verifyOverrideReport} from "../docs/lib/override-benchmark.js";
+import {OVERRIDE_SUITE, OVERRIDE_SPLITS, overrideCases} from "../docs/lib/override-study.js";
+
 const labs = {
+  override: {id: OVERRIDE_SUITE, cases: overrideCases, references: overrideReferences, benchmark: benchmarkOverride,
+    verify: verifyOverrideReport, splits: OVERRIDE_SPLITS},
   overnight:{id:OVERNIGHT_SUITE,cases:overnightCases,references:overnightReferences,benchmark:benchmarkOvernight,verify:verifyOvernightReport,splits:OVERNIGHT_SPLITS},
   fleetweek: {id: FLEET_SUITE, cases: fleetCases, references: fleetReferences, benchmark: benchmarkFleetWeek, verify: verifyFleetReport, splits: FLEET_SPLITS},
   waitcost: { id: WAITCOST_SUITE.id, cases: waitcostCases, references: waitcostReferences, benchmark: benchmarkWaitcost, verify: verifyWaitcostReport, splits: WAITCOST_EVALUATION_SPLITS },
@@ -84,8 +89,15 @@ function pricedStudy(lab) {
   return lab === labs.loadchoice ? "loadchoice" : lab === labs.lastslot ? "lastslot" : null;
 }
 
+function fleetStudy(lab) {
+  if (lab === labs.override) return "override";
+  if (lab === labs.overnight) return "overnight";
+  if (lab === labs.fleetweek) return "fleetweek";
+  return null;
+}
+
 async function loadPricedBank(lab,split) {
-  const name = lab === labs.overnight ? "overnight" : lab === labs.fleetweek ? "fleetweek" : pricedStudy(lab);
+  const name = fleetStudy(lab) ?? pricedStudy(lab);
   if (!name) return undefined;
   if (!lab.splits.includes(split)) throw new Error("Unknown priced evaluation split.");
   const metadata=await loadRelease(name);
@@ -100,11 +112,16 @@ async function releaseFleetModel(name, seed, digest) {
   return JSON.parse(raw);
 }
 async function loadWeights(lab) {
-  if (lab === labs.fleetweek || lab === labs.overnight) {
-    const name = lab === labs.fleetweek ? "fleetweek" : "overnight";
+  const fleetName = fleetStudy(lab);
+  if (fleetName) {
+    const name = fleetName;
     const metadata = await loadRelease(name);
     const current = await releaseFleetModel(name,metadata.primarySeed,metadata.weightHashes[metadata.primarySeed]);
-    return lab === labs.fleetweek ? current : {current, previous:await releaseFleetModel("fleetweek",13,metadata.previousHash)};
+    if (lab === labs.fleetweek) return current;
+    const previous = await releaseFleetModel("fleetweek",13,metadata.previousHash);
+    if (lab === labs.overnight) return {current, previous};
+    const overnight = await releaseFleetModel("overnight",13,metadata.overnightHash);
+    return {current, previous, overnight};
   }
   const name=pricedStudy(lab);
   if (name) return JSON.parse(await readFile(new URL("../docs/data/"+name+"/desk.json",import.meta.url))).weights;
@@ -149,6 +166,7 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --policy ./examples/reserve-agent.mjs --out my-result.json
   node tools/reserve.mjs --split validation --policy planner
   node tools/reserve.mjs --suite drift --policy ./examples/reserve-agent.mjs --out drift.json
+  node tools/reserve.mjs --suite override --split test --policy ./examples/fleetweek-agent.mjs --out overrides.json
   node tools/reserve.mjs --suite overnight --split validation --policy ./examples/fleetweek-agent.mjs --out nights.json
   node tools/reserve.mjs --suite overnight --split archive --out double-return.json -- python3 examples/fleetweek_agent.py
   node tools/reserve.mjs --suite fleetweek --split validation --policy ./examples/fleetweek-agent.mjs --out week.json
@@ -187,7 +205,7 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --manifest
   node tools/reserve.mjs --verify my-result.json
 
---suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff, lastslot, loadchoice, waitcost, fleetweek or overnight.
+--suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff, lastslot, loadchoice, waitcost, fleetweek, overnight or override.
                           Overnight adds fresh weeks and a double-return archive. Policies: rl, planner, previous, greedy, noEmpty.
                           Fleetweek compares two trucks across five days; policies are rl, planner and greedy.
 --split NAME              test or validation. Turns, Closes, Trust, Rally, Survey and Booking also offer retention.
@@ -200,7 +218,8 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
                           Loadchoice evaluates post-survey bookings on fresh, original and archived Last Slot markets.
                           Lastslot offers validation, test, retention and archive, including an always-skip specialist (rlNever).
                           Tariff crosses seven prices with each validation, test, retention or archived Paid tape.
---policy NAME|PATH        Local ES module or reference. Freight Reserve and its survey-series successors offer rl and stochastic.
+--policy NAME|PATH        Override offers rl, planner (never override), always (force every proposal), overnight, previous and greedy.
+                          Local ES module or reference. Freight Reserve and its survey-series successors offer rl and stochastic.
                           Tariff adds paid (previous Paid learner at the current tariff) and reports purchases by price.
                           Paid uses planner for the optional survey planner. Its rlNever, rlAlways,
                           plannerNever and plannerAlways force the purchase decision at the one-credit fee.
@@ -278,7 +297,7 @@ async function saveReport(path, report) {
 }
 
 function display(report) {
-  if (report.suite === FLEET_SUITE || report.suite === OVERNIGHT_SUITE) {
+  if ([FLEET_SUITE, OVERNIGHT_SUITE, OVERRIDE_SUITE].includes(report.suite)) {
     console.log(report.suite + " / " + report.split + " / " + report.policy + " / " + report.cases.length + " weeks");
     const all = report.summary.all;
     console.table(Object.entries(all.policies).map(([name,p]) => ({policy: name, netCredits: p.net.toFixed(2),
@@ -393,7 +412,7 @@ async function main() {
     return console.log(JSON.stringify({ suite: lab.id, split, cases: lab.cases(split) }, null, 2));
   }
   if (command.length && values.policy !== undefined) throw new Error("Choose --policy or a program after --.");
-  const fleet = lab === labs.fleetweek || lab === labs.overnight;
+  const fleet = Boolean(fleetStudy(lab));
   const timeout = Number(values["timeout-ms"] ?? (fleet ? DECISION_MS : 60000));
   if (fleet && timeout > DECISION_MS) throw Error("Fleet benchmarks allow at most 1000 ms per decision.");
   if (!Number.isSafeInteger(timeout) || timeout < 1 || timeout > 2147483647 ||
