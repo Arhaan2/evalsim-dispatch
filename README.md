@@ -1,6 +1,12 @@
 # EvalSim DISPATCH
 
-[Play the overnight truck decision](https://arhaan2.github.io/evalsim-dispatch/overnight.html) · [Benchmark your fleet agent](OVERNIGHT.md) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+[Try the overnight override](https://arhaan2.github.io/evalsim-dispatch/override.html#replays) · [Benchmark your fleet agent](OVERRIDE.md) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+
+## When should the fleet agent override the planner?
+
+A signed load stays with the truck the rolling planner assigned. On four nights, RL estimates whether a different empty-truck placement will earn back its cost by Friday. On **2,048 new weeks from the original double-return schedule**, the release earned **2.32 more net credits per week** than the planner (paired 95% interval +1.13 to +3.52) and served **0.420 percentage points more contracts on time** (+0.205 to +0.630). The original unrestricted fleet RL earned 5.07 more credits than the planner on those same weeks.
+
+Across **4,096 weeks on four unseen schedules**, the override policy earned 330.20 net credits per week and served 72.70% of contracts on time. The planner earned 329.77 and served 72.65%. The differences of +0.43 credits (−0.28 to +1.16) and +0.056 percentage points (−0.078 to +0.190) cleared neither preregistered fresh-week criterion. The release did earn 1.17 more credits per week than the preceding overnight policy (+0.43 to +1.90). It accepted 851 of 8,647 eligible challenges, earning 33.32 more credits per week than forcing every alternative. [Results and paired decisions](https://arhaan2.github.io/evalsim-dispatch/override.html#results) · [Training and reproduction](training/override/)
 
 ## When is an overnight empty move worth it?
 
