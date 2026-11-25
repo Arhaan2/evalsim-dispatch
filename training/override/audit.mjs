@@ -7,7 +7,8 @@ import {chooseFleetGreedy, chooseFleetPlanner} from "../../docs/lib/fleetweek-pl
 import {makeFleetPolicy} from "../../docs/lib/fleetweek-policy.js";
 import {makeOvernightPolicy} from "../../docs/lib/overnight-policy.js";
 import {inspectOverride, makeOverridePolicy} from "../../docs/lib/override-policy.js";
-import {average, paired, publicFrames, replay} from "../fleetweek/audit-helpers.mjs";
+import {verifyFleetSplit} from "../fleetweek/verify-split.mjs";
+import {publicFrames, replay} from "../fleetweek/audit-helpers.mjs";
 
 const data = new URL("../../docs/data/override/", import.meta.url);
 const references = ["rl", "planner", "overnight", "previous", "always", "greedy"];
@@ -25,16 +26,6 @@ async function read(name, digest) {
     assert.equal(createHash("sha256").update(bytes).digest("hex"), digest, name);
   }
   return JSON.parse(bytes);
-}
-
-function verifyScores(rows, result) {
-  assert.equal(result.weeks, rows.length);
-  for (const key of ["agent", ...references]) assert.deepEqual(result.policies[key], average(rows,key));
-  for (const key of references) assert.deepEqual(result.comparisons[key], paired(rows,key));
-  const comparison = result.comparisons.planner;
-  assert.equal(result.earnsMoreThanPlanner, comparison.net95[0] > 0);
-  assert.equal(result.matchesPlannerService, comparison.servicePP >= 0 && comparison.service95[0] >= 0);
-  assert.equal(result.beatsPlanner, result.earnsMoreThanPlanner && result.matchesPlannerService);
 }
 
 function freight(id) {
@@ -148,23 +139,8 @@ for (const [split,start,n,families] of manifest) {
     allFits.push(checks.fits);
     decisions.push(...checks.decisions);
   }
-  const {summary,fits,diagnostics,versusPlanner}=results.splits[split];
-  for (const ref of Object.keys(versusPlanner)) {
-    assert(references.includes(ref));
-    assert.deepEqual(versusPlanner[ref], paired(rows.map(r=>({...r,agent:r[ref]})),"planner"));
-  }
-  for (const name of ["rl","previous","overnight","always"]) assert(Object.hasOwn(versusPlanner,name));
-  verifyScores(rows,summary.all);
-  assert.deepEqual(Object.keys(summary.byFamily),families);
-  for (const family of families) verifyScores(rows.filter(r=>r.family===family),summary.byFamily[family]);
-  assert.deepEqual(fits.map(f=>f.seed),seeds);
-  for (const [i,fit] of fits.entries()) {
-    const sample=rows.map((r,j)=>({...r,agent:allFits[j][i]}));
-    const stats=average(sample,"agent");
-    assert.equal(fit.net,stats.net);
-    assert.equal(fit.onTime,stats.onTime);
-    assert.deepEqual(fit.planner,paired(sample,"planner"));
-  }
+  const {diagnostics}=results.splits[split];
+  verifyFleetSplit(rows,allFits,results.splits[split],references,families,seeds);
   verifyDiagnostics(decisions,diagnostics,rows.length);
   console.log("Verified",split,rows.length,"weeks, ten policies per week and",decisions.length,"matched decisions.");
 }

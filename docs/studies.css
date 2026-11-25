@@ -29,14 +29,9 @@
 @media(max-width:720px){.latest-study {grid-template-columns:minmax(0,1fr)} .latest-study nav {grid-template-columns:repeat(auto-fit,minmax(12rem,1fr))}.study-group dl{grid-template-columns:minmax(0,1fr)}.study-group dt{padding:0}.study-group dd{padding:0 0 1rem}.study-group dt a{font-size:1.12rem}.library-bar nav,.topic-nav{column-gap:1rem}}
 
 .load-distribution { margin:0; }.load-distribution figcaption { font-size:1rem; font-weight:560; color:var(--white); margin:0 0 .65rem; }.load-bin {display:flex; flex-wrap:wrap; gap:.12rem .5rem; align-items:baseline; margin:.55rem 0; }.load-bin strong { font-size:.98rem; }.load-bin span {font-size:.93rem; color:var(--soft);}.load-bar {width:100%;background:#668375;height:.55rem;}.load-bar i {height:100%;background:var(--lime);display:block; transform-origin:left;}.library .study-group>p,.library .library-title>p {color:var(--ink)}
-#overnight + #fleet {margin-top:1.2rem;background:var(--soft);color:var(--ink)}
-#overnight + #fleet :is(p,figcaption,.load-bin span,nav a) {color:var(--ink)}
-#overnight + #fleet .load-bar {background:var(--border)}
-#overnight + #fleet .load-bar i {background:var(--accent-ink)}
-#overnight + #fleet a:focus-visible {outline-color:var(--ink)}
+.latest-study + .latest-study {margin-top:1.2rem;background:var(--soft);color:var(--ink)}
+.latest-study + .latest-study :is(p,figcaption,.load-bin span,nav a) {color:var(--ink)}
+.latest-study + .latest-study .load-bar {background:var(--border)}
+.latest-study + .latest-study .load-bar i {background:var(--accent-ink)}
+.latest-study + .latest-study a:focus-visible {outline-color:var(--ink)}
 @media(prefers-reduced-motion:no-preference){.load-bar i { animation:fill-load .36s ease-out; } @keyframes fill-load {from {transform:scaleX(0)} to {transform:scaleX(1)}}}
-#override + #overnight {margin-top:1.2rem;background:var(--soft);color:var(--ink)}
-#override + #overnight :is(p,figcaption,.load-bin span,nav a) {color:var(--ink)}
-#override + #overnight .load-bar {background:var(--border)}
-#override + #overnight .load-bar i {background:var(--accent-ink)}
-#override + #overnight a:focus-visible {outline-color:var(--ink)}

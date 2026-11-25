@@ -1,4 +1,4 @@
-import {fleetAverages, pairedFleetComparison} from "./fleetweek-study.js";
+import {summarizeFleetReferences} from "./fleetweek-study.js";
 import {OVERRIDE_FAMILIES} from "./override-markets.js";
 
 export {OVERRIDE_FAMILIES};
@@ -19,19 +19,4 @@ export function overrideCases(split) {
     Array.from({length: count}, (_, offset) => ({family, seed: start + index * 10000 + offset})));
 }
 
-function summarizeGroup(rows) {
-  const policies = Object.fromEntries(["agent", ...OVERRIDE_REFERENCES].map(key => [key, fleetAverages(rows, key)]));
-  const comparisons = Object.fromEntries(OVERRIDE_REFERENCES.map(key => [key, pairedFleetComparison(rows, key)]));
-  const {net95, servicePP, service95} = comparisons.planner;
-  const earnsMoreThanPlanner = net95[0] > 0;
-  const matchesPlannerService = servicePP >= 0 && service95[0] >= 0;
-  return {weeks: rows.length, policies, comparisons, earnsMoreThanPlanner, matchesPlannerService,
-    beatsPlanner: earnsMoreThanPlanner && matchesPlannerService};
-}
-
-export function summarizeOverride(rows) {
-  if (!rows.length) throw new RangeError("No weeks to summarize.");
-  const groups = Map.groupBy(rows, row => row.family);
-  return {all: summarizeGroup(rows), byFamily: Object.fromEntries(
-    Array.from(groups, ([family, block]) => [family, summarizeGroup(block)]))};
-}
+export const summarizeOverride = rows => summarizeFleetReferences(rows, OVERRIDE_REFERENCES);

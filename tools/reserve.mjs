@@ -48,7 +48,12 @@ import {OVERNIGHT_SUITE,OVERNIGHT_SPLITS,overnightCases} from "../docs/lib/overn
 import {benchmarkOverride, overrideReferences, verifyOverrideReport} from "../docs/lib/override-benchmark.js";
 import {OVERRIDE_SUITE, OVERRIDE_SPLITS, overrideCases} from "../docs/lib/override-study.js";
 
+import {benchmarkUncertainty, uncertaintyReferences, verifyUncertaintyReport} from "../docs/lib/uncertainty-benchmark.js";
+import {UNCERTAINTY_SUITE, UNCERTAINTY_SPLITS, uncertaintyCases} from "../docs/lib/uncertainty-study.js";
+
 const labs = {
+  uncertainty: {id: UNCERTAINTY_SUITE, cases: uncertaintyCases, references: uncertaintyReferences, benchmark: benchmarkUncertainty,
+    verify: verifyUncertaintyReport, splits: UNCERTAINTY_SPLITS},
   override: {id: OVERRIDE_SUITE, cases: overrideCases, references: overrideReferences, benchmark: benchmarkOverride,
     verify: verifyOverrideReport, splits: OVERRIDE_SPLITS},
   overnight:{id:OVERNIGHT_SUITE,cases:overnightCases,references:overnightReferences,benchmark:benchmarkOvernight,verify:verifyOvernightReport,splits:OVERNIGHT_SPLITS},
@@ -90,6 +95,7 @@ function pricedStudy(lab) {
 }
 
 function fleetStudy(lab) {
+  if (lab === labs.uncertainty) return "uncertainty";
   if (lab === labs.override) return "override";
   if (lab === labs.overnight) return "overnight";
   if (lab === labs.fleetweek) return "fleetweek";
@@ -121,7 +127,9 @@ async function loadWeights(lab) {
     const previous = await releaseFleetModel("fleetweek",13,metadata.previousHash);
     if (lab === labs.overnight) return {current, previous};
     const overnight = await releaseFleetModel("overnight",13,metadata.overnightHash);
-    return {current, previous, overnight};
+    if (lab === labs.override) return {current, previous, overnight};
+    const override = await releaseFleetModel("override",13,metadata.overrideHash);
+    return {current, previous, overnight, override};
   }
   const name=pricedStudy(lab);
   if (name) return JSON.parse(await readFile(new URL("../docs/data/"+name+"/desk.json",import.meta.url))).weights;
@@ -166,6 +174,7 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --policy ./examples/reserve-agent.mjs --out my-result.json
   node tools/reserve.mjs --split validation --policy planner
   node tools/reserve.mjs --suite drift --policy ./examples/reserve-agent.mjs --out drift.json
+  node tools/reserve.mjs --suite uncertainty --split test --policy ./examples/fleetweek-agent.mjs --out uncertainty.json
   node tools/reserve.mjs --suite override --split test --policy ./examples/fleetweek-agent.mjs --out overrides.json
   node tools/reserve.mjs --suite overnight --split validation --policy ./examples/fleetweek-agent.mjs --out nights.json
   node tools/reserve.mjs --suite overnight --split archive --out double-return.json -- python3 examples/fleetweek_agent.py
@@ -205,7 +214,7 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --manifest
   node tools/reserve.mjs --verify my-result.json
 
---suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff, lastslot, loadchoice, waitcost, fleetweek, overnight or override.
+--suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff, lastslot, loadchoice, waitcost, fleetweek, overnight, override or uncertainty.
                           Overnight adds fresh weeks and a double-return archive. Policies: rl, planner, previous, greedy, noEmpty.
                           Fleetweek compares two trucks across five days; policies are rl, planner and greedy.
 --split NAME              test or validation. Turns, Closes, Trust, Rally, Survey and Booking also offer retention.
@@ -218,7 +227,8 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
                           Loadchoice evaluates post-survey bookings on fresh, original and archived Last Slot markets.
                           Lastslot offers validation, test, retention and archive, including an always-skip specialist (rlNever).
                           Tariff crosses seven prices with each validation, test, retention or archived Paid tape.
---policy NAME|PATH        Override offers rl, planner (never override), always (force every proposal), overnight, previous and greedy.
+--policy NAME|PATH        Uncertainty offers rl, planner, override, meanOnly, flatRisk, overnight and previous.
+                          Override offers rl, planner (never override), always (force every proposal), overnight, previous and greedy.
                           Local ES module or reference. Freight Reserve and its survey-series successors offer rl and stochastic.
                           Tariff adds paid (previous Paid learner at the current tariff) and reports purchases by price.
                           Paid uses planner for the optional survey planner. Its rlNever, rlAlways,
@@ -297,7 +307,7 @@ async function saveReport(path, report) {
 }
 
 function display(report) {
-  if ([FLEET_SUITE, OVERNIGHT_SUITE, OVERRIDE_SUITE].includes(report.suite)) {
+  if ([FLEET_SUITE, OVERNIGHT_SUITE, OVERRIDE_SUITE, UNCERTAINTY_SUITE].includes(report.suite)) {
     console.log(report.suite + " / " + report.split + " / " + report.policy + " / " + report.cases.length + " weeks");
     const all = report.summary.all;
     console.table(Object.entries(all.policies).map(([name,p]) => ({policy: name, netCredits: p.net.toFixed(2),

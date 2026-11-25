@@ -1,9 +1,7 @@
 import assert from "node:assert/strict";
-import {createHash} from "node:crypto";
-import {readFile, writeFile} from "node:fs/promises";
-import {createFleetWeek} from "../../docs/lib/fleetweek.js";
-import {replayFleetActions} from "../../docs/lib/fleetweek-benchmark.js";
-import {DECISION_MS, FIT_SEEDS, fleetLedger, pairedFleetComparison} from "../../docs/lib/fleetweek-study.js";
+import {readFile} from "node:fs/promises";
+import {FIT_SEEDS, pairedFleetComparison} from "../../docs/lib/fleetweek-study.js";
+import {hash, artifact, legacyCheckpoint, score} from "../fleetweek/score-helpers.mjs";
 import {makeOverridePolicy} from "../../docs/lib/override-policy.js";
 import {overrideReferences} from "../../docs/lib/override-benchmark.js";
 import {OVERRIDE_SUITE, OVERRIDE_SPLITS, OVERRIDE_REFERENCES, overrideCases, summarizeOverride} from "../../docs/lib/override-study.js";
@@ -12,39 +10,7 @@ import {overrideBranches, summarizeOverrides} from "./diagnostics.mjs";
 const mode = process.argv[2];
 if (!["--check", "--write"].includes(mode)) throw Error("Choose --write to score or --check to reproduce.");
 const dir = new URL("../../docs/data/override/", import.meta.url);
-const hash = data => createHash("sha256").update(data).digest("hex");
-async function artifact(name, object) {
-  const url = new URL(name, dir);
-  const bytes = JSON.stringify(object) + "\n";
-  if (mode === "--check") assert.equal(hash(await readFile(url)), hash(bytes), name + " differs from release");
-  else await writeFile(url, bytes);
-  return hash(bytes);
-}
-
-async function legacyCheckpoint(study) {
-  const metadata = JSON.parse(await readFile(new URL("../" + study + "/results.json", dir), "utf8"));
-  const bytes = await readFile(new URL("../" + study + "/model-13.json", dir));
-  assert.equal(hash(bytes), metadata.weightHashes[13], study + " baseline digest");
-  return {checkpoint: JSON.parse(bytes), hash: hash(bytes)};
-}
-
-function score(config, policy) {
-  const week = createFleetWeek(config);
-  const actions = [];
-  while (!week.done) {
-    const obs = week.observe(), legal = week.legalActions();
-    const start = performance.now();
-    const id = policy(obs, legal);
-    if (performance.now() - start > DECISION_MS) throw Error("Decision exceeded the one-second limit.");
-    week.step(id);
-    actions.push(id);
-  }
-  const ledger = fleetLedger(week.ledger);
-  assert.deepEqual(replayFleetActions(config, actions), ledger);
-  return {actions, ledger};
-}
-
-const [previous, overnight] = await Promise.all([legacyCheckpoint("fleetweek"), legacyCheckpoint("overnight")]);
+const [previous, overnight] = await Promise.all([legacyCheckpoint(dir, "fleetweek"), legacyCheckpoint(dir, "overnight")]);
 const fits = await Promise.all(FIT_SEEDS.map(async seed => {
   const bytes = await readFile(new URL("model-" + seed + ".json", dir));
   const checkpoint = JSON.parse(bytes);
@@ -63,7 +29,7 @@ for (const split of OVERRIDE_SPLITS) {
     const records = Object.fromEntries(Object.entries(refs).map(([name, policy]) => [name, score(config, policy)]));
     return {...config, ...records, branches: overrideBranches(config, records.rl, primary)};
   });
-  results.banks[split] = await artifact(split + ".json", {suite: OVERRIDE_SUITE, split, cases});
+  results.banks[split] = await artifact(dir, mode, split + ".json", {suite: OVERRIDE_SUITE, split, cases});
   const rows = cases.map(row => ({family: row.family, agent: row.rl.ledger,
     ...Object.fromEntries(OVERRIDE_REFERENCES.map(name => [name, row[name].ledger]))}));
   const summary = summarizeOverride(rows);
@@ -83,5 +49,5 @@ const fresh = results.splits.test.summary.all;
 const doubleReturn = results.splits.archive.summary.all.earnsMoreThanPlanner;
 results.goals = {freshProfit: fresh.earnsMoreThanPlanner, freshService: fresh.matchesPlannerService, doubleReturn,
   joint: fresh.beatsPlanner && doubleReturn};
-await artifact("results.json", results);
+await artifact(dir, mode, "results.json", results);
 console.log(mode === "--check" ? "Reproduced all scored artifacts." : "Recorded all override benchmark results.");

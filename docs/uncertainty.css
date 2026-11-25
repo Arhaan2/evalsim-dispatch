@@ -1,0 +1,10 @@
+.uncertainty .risk-estimate {
+  display:flex; flex-wrap:wrap; gap:.4rem 2rem; align-items:baseline;
+  margin:.8rem 0 .5rem; font-variant-numeric:tabular-nums;
+}
+.uncertainty .risk-estimate p {margin:0}
+.uncertainty .risk-estimate strong {font-size:1.15rem;color:var(--accent-ink)}
+@media(max-width:650px){
+  .uncertainty .manifest {margin:.5rem 0;padding:.7rem;gap:.5rem}
+  .uncertainty .risk-estimate {margin:.5rem 0 .15rem;gap:.05rem 1.1rem}
+}
