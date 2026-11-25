@@ -1,11 +1,13 @@
-export function installStudyWorker({directory, splits, verify}) {
+export function installStudyWorker({directory, splits, verify, extraReference}) {
   let verifiedCases;
   self.onmessage = async ({data}) => {
     try {
       if (data.type === "week") {
         if (!Number.isSafeInteger(data.index) || !verifiedCases?.[data.index]) throw Error("Choose a verified week.");
-        const {rl, planner} = verifiedCases[data.index];
-        self.postMessage({type:"week", index:data.index, reference:{rl,planner}});
+        const row = verifiedCases[data.index];
+        const reference = {rl:row.rl, planner:row.planner};
+        if (extraReference) reference[extraReference] = row[extraReference];
+        self.postMessage({type:"week", index:data.index, reference});
         return;
       }
       const report = data.report, split = report?.split;

@@ -1,0 +1,12 @@
+.loss .risk-estimate {
+  display:flex; flex-wrap:wrap; align-items:baseline; gap:.2rem 2rem;
+  margin:.75rem 0 .35rem; font-variant-numeric:tabular-nums;
+}
+.loss .risk-estimate p {margin:0}
+.loss .risk-estimate strong {color:var(--accent-ink);font-size:1.2rem}
+.loss .risk-estimate p:first-child strong {font-size:1.5rem}
+.loss #goals td:last-child {font-weight:550}
+@media(max-width:650px){
+  .loss .manifest {margin:.5rem 0;padding:.7rem;gap:.5rem}
+  .loss .risk-estimate {gap:.1rem 1rem;margin:.5rem 0 .25rem}
+}
