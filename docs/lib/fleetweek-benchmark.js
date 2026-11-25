@@ -16,8 +16,8 @@ function matches(a, b) {
   return keys.length === Object.keys(b).length && keys.every(k => Object.hasOwn(b, k) && matches(a[k], b[k]));
 }
 
-function checkedBank(bank, split, manifest) {
-  if (!bank || bank.suite !== FLEET_SUITE || bank.split !== split || bank.cases?.length !== manifest.length) {
+function checkedBank(suite, bank, split, manifest) {
+  if (!bank || bank.suite !== suite.id || bank.split !== split || bank.cases?.length !== manifest.length) {
     throw new Error("The reference bank does not match this fleet split.");
   }
   for (const [i, config] of manifest.entries()) {
@@ -36,16 +36,16 @@ export function replayFleetActions(config, actions) {
   return fleetLedger(week.ledger);
 }
 
-function buildReport(split, policy, cases, reference) {
+function buildReport(suite, split, policy, cases, reference) {
   if (typeof policy !== "string" || !policy.trim() || policy.length > 120) throw new Error("Use an agent name of 1–120 characters.");
-  const rows = cases.map((row, i) => ({family: row.family, agent: row.ledger, rl: reference[i].rl.ledger,
-    greedy: reference[i].greedy.ledger, planner: reference[i].planner.ledger}));
-  return {suite: FLEET_SUITE, version: 1, split, policy, cases, summary: summarizeFleet(rows)};
+  const rows = cases.map((row, i) => ({family: row.family, agent: row.ledger,
+    ...Object.fromEntries(suite.references.map(name => [name, reference[i][name].ledger]))}));
+  return {suite: suite.id, version: 1, split, policy, cases, summary: suite.summarize(rows)};
 }
 
-export async function benchmarkFleetWeek({split = "test", policy = "agent", createPolicy, bank}) {
-  const manifest = fleetCases(split);
-  const reference = checkedBank(bank, split, manifest);
+export async function benchmarkFleetSuite(suite, {split = "test", policy = "agent", createPolicy, bank}) {
+  const manifest = suite.cases(split);
+  const reference = checkedBank(suite, bank, split, manifest);
   const cases = [];
   for (const config of manifest) {
     const decide = await createPolicy();
@@ -61,13 +61,13 @@ export async function benchmarkFleetWeek({split = "test", policy = "agent", crea
     }
     cases.push({...config, actions, ledger: fleetLedger(week.ledger)});
   }
-  return buildReport(split, policy, cases, reference);
+  return buildReport(suite, split, policy, cases, reference);
 }
 
-export function verifyFleetReport(report, weights, bank) {
-  if (report?.suite !== FLEET_SUITE || report.version !== 1) throw new Error("Unrecognized fleet report.");
-  const manifest = fleetCases(report.split);
-  const reference = checkedBank(bank, report.split, manifest);
+export function verifyFleetSuite(suite, report, bank) {
+  if (report?.suite !== suite.id || report.version !== 1) throw new Error("Unrecognized fleet report.");
+  const manifest = suite.cases(report.split);
+  const reference = checkedBank(suite, bank, report.split, manifest);
   if (!Array.isArray(report.cases) || report.cases.length !== manifest.length) throw new Error("Wrong number of weeks.");
   for (const [i, config] of manifest.entries()) {
     const row = report.cases[i];
@@ -75,7 +75,11 @@ export function verifyFleetReport(report, weights, bank) {
     const ledger = replayFleetActions(config, row.actions);
     if (!matches(ledger, row.ledger)) throw new Error("The submitted ledger differs from the replay.");
   }
-  const verified = buildReport(report.split, report.policy, report.cases, reference);
+  const verified = buildReport(suite, report.split, report.policy, report.cases, reference);
   if (!matches(report.summary, verified.summary)) throw new Error("The submitted comparison differs from the verified scores.");
   return verified;
 }
+
+const fleetSuite = {id: FLEET_SUITE, cases: fleetCases, summarize: summarizeFleet, references: ["rl","planner","greedy"]};
+export const benchmarkFleetWeek = options => benchmarkFleetSuite(fleetSuite, options);
+export const verifyFleetReport = (report, weights, bank) => verifyFleetSuite(fleetSuite, report, bank);

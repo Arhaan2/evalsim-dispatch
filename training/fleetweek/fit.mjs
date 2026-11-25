@@ -48,10 +48,10 @@ function collect(seed, index) {
 
 // All six responses share one positive-definite ridge Gram matrix. The
 // intercept is unpenalized. Cholesky gives the same solve for every response.
-function ridge(gram, rhs, n) {
+export function solveFleetRidge(gram, rhs, n, penalty = FLEET_FIT.ridgePerSample) {
   const d = gram.length;
   for (let i = 0; i < d; i++) {
-    if (i > 0) gram[i][i] += n * FLEET_FIT.ridgePerSample;
+    if (i > 0) gram[i][i] += n * penalty;
     for (let j = 0; j <= i; j++) {
       let value = gram[i][j];
       for (let k = 0; k < j; k++) value -= gram[i][k] * gram[j][k];
@@ -104,7 +104,7 @@ export function fitAfterstateValues({features, rewards, weeks, stages, dimension
         for (let p = 0; p < pairs; p++) rhs[p][j] += x[j] * (target[p] - mean);
       }
     }
-    weights[stage] = ridge(gram, rhs, weeks);
+    weights[stage] = solveFleetRidge(gram, rhs, weeks);
   }
   return weights;
 }
