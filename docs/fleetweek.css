@@ -1,0 +1,19 @@
+.fleet main {max-width:74rem}.fleet .library-title {margin-bottom:2.1rem}
+.fleet .desk {background:#edf1e7;padding:clamp(1rem,3vw,2.6rem);border-radius:.25rem}
+.fleet .desk-top,.fleet .week-controls {display:flex;align-items:baseline;justify-content:space-between;gap:.4rem 1rem;flex-wrap:wrap}
+.fleet .desk-top p {margin:0}.fleet .desk-top h2 {margin-top:.25rem}.fleet #week-balance {font-variant-numeric:tabular-nums}
+.fleet h3 {font-size:1.18rem;letter-spacing:-.025em;margin:0 0 .6rem}.fleet #task-note {max-width:73ch}
+.fleet .board {display:grid;grid-template-columns:minmax(0,1.35fr) minmax(15rem,.65fr);gap:clamp(1.3rem,4vw,3.6rem);margin:1.8rem 0}
+.fleet .orders {margin:0;display:grid;gap:.4rem;align-content:start}.fleet .orders label {font-weight:530}
+.fleet .orders select {background:var(--white);width:100%;padding:.6rem;min-height:44px;border:1px solid var(--muted);border-radius:.2rem;margin-bottom:.45rem}
+.fleet .orders p {margin:.2rem 0 .55rem}.fleet button {min-height:44px;border:1px solid var(--muted);padding:.5rem 1rem;background:var(--white);border-radius:.2rem;font:inherit}
+.fleet .orders button,.fleet #replay {background:var(--accent-ink);color:var(--white);border-color:var(--accent-ink)}
+.fleet button:hover {text-decoration:underline;text-underline-offset:.2em}.fleet .week-controls {justify-content:flex-start;margin-top:1rem}
+.fleet p,.fleet label,.fleet td {line-height:1.5}.fleet details {margin:.9rem 0}.fleet summary {cursor:pointer;min-height:44px;padding:.55rem 0;font-weight:540}
+.fleet table {border-collapse:collapse;width:100%;font-size:1rem;font-variant-numeric:tabular-nums}.fleet th,.fleet td {border-bottom:1px solid var(--border);padding:.6rem .45rem;text-align:right}.fleet th:first-child,.fleet td:first-child {text-align:left}.fleet th {font-weight:560}.fleet #freight td:nth-child(2) {text-align:left}
+.fleet .board .table-frame:has(#freight) th:nth-child(2) {text-align:left}
+.fleet .table-frame {overflow-x:auto}.fleet caption {text-align:left;margin:.3rem 0}.fleet .study-group>p,.fleet .study-group details p {max-width:74ch;color:var(--ink)}.fleet .study-group>p {margin-bottom:1rem}.fleet .study-group h3 {margin-top:1.45rem}
+.fleet #confirmation:empty,.fleet #verification:empty {display:none}.fleet #turns {padding-left:1.5rem}.fleet .upload {background:var(--soft);padding:1.2rem}.fleet .upload p{margin:.35rem 0 .75rem}.fleet input[type=number]{width:5rem;min-height:44px}.fleet .upload input[type=file]{max-width:100%}.fleet #checked{margin-top:1rem}
+.fleet pre {background:var(--accent-ink);color:var(--white);padding:1.1rem;overflow-x:auto;max-width:100%;font-size:.94rem;line-height:1.6}
+@media(max-width:760px){.fleet .board{grid-template-columns:minmax(0,1fr)}.fleet .desk-top{display:block}.fleet #week-balance{margin-top:.5rem}.fleet th,.fleet td{padding:.45rem .3rem}.fleet .table-frame{max-width:100%}.fleet .library-title {margin-top:2rem}.fleet .week-controls{align-items:center}}
+@media(prefers-reduced-motion:reduce){.fleet{scroll-behavior:auto}.fleet button:active{transform:none}}

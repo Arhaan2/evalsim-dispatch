@@ -1,10 +1,17 @@
 # EvalSim DISPATCH
 
-[Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Play the final survey-wait study](https://arhaan2.github.io/evalsim-dispatch/waitcost.html) · [Benchmark an agent](WAITCOST.md) · [Open the original simulator](https://arhaan2.github.io/evalsim-dispatch/)
+[Play the five-day fleet lab](https://arhaan2.github.io/evalsim-dispatch/fleetweek.html) · [Benchmark your fleet agent](FLEETWEEK.md) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+
+## Where should two trucks finish today?
+
+Two trucks move between three depots across five days. Each half-day offers one contract and two spot loads. A booking changes the starting point of the next round. The agent learned position values from 26,880 simulated training weeks across five independent fits. The release checkpoint was specified before training.
+
+On 2,048 unseen weeks the RL agent averaged **339.73 net credits and 74.20% on-time service**. The rolling planner earned **342.40 and 74.84%**, and the greedy dispatcher earned **269.05 and 57.02%**. The RL-minus-planner difference was **−2.67 credits per week** (paired 95% interval −4.60 to −0.79). RL led by 4.89 credits on the double-return schedule. The overall earnings and service test favored the planner. [Results and paired replays](https://arhaan2.github.io/evalsim-dispatch/fleetweek.html#results) · [Five training fits and frozen protocol](training/fleetweek/)
+
 
 ## When does a survey make the dispatcher wait too long?
 
-The final study trains a stopping rule for a specific disagreement. With a single truck slot, a public-history policy would book the signed offer, but the purchased survey makes its dispatcher want to wait. The new rule estimates the return from passing and can take the offer immediately.
+The final survey study trains a stopping rule for a specific disagreement. With a single truck slot, a public-history policy would book the signed offer, but the purchased survey makes its dispatcher want to wait. The new rule estimates the return from passing and can take the offer immediately.
 
 On fresh cold-ending reversals, the release agent beat the fee-aware planner by **0.280 net credits per shift** (paired 95% interval +0.150 to +0.416). Across 50 paid surveys it booked exactly the same freight as always skipping and spent 3.75 credits in fees. It saved 40 credits relative to following the survey's original booking advice, all on one tape tested at two prices. A rule that stopped at every disagreement made the same saves.
 
