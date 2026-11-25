@@ -72,7 +72,7 @@ export function pairedFleetComparison(rows, other) {
     wins, ties, losses: rows.length - wins - ties};
 }
 
-function averages(rows, key) {
+export function fleetAverages(rows, key) {
   const ledgers = rows.map(row => row[key]);
   const totals = {};
   for (const field of Object.keys(ledgers[0])) totals[field] = mean(ledgers.map(l => l[field]));
@@ -82,7 +82,7 @@ function averages(rows, key) {
 export function summarizeFleet(rows) {
   if (!rows.length) throw new Error("No weeks to summarize.");
   const section = group => {
-    const policies = Object.fromEntries(["agent","rl","planner","greedy"].map(key => [key, averages(group, key)]));
+    const policies = Object.fromEntries(["agent","rl","planner","greedy"].map(key => [key, fleetAverages(group, key)]));
     const comparisons = Object.fromEntries(["rl","planner","greedy"].map(key => [key, pairedFleetComparison(group, key)]));
     const primary = comparisons.planner;
     const beatsPlanner = primary.net95[0] > 0 && primary.service95[0] >= -SERVICE_MARGIN &&

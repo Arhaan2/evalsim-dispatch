@@ -1,4 +1,5 @@
 // EvalSim DISPATCH · five-day fleet positioning. One epoch is one half-day.
+import { OVERNIGHT_PATTERNS } from "./overnight-markets.js";
 export const FLEET_DEPOTS = Object.freeze(["Harbor", "Inland", "Junction"]);
 export const FLEET_WEEK_EPOCHS = 10;
 export const FLEET_MISS_PENALTY = 34;
@@ -21,6 +22,7 @@ export const FLEET_FAMILIES = Object.freeze({
   test: Object.freeze(["friday-switch", "split-week", "midweek-pivot", "double-return"]),
 });
 export const FLEET_PATTERNS = patterns;
+const allPatterns = Object.freeze({ ...patterns, ...OVERNIGHT_PATTERNS });
 
 function randomStream(seed) {
   let state = seed >>> 0;
@@ -133,7 +135,7 @@ function makeTape(seed, family) {
   const random = randomStream(seed);
   const rotation = Math.floor(random() * 3);
   const handedness = random() < 0.5 ? 1 : -1;
-  const hubs = Array.from(patterns[family], symbol => shifted(rotation, handedness * Number(symbol)));
+  const hubs = Array.from(allPatterns[family], symbol => shifted(rotation, handedness * Number(symbol)));
   // A Monday bulletin predicts each half-day. The issuing desk may lead, lag, or call the wrong hub.
   const forecast = Object.freeze(hubs.map((hub, i) => {
     const error = random();
@@ -159,7 +161,7 @@ function makeTape(seed, family) {
 const sumFields = Object.freeze(["net", "gross", "loadedCost", "emptyCost", "penalty", "served", "emptyMiles"]);
 export function createFleetWeek({ seed, family }) {
   if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) throw new RangeError("Expected an unsigned 32-bit fleet seed.");
-  if (!Object.hasOwn(patterns, family)) throw new RangeError("Unknown fleet market " + family);
+  if (!Object.hasOwn(allPatterns, family)) throw new RangeError("Unknown fleet market " + family);
   const { forecast, boards } = makeTape(seed, family);
   let positions = Object.freeze([0, 1]);
   let epoch = 0;

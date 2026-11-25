@@ -76,9 +76,9 @@ export function fleetWeekHubProjection(observation) {
   return posterior;
 }
 
-export function chooseFleetPlanner(observation, legalActions = fleetWeekActions(observation)) {
+export function fleetPlannerContinuation(observation) {
   const { epoch, hub } = observation;
-  if (epoch === FLEET_WEEK_EPOCHS - 1) return chooseFleetGreedy(observation, legalActions);
+  if (epoch === FLEET_WEEK_EPOCHS - 1) return new Float64Array(6);
   const tables = getRewardTables();
   const posterior = fleetWeekHubProjection(observation);
   let next = new Float64Array(18);
@@ -104,5 +104,10 @@ export function chooseFleetPlanner(observation, legalActions = fleetWeekActions(
     }
     next = earlier;
   }
-  return bestFleetAction(legalActions, next.subarray(6 * hub, 6 * hub + 6));
+  return next.subarray(6 * hub, 6 * hub + 6);
+}
+
+export function chooseFleetPlanner(observation, legalActions = fleetWeekActions(observation)) {
+  if (observation.epoch === FLEET_WEEK_EPOCHS - 1) return chooseFleetGreedy(observation, legalActions);
+  return bestFleetAction(legalActions, fleetPlannerContinuation(observation));
 }
