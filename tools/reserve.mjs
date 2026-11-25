@@ -39,7 +39,11 @@ import { LOADCHOICE_SUITE, loadchoiceCases } from "../docs/lib/loadchoice.js";
 import { benchmarkWaitcost, waitcostReferences, verifyWaitcostReport, WAITCOST_EVALUATION_SPLITS } from "../docs/lib/waitcost-benchmark.js";
 import { WAITCOST_SUITE, waitcostCases } from "../docs/lib/waitcost.js";
 
+import { benchmarkFleetWeek, fleetReferences, verifyFleetReport } from "../docs/lib/fleetweek-benchmark.js";
+import { DECISION_MS, FLEET_SUITE, FLEET_SPLITS, fleetCases } from "../docs/lib/fleetweek-study.js";
+
 const labs = {
+  fleetweek: {id: FLEET_SUITE, cases: fleetCases, references: fleetReferences, benchmark: benchmarkFleetWeek, verify: verifyFleetReport, splits: FLEET_SPLITS},
   waitcost: { id: WAITCOST_SUITE.id, cases: waitcostCases, references: waitcostReferences, benchmark: benchmarkWaitcost, verify: verifyWaitcostReport, splits: WAITCOST_EVALUATION_SPLITS },
   loadchoice: { id: LOADCHOICE_SUITE.id, cases: loadchoiceCases, references: loadchoiceReferences, benchmark: benchmarkLoadchoice, verify: verifyLoadchoiceReport, splits: LOADCHOICE_EVALUATION_SPLITS },
   lastslot: {id:LASTSLOT_SUITE.id,cases:lastslotCases,references:lastslotReferences,benchmark:benchmarkLastslot,verify:verifyLastslotReport,splits:LASTSLOT_EVALUATION_SPLITS},
@@ -77,7 +81,7 @@ function pricedStudy(lab) {
 }
 
 async function loadPricedBank(lab,split) {
-  const name = pricedStudy(lab);
+  const name = lab === labs.fleetweek ? "fleetweek" : pricedStudy(lab);
   if (!name) return undefined;
   if (!lab.splits.includes(split)) throw new Error("Unknown priced evaluation split.");
   const metadata=await loadRelease(name);
@@ -87,6 +91,12 @@ async function loadPricedBank(lab,split) {
 }
 
 async function loadWeights(lab) {
+  if (lab === labs.fleetweek) {
+    const metadata = await loadRelease("fleetweek");
+    const raw = await readFile(new URL("../docs/data/fleetweek/model-" + metadata.primarySeed + ".json", import.meta.url));
+    if (createHash("sha256").update(raw).digest("hex") !== metadata.weightHashes[metadata.primarySeed]) throw Error("Fleet checkpoint digest mismatch.");
+    return JSON.parse(raw);
+  }
   const name=pricedStudy(lab);
   if (name) return JSON.parse(await readFile(new URL("../docs/data/"+name+"/desk.json",import.meta.url))).weights;
   if (lab === labs.tariff) {
@@ -130,6 +140,8 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --policy ./examples/reserve-agent.mjs --out my-result.json
   node tools/reserve.mjs --split validation --policy planner
   node tools/reserve.mjs --suite drift --policy ./examples/reserve-agent.mjs --out drift.json
+  node tools/reserve.mjs --suite fleetweek --split validation --policy ./examples/fleetweek-agent.mjs --out week.json
+  node tools/reserve.mjs --suite fleetweek --split test --out week.json -- python3 examples/fleetweek_agent.py
   node tools/reserve.mjs --suite drift --policy adaptive
   node tools/reserve.mjs --suite turns --policy ./examples/reserve-agent.mjs --out turns.json
   node tools/reserve.mjs --suite turns --split retention --policy rl
@@ -164,7 +176,8 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --manifest
   node tools/reserve.mjs --verify my-result.json
 
---suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff, lastslot, loadchoice or waitcost.
+--suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff, lastslot, loadchoice, waitcost or fleetweek.
+                          Fleetweek compares two trucks across five days; policies are rl, planner and greedy.
 --split NAME              test or validation. Turns, Closes, Trust, Rally, Survey and Booking also offer retention.
                           The Trust archive replays all eight previous Closes patterns on new seeds.
                           The Rally archive replays the eight previous Trust test patterns on new seeds.
@@ -175,7 +188,7 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
                           Loadchoice evaluates post-survey bookings on fresh, original and archived Last Slot markets.
                           Lastslot offers validation, test, retention and archive, including an always-skip specialist (rlNever).
                           Tariff crosses seven prices with each validation, test, retention or archived Paid tape.
---policy NAME|PATH        Local ES module, or a reference. Every suite offers rl and stochastic.
+--policy NAME|PATH        Local ES module or reference. Freight Reserve and its survey-series successors offer rl and stochastic.
                           Tariff adds paid (previous Paid learner at the current tariff) and reports purchases by price.
                           Paid uses planner for the optional survey planner. Its rlNever, rlAlways,
                           plannerNever and plannerAlways force the purchase decision at the one-credit fee.
@@ -253,6 +266,16 @@ async function saveReport(path, report) {
 }
 
 function display(report) {
+  if (report.suite === FLEET_SUITE) {
+    console.log(report.suite + " / " + report.split + " / " + report.policy + " / " + report.cases.length + " weeks");
+    const all = report.summary.all;
+    console.table(Object.entries(all.policies).map(([name,p]) => ({policy: name, netCredits: p.net.toFixed(2),
+      onTimePct: p.onTime.toFixed(2), emptyMiles: p.emptyMiles.toFixed(2), weeksMeetingTarget: p.targetWeeks})));
+    for (const [name, c] of Object.entries(all.comparisons)) {
+      console.log("Agent minus " + name + " in weekly credits: " + c.net.toFixed(2) + " [" + c.net95.map(n => n.toFixed(2)).join(", ") + "]; on-time difference " + c.servicePP.toFixed(2) + " pp.");
+    }
+    return;
+  }
   const number = n => n.toFixed(2);
   const labels = { rl: "RL", planner: "point planner", stochastic: "stochastic planner", adaptive: "adaptive planner",
     legacy: "original RL", drift: "previous Drift RL", turns: "previous Turns RL", ablated: "RL without history",
@@ -358,7 +381,8 @@ async function main() {
     return console.log(JSON.stringify({ suite: lab.id, split, cases: lab.cases(split) }, null, 2));
   }
   if (command.length && values.policy !== undefined) throw new Error("Choose --policy or a program after --.");
-  const timeout = Number(values["timeout-ms"] ?? 60000);
+  const timeout = Number(values["timeout-ms"] ?? (lab === labs.fleetweek ? DECISION_MS : 60000));
+  if (lab === labs.fleetweek && timeout > DECISION_MS) throw Error("Fleetweek allows at most 1000 ms per decision.");
   if (!Number.isSafeInteger(timeout) || timeout < 1 || timeout > 2147483647 ||
       (values["timeout-ms"] !== undefined && !command.length)) throw new Error("Use a positive --timeout-ms with an external program.");
   const weights = await loadWeights(lab);

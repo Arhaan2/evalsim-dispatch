@@ -19,16 +19,11 @@
   <header class="library-title">
     <h1>DISPATCH studies</h1>
     <p>How does a trained dispatcher compare with a planner when freight, forecasts and capacity change? Follow a question from its first experiment to the latest evidence.</p>
-    <nav class="topic-nav" aria-label="Browse by research question"><a href="#information">Survey decisions ↓</a><a href="#demand">Changing demand ↓</a><a href="#operations">Dispatch planning ↓</a></nav>
+    <nav class="topic-nav" aria-label="Browse by research question"><a href="#fleet">Fleet positioning ↓</a><a href="#information">Survey decisions ↓</a><a href="#demand">Changing demand ↓</a><a href="#operations">Dispatch planning ↓</a></nav>
   </header>
-  <article class="latest-study" aria-labelledby="latest-title">
-    <div><h2 id="latest-title">When does a survey cause an expensive wait?</h2>
-      <p id="latest-result">The agent stopped two costly waits on cold reversals, both on the same freight tape at different prices. Skipping every survey earned more after fees. The fresh hot-drop win did not repeat, and the original interrupted-drop gains held.</p>
-    </div>
-
-    <figure class="load-distribution"><figcaption>After a paid reading</figcaption><div class="load-bin"><strong>Cold reversals</strong><span>0 of 2 costly waits remained</span><div class="load-bar" aria-hidden="true"><i style="width:0%"></i></div></div><div class="load-bin"><strong>Hot drops</strong><span>8 of 16 profitable waits remained</span><div class="load-bar" aria-hidden="true"><i style="width:50%"></i></div></div></figure>
-    <nav aria-label="Waiting-cost study"><a href="./waitcost.html#benchmark">Read the latest results →</a><a href="./waitcost.html#session">Try the decision →</a><a href="./waitcost.html#own-agent">Benchmark your agent →</a></nav>
-  </article>
+  <!-- fleet-feature-start -->
+<article class="latest-study" id="fleet" aria-labelledby="latest-title"><div><h2 id="latest-title">Where should the trucks finish today?</h2><p>Run a two-truck fleet through Friday. On 2,048 fresh weeks the trained dispatcher earned -2.67 credits per week versus the rolling planner.</p></div><figure class="load-distribution"><figcaption>Contracts served on time</figcaption><div class="load-bin"><strong>Trained RL</strong><span>74.20%</span><div class="load-bar" aria-hidden="true"><i style="width:74.20%"></i></div></div><div class="load-bin"><strong>Planner</strong><span>74.84%</span><div class="load-bar" aria-hidden="true"><i style="width:74.84%"></i></div></div></figure><nav aria-label="Five-day fleet"><a href="./fleetweek.html">Dispatch a week →</a><a href="./fleetweek.html#results">Read the results →</a><a href="./fleetweek.html#own-agent">Benchmark your agent →</a></nav></article>
+<!-- fleet-feature-end -->
   <section id="information" class="study-group" aria-labelledby="information-title">
     <h2 id="information-title">When is a survey worth buying?</h2>
     <p>Trace the decisions in reverse publication order. Net earnings include any fee the agent paid. Each study has its own fixed shifts and controls.</p>
