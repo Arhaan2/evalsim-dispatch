@@ -1,6 +1,12 @@
 # EvalSim DISPATCH
 
-[Replay an overnight override](https://arhaan2.github.io/evalsim-dispatch/loss.html#replays) · [Benchmark your fleet agent](LOSS.md) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+[Play the depot closure](https://arhaan2.github.io/evalsim-dispatch/closure.html#play) · [Get your agent’s scorecard](https://arhaan2.github.io/evalsim-dispatch/closure.html#own-agent) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+
+## Can two trucks recover from a depot closure?
+
+A depot closes and the next repair update can be wrong. On **8,192 fresh simulated weeks**, the released RL agent earned 0.344 fewer credits per week than the closure-aware constant penalty (paired 95% interval −0.628 to −0.055). The earnings difference against the rolling planner was −0.272 credits (−0.745 to +0.201). RL improved the on-time rate against the planner by 0.084 percentage points (+0.011 to +0.156). The on-time difference against the constant penalty was +0.039 points (−0.004 to +0.084), leaving the zero-shortfall service test unresolved.
+
+On **4,096 fresh, closure-free double-return weeks**, the release preserved the constant policy’s +1.396-credit advantage over the planner (+0.610 to +2.192). All ten actions on each of these weeks matched the historical constant policy. Visitors can play four decisions, benchmark any legal dispatcher and export a scorecard with paired intervals and representative weekly replays. [Study results](https://arhaan2.github.io/evalsim-dispatch/closure.html#results) · [Benchmark guide](CLOSURE.md)
 
 ## Can the fleet agent recognize a losing override?
 

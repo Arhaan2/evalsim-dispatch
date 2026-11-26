@@ -1,0 +1,40 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import test from "node:test";
+import {FLEET_PATTERNS} from "../docs/lib/fleetweek.js";
+import {OVERNIGHT_PATTERNS} from "../docs/lib/overnight-markets.js";
+import {OVERRIDE_PATTERNS} from "../docs/lib/override-markets.js";
+import {UNCERTAINTY_PATTERNS} from "../docs/lib/uncertainty-markets.js";
+import {LOSS_PATTERNS} from "../docs/lib/loss-markets.js";
+import {CLOSURE_PATTERNS} from "../docs/lib/closure-markets.js";
+import {CLOSURE_SPLITS,benchmarkClosure,closureCases,verifyClosureReport} from "../docs/lib/closure-benchmark.js";
+import {createClosureWeek} from "../docs/lib/closure-world.js";
+
+test("all six new market schedules are held out even under depot relabeling",()=>{
+  const all=Object.values({...FLEET_PATTERNS,...OVERNIGHT_PATTERNS,...OVERRIDE_PATTERNS,...UNCERTAINTY_PATTERNS,...LOSS_PATTERNS,...CLOSURE_PATTERNS});
+  const canonical=s=>Array.from(s,c=>[...new Set(s)].indexOf(c)).join("");
+  assert.equal(new Set(all.map(canonical)).size,all.length);
+  const banks=CLOSURE_SPLITS.map(closureCases);
+  assert.deepEqual(banks.map(c=>c.length),[256,8192,2048,4096]);
+  assert.equal(new Set(banks.flat().map(c=>c.seed)).size,14592);
+  assert(banks[1].every(c=>c.closure.starts.every(i=>i===3||i===5)));
+  assert(banks[3].every(c=>c.family==="double-return" && c.closure===null));
+});
+test("public verification uses the incident menu and binds the submitted timing profile",async()=>{
+  const bank=JSON.parse(readFileSync(new URL("../docs/data/closure/validation.json",import.meta.url)));
+  const report=await benchmarkClosure({bank,split:"validation",policy:"Always wait",createPolicy:()=>()=>"W|W"});
+  assert.deepEqual(verifyClosureReport(report,null,bank),report);
+  const altered=structuredClone(report);
+  altered.cases[0].closure=null;
+  assert.throws(()=>verifyClosureReport(altered,null,bank),/manifest/);
+  const world=createClosureWeek(report.cases[0]);
+  while (world.observe().incident.status!=="closed") world.step("W|W");
+  const obs=world.observe(),truck=obs.positions.findIndex(p=>p!==obs.incident.depot);
+  const moves=["W","W"];moves[truck]="E"+obs.incident.depot;
+  const forged=structuredClone(report);
+  forged.cases[0].actions[obs.epoch]=moves.join("|");
+  assert.throws(()=>verifyClosureReport(forged,null,bank),/Illegal closure action/);
+  const badBank=structuredClone(bank);
+  badBank.cases[0].closure.durations=[1];
+  assert.throws(()=>verifyClosureReport(report,null,badBank),/manifest/);
+});
