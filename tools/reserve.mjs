@@ -54,7 +54,10 @@ import {UNCERTAINTY_SUITE, UNCERTAINTY_SPLITS, uncertaintyCases} from "../docs/l
 import {benchmarkLoss, lossReferences, verifyLossReport} from "../docs/lib/loss-benchmark.js";
 import {LOSS_SUITE, LOSS_SPLITS, lossCases} from "../docs/lib/loss-study.js";
 
+import {benchmarkClosure, closureReferences, verifyClosureReport, CLOSURE_SUITE, CLOSURE_SPLITS, closureCases} from "../docs/lib/closure-benchmark.js";
+
 const labs = {
+  closure:{id:CLOSURE_SUITE, cases:closureCases, references:closureReferences, benchmark:benchmarkClosure, verify:verifyClosureReport, splits:CLOSURE_SPLITS},
   loss: {id: LOSS_SUITE, cases: lossCases, references: lossReferences, benchmark: benchmarkLoss,
     verify: verifyLossReport, splits: LOSS_SPLITS},
   uncertainty: {id: UNCERTAINTY_SUITE, cases: uncertaintyCases, references: uncertaintyReferences, benchmark: benchmarkUncertainty,
@@ -100,6 +103,7 @@ function pricedStudy(lab) {
 }
 
 function fleetStudy(lab) {
+  if (lab === labs.closure) return "closure";
   if (lab === labs.loss) return "loss";
   if (lab === labs.uncertainty) return "uncertainty";
   if (lab === labs.override) return "override";
@@ -130,6 +134,11 @@ async function loadWeights(lab) {
     const metadata = await loadRelease(name);
     const current = await releaseFleetModel(name,metadata.primarySeed,metadata.weightHashes[metadata.primarySeed]);
     if (lab === labs.fleetweek) return current;
+    if (lab === labs.closure) {
+      const override=await releaseFleetModel("override",13,metadata.overrideHash);
+      const uncertainty=await releaseFleetModel("uncertainty",13,metadata.uncertaintyHash);
+      return {current,override,uncertainty};
+    }
     const previous = await releaseFleetModel("fleetweek",13,metadata.previousHash);
     if (lab === labs.overnight) return {current, previous};
     if (lab === labs.loss) {
@@ -186,6 +195,7 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --policy ./examples/reserve-agent.mjs --out my-result.json
   node tools/reserve.mjs --split validation --policy planner
   node tools/reserve.mjs --suite drift --policy ./examples/reserve-agent.mjs --out drift.json
+  node tools/reserve.mjs --suite closure --split test --policy ./examples/fleetweek-agent.mjs --out closure.json
   node tools/reserve.mjs --suite loss --split test --policy ./examples/fleetweek-agent.mjs --out loss.json
   node tools/reserve.mjs --suite loss --split archive --out loss-python.json -- python3 examples/fleetweek_agent.py
   node tools/reserve.mjs --suite uncertainty --split test --policy ./examples/fleetweek-agent.mjs --out uncertainty.json
@@ -228,10 +238,11 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --manifest
   node tools/reserve.mjs --verify my-result.json
 
---suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff, lastslot, loadchoice, waitcost, fleetweek, overnight, override, uncertainty or loss.
+--suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff, lastslot, loadchoice, waitcost, fleetweek, overnight, override, uncertainty, loss or closure.
                           Overnight adds fresh weeks and a double-return archive. Policies: rl, planner, previous, greedy, noEmpty.
                           Fleetweek compares two trucks across five days; policies are rl, planner and greedy.
 --split NAME              test or validation. Turns, Closes, Trust, Rally, Survey and Booking also offer retention.
+                          Closure offers validation, test, clean and archive. Policies: rl, planner and flatRisk.
                           Loss offers validation, test and the original double-return archive.
                           The Trust archive replays all eight previous Closes patterns on new seeds.
                           The Rally archive replays the eight previous Trust test patterns on new seeds.
@@ -324,7 +335,7 @@ async function saveReport(path, report) {
 }
 
 function display(report) {
-  if ([FLEET_SUITE, OVERNIGHT_SUITE, OVERRIDE_SUITE, UNCERTAINTY_SUITE, LOSS_SUITE].includes(report.suite)) {
+  if ([FLEET_SUITE, OVERNIGHT_SUITE, OVERRIDE_SUITE, UNCERTAINTY_SUITE, LOSS_SUITE, CLOSURE_SUITE].includes(report.suite)) {
     console.log(report.suite + " / " + report.split + " / " + report.policy + " / " + report.cases.length + " weeks");
     const all = report.summary.all;
     console.table(Object.entries(all.policies).map(([name,p]) => ({policy: name, netCredits: p.net.toFixed(2),
