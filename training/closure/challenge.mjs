@@ -3,16 +3,18 @@ import {FLEET_DEPOTS} from "../../docs/lib/fleetweek.js";
 import {closureProbabilities} from "../../docs/lib/closure-world.js";
 import {incidentText,traceClosure} from "../../docs/lib/closure-view.js";
 import {roundName,dispatchText,moveName} from "../../docs/lib/overnight-view.js";
-import {table,digits} from "../fleetweek/render-decisions.mjs";
+import {table,digits,signed} from "../fleetweek/render-decisions.mjs";
 
 const stamp=e=>e.seed+"-"+e.epoch;
 
+const shortVsLong = {base:"shortId", proposal:"longId", names:["Short-trained default","Long-trained alternative"],
+    moves:["short-trained default’s move","long-trained agent’s move"], journey:["Short-trained move first","Long-trained move first"]};
 const studies = {
   closure: {base:"constantId", proposal:"proposalId", journey:["Constant-penalty move first","Alternative move first"]},
   longrepair: {base:"constantId", proposal:"closureId", names:["Constant penalty","Earlier closure agent"],
     moves:["constant-penalty move","earlier closure agent’s move"], journey:["Constant-penalty move first","Earlier agent’s move first"]},
-  shortdefault: {base:"shortId", proposal:"longId", names:["Short-trained default","Long-trained alternative"],
-    moves:["short-trained default’s move","long-trained agent’s move"], journey:["Short-trained move first","Long-trained move first"]},
+  shortdefault: shortVsLong,
+  longmove: shortVsLong,
 };
 function challenge(e, study) {
   const {base:baseKey,proposal,names:dispatchers,moves,journey:headings}=studies[study];
@@ -60,17 +62,23 @@ function challenge(e, study) {
     (moves?"The "+moves[1]+" earned ":"The alternative earned ")+Math.abs(difference)+(difference>0?" more":" fewer")+" net credits through Friday.";
   const elapsed=dispatchers && incident.status==="closed" ? "Repairs began "+roundName(incident.start)+". " : "";
   const explanation=dispatchers ? ' The new agent chose the '+moves[selectedDefault?0:1]+'. This repair lasted '+e.duration+(e.duration===1?' half-day.':' half-days.')+' Both paths use the new agent on every later decision.</p>' : ' The constant-penalty dispatcher chose “'+names[0]+'”. RL chose “'+names[selectedDefault?0:1]+'”. The released RL agent handled all later decisions on both paths.</p>';
+  let forecast="";
+  if (study==="longmove") {
+    assert(Number.isFinite(e.winProbability) && e.winProbability>=0 && e.winProbability<=1 && Number.isFinite(e.expectedNet));
+    forecast='<p>Before this choice, the detector gave the long-trained move a '+digits(100*e.winProbability,1)+
+      '% chance of earning more and estimated '+signed(e.expectedNet,2)+' extra credits through Friday, using the short-trained policy on later boards.</p>';
+  }
   return '<article class="night-case" data-case="'+stamp(e)+'"><h3>'+roundName(t)+'</h3>'+
     '<div class="notice-board"><div><h4>'+affected+(incident.status==="warning"?" will close":" is closed")+'</h4><p>'+elapsed+update+chance+'</p></div>'+
     '<ul class="depot-list" aria-label="Depot status">'+depotList+'</ul></div><div class="fleet-position">'+trucks+'</div>'+
     '<div class="call-row shift-choices" hidden>'+choices+'</div><noscript><p>Choices: '+names.join(" or ")+'.</p></noscript>'+
-    '<p class="call-status" role="status"></p><details class="outcome"><summary>Reveal both Friday outcomes</summary><p><strong>'+finding+'</strong>'+explanation+stats+
+    '<p class="call-status" role="status"></p><details class="outcome"><summary>Reveal both Friday outcomes</summary><p><strong>'+finding+ '</strong>'+explanation+forecast+stats+
     '<details><summary>Repair timeline and truck log</summary><p>'+timeline+'</p>'+journey+'</details></details>'+
     '<a class="case-link" href="./'+study+'.html?case='+stamp(e)+'#play">Link to this decision</a></article>';
 }
 export function closurePlay(examples, {study="closure", sampleNote}={}) {
   if (!examples.length) throw Error("The public challenge requires at least one playable decision.");
-  const displayRound=e=>study==="shortdefault" ? roundName(e.epoch).slice(0,3)+(e.epoch%2?" PM":" AM") : roundName(e.epoch);
+  const displayRound=e=>studies[study]===shortVsLong ? roundName(e.epoch).slice(0,3)+(e.epoch%2?" PM":" AM") : roundName(e.epoch);
   const options=examples.map(e=>'<option value="'+stamp(e)+'">'+displayRound(e)+' · week '+e.seed+'</option>').join("");
   return '<div class="case-list" hidden><label for="case-select">Choose a week</label><select id="case-select">'+options+'</select></div>'+
     examples.map(e=>challenge(e,study)).join("\n")+'<p class="sample-note">'+(sampleNote??'Each replay shows a result nearest the middle of its group among paired decisions from the first 32 test weeks per schedule. The choices keep the same freight assignments and change empty-truck placement on one round.')+'</p>';

@@ -15,4 +15,36 @@ jobs:
       - run: npm test
       - run: npm run audit:results
       - run: npm run audit:models
-      - run: npm run audit:labs
+      - run: npm run audit:shifts
+  fleet:
+    name: ${{ matrix.audit }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        audit: ['audit:fleet-decisions', 'audit:depot-repairs', 'audit:longmove:study', 'audit:longmove:ledgers']
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.18.0'
+      - run: npm run "${{ matrix.audit }}"
+  long-move-fit:
+    name: Reproduce long-move fit ${{ matrix.seed }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        seed: [13, 37, 73, 101, 211]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.18.0'
+      - run: node training/longmove/fit.mjs --check "${{ matrix.seed }}"
+      - run: node training/longmove/audit-fit.mjs "${{ matrix.seed }}"

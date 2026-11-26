@@ -30,3 +30,5 @@
 .short-default .default-comparisons th,.short-default .default-comparisons td{overflow-wrap:break-word}
 .short-default .default-comparisons strong{display:inline-block;font-weight:550}
 @media(max-width:520px){.short-default .default-comparisons th:first-child{width:29%}.short-default .default-comparisons th:nth-child(2){width:41%}}
+.short-default .opportunity-counts{table-layout:fixed;white-space:normal}
+.short-default .opportunity-counts th,.short-default .opportunity-counts td{overflow-wrap:break-word}

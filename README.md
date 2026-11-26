@@ -1,6 +1,14 @@
 # EvalSim DISPATCH
 
-[Play short or long](https://arhaan2.github.io/evalsim-dispatch/shortdefault.html#play) · [Benchmark your dispatcher](https://arhaan2.github.io/evalsim-dispatch/shortdefault.html#own-agent) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+[Play the long-move challenge](https://arhaan2.github.io/evalsim-dispatch/longmove.html#play) · [Benchmark your dispatcher](https://arhaan2.github.io/evalsim-dispatch/longmove.html#own-agent) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+
+## Can the fleet spot a profitable long-repair move?
+
+On **16,384 fresh simulated weeks**, there were 152 boards on the short dispatcher's route where the short- and long-trained policies disagreed. Trying both first moves against identical future freight showed that 72 long moves would have earned more by Friday. **The trained detector's switching rule caught 5 of those 72 and missed 67.** It chose long 10 times. Five earned more, four tied and one earned less. The detector ranked profitable moves ahead of ties or losses with an AUROC of 0.617 (95% interval 0.528 to 0.702, chance 0.5). The earlier study's 62 profitable moves stayed out of training and testing.
+
+The release earned **63 more credits in total than always short**, or +0.00385 per week (paired 95% interval −0.00427 to +0.01257). Its earnings differences against the constant penalty (+0.0449, −0.0043 to +0.0947) and rolling planner (+0.1391, −0.1365 to +0.3998) also remained inconclusive. Service improved against the constant penalty by 0.0177 percentage points and against the planner by 0.0818 points. The short policy served the same total number of contracts as the release, with an interval of −0.00183 to +0.00183 points, leaving the zero-shortfall service criterion unresolved.
+
+On 4,096 fresh draws of the original double-return schedule, the unchanged closure-free dispatch retained its +2.082 credits per week over the planner (+1.233 to +2.857). Three of seven registered criteria passed. [Inspect the detector](https://arhaan2.github.io/evalsim-dispatch/longmove.html#detection) · [Replay decisions](https://arhaan2.github.io/evalsim-dispatch/longmove.html#play) · [Benchmark your agent](LONGMOVE.md)
 
 ## When is it worth switching away from the short-repair dispatcher?
 

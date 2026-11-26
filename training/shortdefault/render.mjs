@@ -2,6 +2,7 @@ import {readFile} from "node:fs/promises";
 import {verifyShortDefaultReport} from "../../docs/lib/shortdefault-benchmark.js";
 import {familyName} from "../../docs/lib/overnight-view.js";
 import {closurePlay} from "../closure/challenge.mjs";
+import {verdict,defaultTable,primaryTable,allFitTables,decisionTables} from "../closure/switch-tables.mjs";
 import {interval,section,baselineTable,registeredTests,dispatcherTable,writeSampleReport} from "../closure/repair-tables.mjs";
 import {table,count,digits,signed,writeSections} from "../fleetweek/render-decisions.mjs";
 
@@ -17,12 +18,6 @@ const names={rl:"Short-default RL",shortGate:"Short-trained default",longGate:"L
 const {tests,registered}=registeredTests(all,archive,result.goals);
 const short=all.comparisons.shortGate, base=all.comparisons.flatRisk, planner=all.comparisons.planner;
 
-function verdict(c) {
-  if (!c.wins && !c.losses) return "Tied on every week";
-  if (c.net95[0]>0) return "Release earned more";
-  if (c.net95[1]<0) return "Release earned less";
-  return "Inconclusive";
-}
 function shortFinding() {
   if (released.settings.shortOnly) return "The release followed the short-trained default on every board. Against that default it earned exactly zero additional credits.";
   if (!d.switched) return "The release kept the short-trained move at every disagreement. Both dispatchers finished every week with identical scores.";
@@ -33,35 +28,17 @@ function shortFinding() {
 }
 const lengthRows=[["Short · 1–3 half-days",fresh.durationGroups.short],["Long · 4–5 half-days",fresh.durationGroups.long]];
 const individual=Object.entries(fresh.byDuration).map(([n,g])=>[n+(n==="1"?" half-day":" half-days"),g]);
-function defaultTable(title, rows) {
-  return table(title,["Group","Weeks","Credits/week vs short [95% interval]","On-time pp vs short [95% interval]",
-    "Credits/week vs long [95% interval]","Credits/week vs constant [95% interval]","Credits/week vs planner [95% interval]"],
-  rows.map(([label,g])=>[label,count(g.weeks),interval(g.comparisons.shortGate),interval(g.comparisons.shortGate,true),
-    interval(g.comparisons.longGate),interval(g.comparisons.flatRisk),interval(g.comparisons.planner)]));
-}
-
-const primary=table("Fresh earnings and on-time service",["Release compared with","Earnings difference","Service difference"],
-  [["Short-trained default",short],["Rolling planner",planner],["Constant penalty",base]].map(([name,c])=>
-    [name,interval(c)+" credits/week<br><strong>"+verdict(c)+"</strong>",interval(c,true)+" pp"]),"default-comparisons");
+const primary=primaryTable(all.comparisons);
 const switched=fresh.examples.length ? closurePlay(fresh.examples,{study:"shortdefault",
   sampleNote:"The evaluator forked all "+count(d.forked)+" disagreements on the release trajectory, playing both moves through Friday with the released agent on every later board. Each example is nearest its group’s median earnings difference among switches or deferrals that won, tied or lost."}) :
   "<p>The two frozen agents agreed on every decision in this bank. The fresh weeks produced no disagreement to replay.</p>";
 const gates=table("Full-week scores against the six dispatchers",["Reference","Release credits/week [95% interval]","Release on-time pp [95% interval]"],
   Object.entries(names).filter(([key])=>key!=="rl").map(([k,n])=>[n,interval(all.comparisons[k]),interval(all.comparisons[k],true)]));
-const fits=table("All five agents on the same fresh weeks",["Training seed","Selected dispatch rule","Credits vs short","On-time pp vs short","Credits vs long","Credits vs planner","On-time pp vs planner","Credits vs constant","On-time pp vs constant"],
-  fresh.fits.map(f=>[f.seed+(f.seed===result.primarySeed?" · release":""),models.get(f.seed).settings.shortOnly?"Always short":"Can switch",interval(f.shortGate),interval(f.shortGate,true),
-    interval(f.longGate),interval(f.planner),interval(f.planner,true),interval(f.flatRisk),interval(f.flatRisk,true)]));
-const longFits=table("Five fits on actual four- and five-half-day repairs",["Training seed","Credits vs short","On-time pp vs short","Credits vs long","On-time pp vs long"],
-  fresh.fits.map(f=>[f.seed+(f.seed===result.primarySeed?" · release":""),interval(f.longRepairs.shortGate),interval(f.longRepairs.shortGate,true),
-    interval(f.longRepairs.longGate),interval(f.longRepairs.longGate,true)]));
+const {fits,longFits}=allFitTables(fresh,models,result.primarySeed);
 const missed=d.outcomes.deferred;
 const opportunities=d.deferred ? '<p>On the '+count(d.deferred)+' boards where the release kept short, taking the long-trained move would have earned more by Friday '+
   count(missed.losses)+' times. Keeping short earned more '+count(missed.wins)+' times. The other '+count(missed.ties)+' choices tied.</p>' : '';
-const decisions=table("Earnings from changing one decision",["Release choice","Decisions","Earned more","Tied","Earned less","Mean credits over other move"],
-  [["Took long",d.outcomes.adopted],["Kept short",d.outcomes.deferred]].map(([label,o])=>
-    [label,count(o.wins+o.ties+o.losses),count(o.wins),count(o.ties),count(o.losses),o.net===null?"No decisions":signed(o.net,3)]));
-const eachLength=table("Where the dispatchers disagreed",["Repair length","Disagreements","Kept short","Took long"],
-  Object.entries(d.byDuration).map(([n,v])=>[n+(n==="1"?" half-day":" half-days"),count(v.eligible),count(v.deferred),count(v.switched)]));
+const {decisions,eachLength}=decisionTables(d);
 const goal=result.goals;
 const challenges='<p>The release '+(goal.freshProfit?"met":"missed")+' the fresh earnings target against the rolling planner and '+
   (goal.freshFlatProfit?"met":"missed")+' it against the constant penalty. Its on-time service '+(goal.freshService?"met":"missed")+

@@ -23,11 +23,11 @@ test("research library reaches each published desk and its linked sections witho
   const source=html("studies.html");
   const links=localLinks(source);
   links.forEach(href=>checkTarget(href,"studies.html"));
-  const studies=["shortdefault","longrepair","closure","loss","uncertainty","override","overnight","fleetweek","waitcost","loadchoice","lastslot","tariff","paid","booking","survey","rally","trust","closes","turns","drift",
+  const studies=["longmove","shortdefault","longrepair","closure","loss","uncertainty","override","overnight","fleetweek","waitcost","loadchoice","lastslot","tariff","paid","booking","survey","rally","trust","closes","turns","drift",
     "reserve","cutoff","index","language-model"];
   for (const name of studies) {
     assert(links.some(href=>href.split("#")[0]==="./"+name+".html"),name+" missing from study library");
     assert(localLinks(html(name+".html")).some(href=>href.split("#")[0]==="./studies.html"),name+" missing a return path");
   }
-  for (const page of ["loadchoice.html","waitcost.html","fleetweek.html","overnight.html","override.html","uncertainty.html","loss.html","closure.html","longrepair.html","shortdefault.html"]) localLinks(html(page)).forEach(href=>checkTarget(href,page));
+  for (const page of ["loadchoice.html","waitcost.html","fleetweek.html","overnight.html","override.html","uncertainty.html","loss.html","closure.html","longrepair.html","shortdefault.html","longmove.html"]) localLinks(html(page)).forEach(href=>checkTarget(href,page));
 });

@@ -61,3 +61,30 @@ test("custom policies see only public bulletins; replay authenticates schedule, 
   altered.summary.durationGroups.long.comparisons.flatRisk.net++;
   assert.throws(()=>verifyLongMoveReport(altered,null,bank),/comparison/);
 });
+
+test("detector metrics count missed wins, give equal-score pairs half credit and cluster correlated decisions",async()=>{
+  const {detectorStats,detectorInterval}=await import("../training/longmove/detector.mjs");
+  const {checkDetectorRows,checkDetectorInterval}=await import("../training/longmove/audit-detector.mjs");
+  const rows=[[1,3,.8,true],[1,0,.8,true],[2,-7,.2,false],[3,2,.2,false]].map(([seed,netGain,probability,switched])=>
+    ({family:"fixture",seed,netGain,predictions:[{probability,switched}]}));
+  const scored=detectorStats(rows,0,.4);
+  assert.deepEqual(scored,checkDetectorRows(rows,0,.4));
+  assert.equal(scored.tp,1);
+  assert.equal(scored.fn,1);
+  assert.equal(scored.fp,1);
+  assert.equal(scored.tn,1);
+  assert.equal(scored.switchedTies,1);
+  assert.equal(scored.auroc,.5);
+  assert(Math.abs(scored.brier-.34)<1e-12);
+  const interval=detectorInterval(rows,.4);
+  assert.equal(interval.weeks,3);
+  assert(interval.validAuroc<2000);
+  assert.deepEqual(interval,checkDetectorInterval(rows,.4));
+  const empty=detectorStats([],0,.4);
+  assert.equal(empty.brier,null);
+  assert.equal(empty.auroc,null);
+  const fallback=detectorStats(rows.map(row=>({...row,predictions:[{probability:.4,switched:false}]})),0,.4);
+  assert.equal(fallback.precision,null);
+  assert.equal(fallback.recall,0);
+  assert.equal(fallback.brier,fallback.baseBrier);
+});
