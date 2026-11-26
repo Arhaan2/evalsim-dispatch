@@ -1,9 +1,10 @@
-import {makeCard,validateCard} from "./closure-scorecard.js";
+import {makeCard,validateCard,scorecardBaselines} from "./closure-scorecard.js";
 import {replayWeek} from "./closure-view.js";
 
 const sha = async bytes => Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes)),
   b=>b.toString(16).padStart(2,"0")).join("");
 export function installClosureReportWorker({suite, splits, verify, page, version}) {
+  const baselines=scorecardBaselines(version);
   let verified, reference;
   async function loadBank(split) {
     if (!splits.includes(split)) throw Error("Unknown benchmark split.");
@@ -19,7 +20,7 @@ export function installClosureReportWorker({suite, splits, verify, page, version
       if (data.type==="week") {
         const i=data.i;
         if (!Number.isSafeInteger(i) || !verified?.cases[i]) throw Error("Choose a verified week.");
-        self.postMessage({type:"week",i,week:replayWeek(reference.cases[i],verified.cases[i].actions)});
+        self.postMessage({type:"week",i,week:replayWeek(reference.cases[i],verified.cases[i].actions,baselines)});
         return;
       }
       let card,bank;
@@ -40,7 +41,7 @@ export function installClosureReportWorker({suite, splits, verify, page, version
         card=makeCard(verified,bank,release.hash,await sha(bytes),version);
       } else throw Error("Unknown scorecard action.");
       const weeks=card.examples.map(e=>{
-        const week=replayWeek(bank.cases[e.i],e.actions);
+        const week=replayWeek(bank.cases[e.i],e.actions,baselines);
         if (Math.sign(week.ledgers[0].net-week.ledgers[1].net)!==e.sign) throw Error("The shared example does not match its result.");
         return week;
       });

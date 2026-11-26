@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {LONG_REPAIR_CARD_VERSION,makeCard,cardURL,parseCardHash,exportCard,cardMarkup,representativeWeeks} from "../docs/lib/closure-scorecard.js";
+import {SHORT_DEFAULT_CARD_VERSION,scorecardBaselines,LONG_REPAIR_CARD_VERSION,makeCard,cardURL,parseCardHash,exportCard,cardMarkup,representativeWeeks} from "../docs/lib/closure-scorecard.js";
 import {createClosureWeek} from "../docs/lib/closure-world.js";
 import {replayWeek} from "../docs/lib/closure-view.js";
 
@@ -65,4 +65,21 @@ test("long-repair scorecards link to their own release and label the correct rep
   assert(page.includes("longrepair.html#own-agent"));
   assert(page.includes("longrepair-v1.0.0"));
   assert(!page.includes("<img"));
+});
+
+test("short-default scorecards bind their third comparison to a replayable short-trained default",()=>{
+  const report=makeReport();
+  report.summary.all.comparisons.shortGate={...pair,net:-1};
+  const enriched={...reference,shortGate:wait};
+  const card=makeCard(report,{cases:[enriched]},digest,digest,SHORT_DEFAULT_CARD_VERSION);
+  assert.equal(card.comparisons.length,3);
+  assert.equal(card.comparisons[2][0],-1);
+  const link=new URL(cardURL(card));
+  assert.equal(link.pathname,"/evalsim-dispatch/shortdefault.html");
+  assert.deepEqual(parseCardHash(link.hash),card);
+  const week=replayWeek(enriched,card.examples[0].actions,scorecardBaselines(card.v));
+  assert.deepEqual(week.ledgers,[greedy.ledger,wait.ledger,greedy.ledger,wait.ledger,greedy.ledger]);
+  assert(exportCard(card,[week]).includes("Short-trained default · credits/week"));
+  assert.throws(()=>cardURL({...card,comparisons:card.comparisons.slice(0,2)}));
+  assert.throws(()=>cardURL({...card,v:LONG_REPAIR_CARD_VERSION}));
 });
