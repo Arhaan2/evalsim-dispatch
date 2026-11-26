@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {SHORT_DEFAULT_CARD_VERSION,scorecardBaselines,LONG_REPAIR_CARD_VERSION,makeCard,cardURL,parseCardHash,exportCard,cardMarkup,representativeWeeks} from "../docs/lib/closure-scorecard.js";
+import {LONG_MOVE_CARD_VERSION,SHORT_DEFAULT_CARD_VERSION,scorecardBaselines,LONG_REPAIR_CARD_VERSION,makeCard,cardURL,parseCardHash,exportCard,cardMarkup,representativeWeeks} from "../docs/lib/closure-scorecard.js";
 import {createClosureWeek} from "../docs/lib/closure-world.js";
 import {replayWeek} from "../docs/lib/closure-view.js";
 
@@ -82,4 +82,18 @@ test("short-default scorecards bind their third comparison to a replayable short
   assert(exportCard(card,[week]).includes("Short-trained default · credits/week"));
   assert.throws(()=>cardURL({...card,comparisons:card.comparisons.slice(0,2)}));
   assert.throws(()=>cardURL({...card,v:LONG_REPAIR_CARD_VERSION}));
+});
+
+test("long-move links use their own release route, replay label and three reference comparisons",()=>{
+  const report=makeReport();
+  report.summary.all.comparisons.shortGate=pair;
+  const card=makeCard(report,bank,digest,digest,LONG_MOVE_CARD_VERSION);
+  const link=new URL(cardURL(card));
+  assert.equal(link.pathname,"/evalsim-dispatch/longmove.html");
+  assert.deepEqual(parseCardHash(link.hash),card);
+  const week=replayWeek({...reference,shortGate:wait},card.examples[0].actions,scorecardBaselines(card.v));
+  const page=exportCard(card,[week]);
+  assert(page.includes("Long-move RL"));
+  assert(page.includes("Short-trained default · credits/week"));
+  assert(page.includes("longmove.html#own-agent"));
 });

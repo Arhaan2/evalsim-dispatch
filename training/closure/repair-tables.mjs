@@ -23,7 +23,11 @@ export function registeredTests(all, archive, goals) {
     ["Fresh on-time service vs constant penalty",all.comparisons.flatRisk,true,goals.freshFlatService],
     ["Original double-return earnings vs planner",archive.summary.all.comparisons.planner,false,goals.doubleReturn],
   ];
-  const registered = table("Five registered tests",["Comparison","Agent difference [paired 95% interval]","Units","Test"],
+  if (Object.hasOwn(goals,"freshShortProfit")) {
+    tests.unshift(["Fresh earnings vs short-trained default",all.comparisons.shortGate,false,goals.freshShortProfit],
+      ["Fresh on-time service vs short-trained default",all.comparisons.shortGate,true,goals.freshShortService]);
+  }
+  const registered = table(tests.length===7?"Seven registered tests":"Five registered tests",["Comparison","Agent difference [paired 95% interval]","Units","Test"],
     tests.map(([name,c,service,passed])=>[name,interval(c,service),service?"percentage points":"credits/week",passed?"Met":"Missed"]));
   return {tests,registered};
 }
