@@ -58,7 +58,10 @@ import {benchmarkClosure, closureReferences, verifyClosureReport, CLOSURE_SUITE,
 
 import {benchmarkLongRepair, longRepairReferences, verifyLongRepairReport, LONGREPAIR_SUITE, LONGREPAIR_SPLITS, longRepairCases} from "../docs/lib/longrepair-benchmark.js";
 
+import {benchmarkShortDefault, shortDefaultReferences, verifyShortDefaultReport, SHORTDEFAULT_SUITE, SHORTDEFAULT_SPLITS, shortDefaultCases} from "../docs/lib/shortdefault-benchmark.js";
+
 const labs = {
+  shortdefault:{id:SHORTDEFAULT_SUITE, cases:shortDefaultCases, references:shortDefaultReferences, benchmark:benchmarkShortDefault, verify:verifyShortDefaultReport, splits:SHORTDEFAULT_SPLITS},
   longrepair:{id:LONGREPAIR_SUITE, cases:longRepairCases, references:longRepairReferences, benchmark:benchmarkLongRepair, verify:verifyLongRepairReport, splits:LONGREPAIR_SPLITS},
   closure:{id:CLOSURE_SUITE, cases:closureCases, references:closureReferences, benchmark:benchmarkClosure, verify:verifyClosureReport, splits:CLOSURE_SPLITS},
   loss: {id: LOSS_SUITE, cases: lossCases, references: lossReferences, benchmark: benchmarkLoss,
@@ -106,6 +109,7 @@ function pricedStudy(lab) {
 }
 
 function fleetStudy(lab) {
+  if (lab === labs.shortdefault) return "shortdefault";
   if (lab === labs.longrepair) return "longrepair";
   if (lab === labs.closure) return "closure";
   if (lab === labs.loss) return "loss";
@@ -136,13 +140,15 @@ async function loadWeights(lab) {
   if (fleetName) {
     const name = fleetName;
     const metadata = await loadRelease(name);
-    if (lab === labs.longrepair) {
+    if (lab === labs.longrepair || lab === labs.shortdefault) {
       const [current, short, closure, override, uncertainty] = await Promise.all([
         releaseFleetModel(name, metadata.primarySeed, metadata.weightHashes[metadata.primarySeed], "fit"),
-        releaseFleetModel(name, 13, metadata.shortHash, "short"), releaseFleetModel("closure", 13, metadata.closureHash),
+        releaseFleetModel("longrepair", 13, metadata.shortHash, "short"), releaseFleetModel("closure", 13, metadata.closureHash),
         releaseFleetModel("override", 13, metadata.overrideHash), releaseFleetModel("uncertainty", 13, metadata.uncertaintyHash),
       ]);
-      return {current, short, closure, override, uncertainty};
+      const weights = {current, short, closure, override, uncertainty};
+      if (lab === labs.shortdefault) weights.long = await releaseFleetModel("longrepair", 13, metadata.longHash, "fit");
+      return weights;
     }
     const current = await releaseFleetModel(name,metadata.primarySeed,metadata.weightHashes[metadata.primarySeed]);
     if (lab === labs.fleetweek) return current;
@@ -207,6 +213,8 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --policy ./examples/reserve-agent.mjs --out my-result.json
   node tools/reserve.mjs --split validation --policy planner
   node tools/reserve.mjs --suite drift --policy ./examples/reserve-agent.mjs --out drift.json
+  node tools/reserve.mjs --suite shortdefault --split test --policy ./examples/fleetweek-agent.mjs --out shortdefault.json
+  node tools/reserve.mjs --suite shortdefault --split clean --out shortdefault-clean.json -- python3 examples/fleetweek_agent.py
   node tools/reserve.mjs --suite longrepair --split test --policy ./examples/fleetweek-agent.mjs --out longrepair.json
   node tools/reserve.mjs --suite longrepair --split clean --out longrepair-clean.json -- python3 examples/fleetweek_agent.py
   node tools/reserve.mjs --suite closure --split test --policy ./examples/fleetweek-agent.mjs --out closure.json
@@ -252,10 +260,11 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --manifest
   node tools/reserve.mjs --verify my-result.json
 
---suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff, lastslot, loadchoice, waitcost, fleetweek, overnight, override, uncertainty, loss, closure or longrepair.
+--suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff, lastslot, loadchoice, waitcost, fleetweek, overnight, override, uncertainty, loss, closure, longrepair or shortdefault.
                           Overnight adds fresh weeks and a double-return archive. Policies: rl, planner, previous, greedy, noEmpty.
                           Fleetweek compares two trucks across five days; policies are rl, planner and greedy.
 --split NAME              test or validation. Turns, Closes, Trust, Rally, Survey and Booking also offer retention.
+                          Shortdefault offers validation, test, clean and archive with rl, planner, flatRisk, shortGate, longGate and flatGate.
                           Longrepair offers validation, test, clean and archive with rl, planner, flatRisk, closure, flatGate and shortGate.
                           Closure offers validation, test, clean and archive. Policies: rl, planner and flatRisk.
                           Loss offers validation, test and the original double-return archive.
@@ -350,7 +359,7 @@ async function saveReport(path, report) {
 }
 
 function display(report) {
-  if ([FLEET_SUITE, OVERNIGHT_SUITE, OVERRIDE_SUITE, UNCERTAINTY_SUITE, LOSS_SUITE, CLOSURE_SUITE, LONGREPAIR_SUITE].includes(report.suite)) {
+  if ([FLEET_SUITE, OVERNIGHT_SUITE, OVERRIDE_SUITE, UNCERTAINTY_SUITE, LOSS_SUITE, CLOSURE_SUITE, LONGREPAIR_SUITE, SHORTDEFAULT_SUITE].includes(report.suite)) {
     console.log(report.suite + " / " + report.split + " / " + report.policy + " / " + report.cases.length + " weeks");
     const all = report.summary.all;
     console.table(Object.entries(all.policies).map(([name,p]) => ({policy: name, netCredits: p.net.toFixed(2),
