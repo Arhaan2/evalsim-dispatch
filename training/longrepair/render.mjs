@@ -38,6 +38,9 @@ const tests = [
 ];
 const registered = table("Five registered tests",["Comparison","Agent difference [paired 95% interval]","Units","Test"],
   tests.map(([name,c,service,passed])=>[name,interval(c,service),service?"percentage points":"credits/week",passed?"Met":"Missed"]));
+const serviceFinding = "The release "+(goals.freshFlatService?"met":"missed")+" the on-time service target against the constant penalty and "+
+  (goals.freshService?"met":"missed")+" it against the rolling planner. On fresh double-return weeks, the inherited policy earned "+
+  interval(archive.summary.all.comparisons.planner)+" credits/week relative to the planner.";
 const absolutes = table("All six dispatchers on the fresh weeks",["Dispatcher","Net credits/week","Contracts on time","Empty miles/week"],
   Object.entries(labels).map(([key,name])=>{
     const p=all.policies[key];
@@ -83,7 +86,7 @@ const byLength = Object.entries(fresh.byDuration).map(([d,g])=>[d,g,diagnostics.
 const decisions = table("Dispatches by completed repair length",["Half-days","Disagreements","Kept constant penalty","Took earlier agent’s move","Credits/week vs earlier agent [95% interval]"],
   byLength.map(([d,g,decision])=>[d,count(decision.eligible),count(decision.deferred),count(decision.switched),interval(g.comparisons.closure)]));
 const summary = '<p class="finding"><strong>'+olderFinding+'</strong> On four- and five-half-day repairs the difference was '+interval(fresh.durationGroups.long.comparisons.closure)+' credits/week. '+earningsFinding()+' '+shortResult+' The release met '+
-  count(tests.filter(t=>t[3]).length)+' of the five registered targets.</p>'+registered+
+  count(tests.filter(t=>t[3]).length)+' of the five registered targets.</p>'+registered+'<p>'+serviceFinding+'</p>'+
   section("Four or five half-days vs shorter repairs",'<p>All four freight schedules drew from the same duration mix. These groups use the realized repair length, which the agent learned only as the week unfolded. Each interval is paired within its group.</p>'+durations+byDuration)+
   section("When did the agent stay with the constant penalty?",adoption+decisions)+
   section("Compare the six dispatchers",absolutes+controls+'<p>The earlier closure agent proposed moves. The constant-score gate tested whether conditioning on the current board helped. The matched short-training agent used the release seed, budget, calibration and selection weeks. Its fitting weeks contained only repairs lasting one to three half-days. '+shortResult+' The observed fresh difference was '+interval(short)+' credits/week.</p>'+shortControl+matchedByDuration)+
