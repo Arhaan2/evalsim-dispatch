@@ -68,9 +68,9 @@ export function overrideBelief(obs) {
   return posterior;
 }
 
-export function overrideContext(obs, base = fleetPlannerContinuation(obs)) {
+export function overrideContext(obs, base = fleetPlannerContinuation(obs), continuation = fleetContinuationFromProjection) {
   const belief = overrideBelief(obs);
-  const adjusted = fleetContinuationFromProjection(obs.epoch, obs.hub, belief);
+  const adjusted = continuation(obs.epoch, obs.hub, belief);
   const calls = obs.forecast.map(leader), t = obs.epoch;
   const seen = obs.history.map(row => row.hub).concat(obs.hub);
   const prev = seen.at(-2), home = seen[0];

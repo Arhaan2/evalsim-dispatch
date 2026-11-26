@@ -16,21 +16,25 @@ function matches(a, b) {
   return keys.length === Object.keys(b).length && keys.every(k => Object.hasOwn(b, k) && matches(a[k], b[k]));
 }
 
+function matchesConfig(suite, record, config) {
+  return record && (suite.configKeys ?? ["family","seed"]).every(key=>matches(record[key],config[key]));
+}
+
 function checkedBank(suite, bank, split, manifest) {
   if (!bank || bank.suite !== suite.id || bank.split !== split || bank.cases?.length !== manifest.length) {
     throw new Error("The reference bank does not match this fleet split.");
   }
   for (const [i, config] of manifest.entries()) {
-    if (bank.cases[i].family !== config.family || bank.cases[i].seed !== config.seed) throw new Error("Reference manifest mismatch.");
+    if (!matchesConfig(suite,bank.cases[i],config)) throw new Error("Reference manifest mismatch.");
   }
   return bank.cases;
 }
 
-export function replayFleetActions(config, actions) {
+export function replayFleetActions(config, actions, createWeek = createFleetWeek) {
   if (!Array.isArray(actions) || actions.length !== 10 || actions.some(id => typeof id !== "string")) {
     throw new Error("A five-day week needs ten joint dispatch decisions.");
   }
-  const week = createFleetWeek(config);
+  const week = createWeek(config);
   for (const id of actions) week.step(id);
   if (!week.done) throw new Error("Incomplete week.");
   return fleetLedger(week.ledger);
@@ -49,7 +53,7 @@ export async function benchmarkFleetSuite(suite, {split = "test", policy = "agen
   const cases = [];
   for (const config of manifest) {
     const decide = await createPolicy();
-    const week = createFleetWeek(config);
+    const week = (suite.createWeek ?? createFleetWeek)(config);
     const actions = [];
     while (!week.done) {
       const obs = week.observe(), legal = week.legalActions();
@@ -71,8 +75,8 @@ export function verifyFleetSuite(suite, report, bank) {
   if (!Array.isArray(report.cases) || report.cases.length !== manifest.length) throw new Error("Wrong number of weeks.");
   for (const [i, config] of manifest.entries()) {
     const row = report.cases[i];
-    if (row?.family !== config.family || row.seed !== config.seed) throw new Error("A week differs from the fixed manifest.");
-    const ledger = replayFleetActions(config, row.actions);
+    if (!matchesConfig(suite,row,config)) throw new Error("A week differs from the fixed manifest.");
+    const ledger = replayFleetActions(config, row.actions, suite.createWeek);
     if (!matches(ledger, row.ledger)) throw new Error("The submitted ledger differs from the replay.");
   }
   const verified = buildReport(suite, report.split, report.policy, report.cases, reference);

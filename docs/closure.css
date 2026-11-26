@@ -1,0 +1,28 @@
+.closure .night-title h1{max-width:20ch}
+.closure .notice-board{margin:1rem 0 .75rem;background:var(--accent-ink);color:var(--white);padding:clamp(.85rem,2.5vw,1.5rem);display:grid;grid-template-columns:1.3fr 1fr;gap:1.4rem}
+.closure .notice-board h4{color:var(--lime);margin:0;font-size:clamp(1.18rem,2.5vw,1.65rem);letter-spacing:-.025em}
+.closure .notice-board p{margin:.25rem 0;max-width:45ch}
+.closure .depot-list{list-style:none;margin:0;padding:0;display:grid;align-content:center;gap:.25rem}
+.closure .depot-list li{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;border-bottom:1px solid #72877b}
+.closure .depot-list span{font-size:.9rem}
+.closure .depot-list .affected{color:var(--lime);font-weight:550}
+.closure .fleet-position{margin:.6rem 0}.closure .fleet-position p{margin:.2rem 0}
+.closure .score-sheet{background:var(--white);padding:clamp(.85rem,2.4vw,1.65rem);overflow-wrap:anywhere}
+.closure .score-sheet h3{font-size:clamp(1.55rem,3.3vw,2.4rem);overflow-wrap:anywhere;margin:.3rem 0;letter-spacing:-.035em}
+.closure .score-sheet h4{margin:1.2rem 0 .5rem}
+.closure .score-context{margin:0;color:var(--muted)}
+.closure .score-totals{font-size:clamp(1.05rem,2.3vw,1.35rem)}
+.closure .share-actions{display:flex;flex-wrap:wrap;gap:.55rem}
+.closure #copy-card{background:var(--accent-ink);color:var(--white)}
+.closure #share-link{width:100%;padding:.45rem;font:inherit}
+.closure [role=status]:empty{display:none}
+.closure .score-sheet table{width:100%}
+.closure .score-sheet>.table-frame table{white-space:normal;table-layout:fixed}
+.closure .score-sheet>.table-frame td,.closure .score-sheet>.table-frame th{overflow-wrap:break-word}
+.closure .score-sheet>.table-frame caption{white-space:normal}
+.closure #sample-scorecard{margin:.5rem 0 1rem}
+.closure #sample-scorecard p{margin:.35rem 0}
+.closure #sample-scorecard a{display:inline-flex;align-items:center;min-height:44px;margin-left:.5rem}
+.closure button:active{transform:scale(.985)}
+@media(max-width:540px){.closure .notice-board{grid-template-columns:1fr;gap:.55rem}.closure .depot-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem}.closure .depot-list li{display:block}.closure .depot-list span{display:block}.closure .night-title h1{max-width:17ch}}
+@media(prefers-reduced-motion:reduce){.closure button:active{transform:none}}

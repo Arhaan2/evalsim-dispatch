@@ -20,23 +20,21 @@ export function chooseFleetGreedy(observation, legalActions = fleetWeekActions(o
 
 // For each observed board, the best immediate reward of ending in each pair. Costs and order
 // conflicts come from the very same public menu that a visiting agent receives.
-let rewardTables;
-function getRewardTables() {
-  if (rewardTables) return rewardTables;
-  rewardTables = [0, 1].map(phase => {
-    const boards = fleetWeekBoardScenarios(phase);
-    return boards.map(board => {
-      const rewards = new Float64Array(36).fill(-Infinity);
-      FLEET_PAIRS.forEach((positions, from) => {
-        for (const action of fleetWeekActions({ positions, orders: board.orders })) {
-          const index = 6 * from + fleetPairIndex(action.positions);
-          rewards[index] = Math.max(rewards[index], action.net);
-        }
-      });
-      return { ...board, rewards };
+export function fleetRewardTable(phase, legalActions = fleetWeekActions) {
+  return fleetWeekBoardScenarios(phase).map(board => {
+    const rewards = new Float64Array(36).fill(-Infinity);
+    FLEET_PAIRS.forEach((positions, from) => {
+      for (const action of legalActions({ positions, orders: board.orders })) {
+        const index = 6 * from + fleetPairIndex(action.positions);
+        rewards[index] = Math.max(rewards[index], action.net);
+      }
     });
+    return { ...board, rewards };
   });
-  return rewardTables;
+}
+let rewardTables;
+export function fleetRewardTables() {
+  return rewardTables ??= [fleetRewardTable(0),fleetRewardTable(1)];
 }
 
 const stay = 0.65;
@@ -82,31 +80,35 @@ export function fleetPlannerContinuation(observation) {
   return fleetContinuationFromProjection(epoch, hub, fleetWeekHubProjection(observation));
 }
 
+export function fleetBellmanStep(boards, probabilities, next) {
+  // Condition the choice on the newly signed board before averaging the best feasible
+  // return. The continuation value remembers the realized hub and both truck locations.
+  const byHub = new Float64Array(18);
+  for (const { hub: realized, weight, rewards } of boards) {
+    for (let from = 0; from < 6; from++) {
+      let best = -Infinity;
+      for (let to = 0; to < 6; to++) {
+        const value = rewards[6 * from + to] + next[6 * realized + to];
+        if (value > best) best = value;
+      }
+      byHub[6 * realized + from] += weight * best;
+    }
+  }
+  const earlier = new Float64Array(18);
+  for (let from = 0; from < 6; from++) {
+    let base = 0;
+    for (let h = 0; h < 3; h++) base += (0.68 * probabilities[h] + 0.11 / 3) * byHub[6 * h + from];
+    for (let prior = 0; prior < 3; prior++) earlier[6 * prior + from] = base + 0.21 * byHub[6 * prior + from];
+  }
+  return earlier;
+}
+
 // Integrate the existing public freight-board distribution under a supplied demand belief.
 export function fleetContinuationFromProjection(epoch, hub, posterior) {
-  const tables = getRewardTables();
+  const tables = fleetRewardTables();
   let next = new Float64Array(18);
   for (let t = FLEET_WEEK_EPOCHS - 1; t > epoch; t--) {
-    // Condition the choice on the newly signed board before averaging the best feasible
-    // return. The continuation value remembers the realized hub and both truck locations.
-    const byHub = new Float64Array(18);
-    for (const { hub: realized, weight, rewards } of tables[t % 2]) {
-      for (let from = 0; from < 6; from++) {
-        let best = -Infinity;
-        for (let to = 0; to < 6; to++) {
-          const value = rewards[6 * from + to] + next[6 * realized + to];
-          if (value > best) best = value;
-        }
-        byHub[6 * realized + from] += weight * best;
-      }
-    }
-    const earlier = new Float64Array(18);
-    for (let from = 0; from < 6; from++) {
-      let base = 0;
-      for (let h = 0; h < 3; h++) base += (0.68 * posterior[t][h] + 0.11 / 3) * byHub[6 * h + from];
-      for (let prior = 0; prior < 3; prior++) earlier[6 * prior + from] = base + 0.21 * byHub[6 * prior + from];
-    }
-    next = earlier;
+    next = fleetBellmanStep(tables[t % 2], posterior[t], next);
   }
   return next.subarray(6 * hub, 6 * hub + 6);
 }
