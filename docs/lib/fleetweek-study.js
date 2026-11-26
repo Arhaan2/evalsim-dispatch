@@ -93,7 +93,7 @@ export function summarizeFleet(rows) {
   return {all: section(rows), byFamily: Object.fromEntries(families.map(f => [f, section(rows.filter(r => r.family === f))]))};
 }
 
-function summarizeGroup(rows, referenceKeys) {
+export function summarizeFleetGroup(rows, referenceKeys) {
   const policies = Object.fromEntries(["agent", ...referenceKeys].map(key => [key, fleetAverages(rows, key)]));
   const comparisons = Object.fromEntries(referenceKeys.map(key => [key, pairedFleetComparison(rows, key)]));
   const {net95, servicePP, service95} = comparisons.planner;
@@ -106,6 +106,6 @@ function summarizeGroup(rows, referenceKeys) {
 export function summarizeFleetReferences(rows, referenceKeys) {
   if (!rows.length) throw new RangeError("No weeks to summarize.");
   const groups = Map.groupBy(rows, row => row.family);
-  return {all: summarizeGroup(rows, referenceKeys), byFamily: Object.fromEntries(
-    Array.from(groups, ([family, block]) => [family, summarizeGroup(block, referenceKeys)]))};
+  return {all: summarizeFleetGroup(rows, referenceKeys), byFamily: Object.fromEntries(
+    Array.from(groups, ([family, block]) => [family, summarizeFleetGroup(block, referenceKeys)]))};
 }

@@ -1,6 +1,14 @@
 # EvalSim DISPATCH
 
-[Play the depot closure](https://arhaan2.github.io/evalsim-dispatch/closure.html#play) · [Get your agent’s scorecard](https://arhaan2.github.io/evalsim-dispatch/closure.html#own-agent) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+[Play the long-repair challenge](https://arhaan2.github.io/evalsim-dispatch/longrepair.html#play) · [Benchmark your dispatcher](https://arhaan2.github.io/evalsim-dispatch/longrepair.html#own-agent) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+
+## When should the fleet stick with the constant penalty?
+
+On **8,192 fresh closure weeks**, the trained dispatcher followed the constant penalty on 820 of 923 disagreements with the previous closure agent. It earned **0.687 more credits per week than the previous agent** (paired 95% interval +0.368 to +0.982). On the 5,474 weeks when repairs lasted four or five half-days, that advantage reached +1.146 (+0.770 to +1.539).
+
+The release earned +0.017 credits per week versus the rolling planner (−0.383 to +0.417) and +0.031 versus the constant penalty (−0.070 to +0.138). Both earnings comparisons remain open. On-time service improved by +0.022 percentage points over the constant penalty (+0.006 to +0.039). The difference against the planner was +0.050 points (−0.012 to +0.112), leaving the zero-shortfall service test unresolved. The matched agent fitted on short repairs earned **0.092 more credits per week** (+0.009 to +0.180) than the long-repair fit. Both used identical mixed-duration calibration and selection weeks.
+
+On **4,096 fresh double-return weeks** without closures the release followed the historical constant policy on every dispatch, retaining its +2.472 credits per week over the planner (+1.699 to +3.298). Play a disagreement, read the five registered outcomes, or run a JavaScript or Python dispatcher on the published cases. [Interactive results](https://arhaan2.github.io/evalsim-dispatch/longrepair.html#results) · [Benchmark guide](LONGREPAIR.md) · [Fitting and replay audit](training/longrepair/)
 
 ## Can two trucks recover from a depot closure?
 
