@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import {average, paired} from "./audit-helpers.mjs";
 
-function verifyScores(rows, result, references) {
+export function verifyScores(rows, result, references) {
   assert.equal(result.weeks, rows.length);
   for (const key of ["agent", ...references]) assert.deepEqual(result.policies[key], average(rows,key));
   for (const key of references) assert.deepEqual(result.comparisons[key], paired(rows,key));

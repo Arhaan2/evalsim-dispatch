@@ -43,7 +43,7 @@ export function replayFleetActions(config, actions, createWeek = createFleetWeek
 function buildReport(suite, split, policy, cases, reference) {
   if (typeof policy !== "string" || !policy.trim() || policy.length > 120) throw new Error("Use an agent name of 1–120 characters.");
   const rows = cases.map((row, i) => ({family: row.family, agent: row.ledger, ...suite.rowMetadata?.(reference[i]),
-    ...Object.fromEntries(suite.references.map(name => [name, reference[i][name].ledger]))}));
+    ...Object.fromEntries(suite.references.map(name => [name, reference[i][suite.referenceFields?.[name] ?? name].ledger]))}));
   return {suite: suite.id, version: 1, split, policy, cases, summary: suite.summarize(rows)};
 }
 

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {makeCard,cardURL,parseCardHash,exportCard,cardMarkup,representativeWeeks} from "../docs/lib/closure-scorecard.js";
+import {LONG_REPAIR_CARD_VERSION,makeCard,cardURL,parseCardHash,exportCard,cardMarkup,representativeWeeks} from "../docs/lib/closure-scorecard.js";
 import {createClosureWeek} from "../docs/lib/closure-world.js";
 import {replayWeek} from "../docs/lib/closure-view.js";
 
@@ -50,7 +50,19 @@ test("all-tie report has an explicit empty example set and rejects malformed or 
     assert.throws(()=>cardURL({...c,...edit}));
   }
   assert.throws(()=>parseCardHash("#card="+"a".repeat(6500)));
-  const bad=makeCard(makeReport(),bank,digest,digest);
+  const bad=structuredClone(makeCard(makeReport(),bank,digest,digest));
   bad.examples[0].actions[0]="<script>";
   assert.throws(()=>cardURL(bad));
+});
+
+test("long-repair scorecards link to their own release and label the correct replay policy",()=>{
+  const card=makeCard(makeReport(),bank,digest,digest,LONG_REPAIR_CARD_VERSION);
+  const link=new URL(cardURL(card));
+  assert.equal(link.pathname,"/evalsim-dispatch/longrepair.html");
+  assert.deepEqual(parseCardHash(link.hash),card);
+  const page=exportCard(card,[replayWeek(reference,card.examples[0].actions)]);
+  assert(page.includes("Long-repair RL"));
+  assert(page.includes("longrepair.html#own-agent"));
+  assert(page.includes("longrepair-v1.0.0"));
+  assert(!page.includes("<img"));
 });

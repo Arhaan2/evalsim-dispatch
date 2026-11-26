@@ -15,7 +15,7 @@ export function longRepairReferences(weights) {
   };
 }
 const suite = {id:LONGREPAIR_SUITE, cases:longRepairCases, references:LONGREPAIR_REFERENCES,
-  createWeek:createClosureWeek, configKeys:["family","seed","closure"], rowMetadata:r => ({duration:r.duration}),
+  createWeek:createClosureWeek, configKeys:["family","seed","closure"], referenceFields:{closure:"closurePolicy"}, rowMetadata:r => ({duration:r.duration}),
   summarize:rows => ({...summarizeLongRepair(rows), ...summarizeDurations(rows)})};
 export const benchmarkLongRepair = options => benchmarkFleetSuite(suite, options);
 export const verifyLongRepairReport = (report, weights, bank) => verifyFleetSuite(suite, report, bank);

@@ -58,7 +58,7 @@ function scoreWeek(config) {
     return chosenId;
   });
   const row = {...config, duration, rl, planner:run(p => p.plannerId).path, flatRisk:run(p => p.constantId).path,
-    closure:run(p => p.closureId).path, flatGate:run(p => longRepairDecision(p, primary, {flatGate:true}).chosenId).path,
+    closurePolicy:run(p => p.closureId).path, flatGate:run(p => longRepairDecision(p, primary, {flatGate:true}).chosenId).path,
     shortGate:run(p => longRepairDecision(p, short.model).chosenId).path};
   const forks = decisions.map(d => {
     const other = run((p,o) => o.epoch < d.epoch ? rl.actions[o.epoch] : o.epoch === d.epoch ? d.alternativeId : release(p)).path;
@@ -90,7 +90,7 @@ for (const split of LONGREPAIR_SPLITS) {
   for (const config of longRepairCases(split)) {
     const scored = scoreWeek(config), row = scored.row;
     cases.push(row);
-    rows.push({family:config.family, duration:row.duration, agent:row.rl.ledger, ...Object.fromEntries(refs.map(k => [k,row[k].ledger]))});
+    rows.push({family:config.family, duration:row.duration, agent:row.rl.ledger, ...Object.fromEntries(refs.map(k => [k,row[k === "closure" ? "closurePolicy" : k].ledger]))});
     allFits.push(scored.fitLedgers);
     forks.push(...scored.forks);
     changed += Number(row.rl.actions.some((id,i) => id !== row.flatRisk.actions[i]));
