@@ -1,6 +1,14 @@
 # EvalSim DISPATCH
 
-[Play the long-repair challenge](https://arhaan2.github.io/evalsim-dispatch/longrepair.html#play) · [Benchmark your dispatcher](https://arhaan2.github.io/evalsim-dispatch/longrepair.html#own-agent) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+[Play short or long](https://arhaan2.github.io/evalsim-dispatch/shortdefault.html#play) · [Benchmark your dispatcher](https://arhaan2.github.io/evalsim-dispatch/shortdefault.html#own-agent) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+
+## When is it worth switching away from the short-repair dispatcher?
+
+On **16,384 fresh simulated weeks**, the designated release earned **0.407 more net credits per week than the rolling planner** (paired 95% interval +0.152 to +0.680). Its +0.0008-credit difference from the constant penalty remained unresolved (−0.0536 to +0.0551). On-time service improved against both the planner (+0.142 percentage points, +0.100 to +0.187) and the constant penalty (+0.014 points, +0.006 to +0.023).
+
+The release reproduced the frozen short-repair dispatcher on every move. It was trained on 3,693 paired disagreements, then compared twelve switching rules on 22,528 separate selection weeks. None cleared the prespecified earnings threshold while maintaining service. The resulting baseline wins belong to the short policy. On the fresh weeks the two expert policies disagreed 153 times. Replaying each choice through Friday showed 62 opportunities where the long move would have earned more, 58 where short earned more and 33 ties. Two secondary training fits authorized switches. Neither established an earnings advantage over always taking short.
+
+On **4,096 fresh double-return weeks** without a closure, the release retained the historical constant policy’s +2.189 credits/week over the planner (+1.513 to +2.934). Four of five registered tests passed. [Play or replay a decision](https://arhaan2.github.io/evalsim-dispatch/shortdefault.html#play) · [Study results](https://arhaan2.github.io/evalsim-dispatch/shortdefault.html#results) · [Benchmark your agent](SHORTDEFAULT.md)
 
 ## When should the fleet stick with the constant penalty?
 

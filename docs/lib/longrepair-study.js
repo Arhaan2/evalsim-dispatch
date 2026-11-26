@@ -28,15 +28,15 @@ function addConstantComparison(group) {
   return group;
 }
 
-export function summarizeLongRepair(rows) {
-  const summary = summarizeFleetReferences(rows, LONGREPAIR_REFERENCES);
+export function summarizeLongRepair(rows, references = LONGREPAIR_REFERENCES) {
+  const summary = summarizeFleetReferences(rows, references);
   for (const group of [summary.all, ...Object.values(summary.byFamily)]) addConstantComparison(group);
   return summary;
 }
 
 // Only the completed reference ledger supplies duration. Agents never see it before dispatch.
-export function summarizeDurations(rows) {
-  const group = subset => addConstantComparison(summarizeFleetGroup(subset, LONGREPAIR_REFERENCES));
+export function summarizeDurations(rows, references = LONGREPAIR_REFERENCES) {
+  const group = subset => addConstantComparison(summarizeFleetGroup(subset, references));
   const partition = predicate => group(rows.filter(r => predicate(r.duration)));
   if (!rows.some(r => r.duration > 0)) return {};
   return {

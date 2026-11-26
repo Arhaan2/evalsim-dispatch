@@ -26,3 +26,7 @@
 .closure button:active{transform:scale(.985)}
 @media(max-width:540px){.closure .notice-board{grid-template-columns:1fr;gap:.55rem}.closure .depot-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem}.closure .depot-list li{display:block}.closure .depot-list span{display:block}.closure .night-title h1{max-width:17ch}}
 @media(prefers-reduced-motion:reduce){.closure button:active{transform:none}}
+.short-default .default-comparisons{white-space:normal;table-layout:fixed}
+.short-default .default-comparisons th,.short-default .default-comparisons td{overflow-wrap:break-word}
+.short-default .default-comparisons strong{display:inline-block;font-weight:550}
+@media(max-width:520px){.short-default .default-comparisons th:first-child{width:29%}.short-default .default-comparisons th:nth-child(2){width:41%}}

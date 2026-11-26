@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import {readFile, writeFile} from "node:fs/promises";
+import {readFile} from "node:fs/promises";
 import {verifyLongRepairReport} from "../../docs/lib/longrepair-benchmark.js";
 import {familyName} from "../../docs/lib/overnight-view.js";
+import {interval,section,baselineTable,registeredTests,dispatcherTable,writeSampleReport} from "../closure/repair-tables.mjs";
 import {closurePlay} from "../closure/challenge.mjs";
 import {table, signed, count, digits, percentage, writeSections} from "../fleetweek/render-decisions.mjs";
 
@@ -15,13 +15,6 @@ const diagnostics = fresh.diagnostics;
 const labels = {rl:"Long-repair RL", planner:"Rolling planner", flatRisk:"Constant penalty",
   closure:"Earlier closure agent", flatGate:"Constant-score gate", shortGate:"Matched short-training agent"};
 
-function interval(comparison, service=false) {
-  const [point, bounds] = service ? [comparison.servicePP, comparison.service95] : [comparison.net, comparison.net95];
-  return signed(point,3)+" ["+bounds.map(n=>signed(n,3)).join(", ")+"]";
-}
-function section(title, content) {
-  return "<details><summary>"+title+"</summary>"+content+"</details>";
-}
 function earningsFinding() {
   if (goals.freshProfit && goals.freshFlatProfit) return "The agent beat both baselines on fresh earnings.";
   if (goals.freshProfit) return "The agent beat the planner on fresh earnings. The constant-penalty comparison missed its earnings target.";
@@ -29,28 +22,11 @@ function earningsFinding() {
   return "Fresh earnings against the rolling planner and constant penalty were both inconclusive.";
 }
 
-const tests = [
-  ["Fresh earnings vs rolling planner",all.comparisons.planner,false,goals.freshProfit],
-  ["Fresh earnings vs constant penalty",all.comparisons.flatRisk,false,goals.freshFlatProfit],
-  ["Fresh on-time service vs rolling planner",all.comparisons.planner,true,goals.freshService],
-  ["Fresh on-time service vs constant penalty",all.comparisons.flatRisk,true,goals.freshFlatService],
-  ["Original double-return earnings vs planner",archive.summary.all.comparisons.planner,false,goals.doubleReturn],
-];
-const registered = table("Five registered tests",["Comparison","Agent difference [paired 95% interval]","Units","Test"],
-  tests.map(([name,c,service,passed])=>[name,interval(c,service),service?"percentage points":"credits/week",passed?"Met":"Missed"]));
+const {tests,registered}=registeredTests(all,archive,goals);
 const serviceFinding = "The release "+(goals.freshFlatService?"met":"missed")+" the on-time service target against the constant penalty and "+
   (goals.freshService?"met":"missed")+" it against the rolling planner. On fresh double-return weeks, the inherited policy earned "+
   interval(archive.summary.all.comparisons.planner)+" credits/week relative to the planner.";
-const absolutes = table("All six dispatchers on the fresh weeks",["Dispatcher","Net credits/week","Contracts on time","Empty miles/week"],
-  Object.entries(labels).map(([key,name])=>{
-    const p=all.policies[key];
-    return [name,digits(p.net),percentage(p.onTime),digits(p.emptyMiles)];
-  }));
-function baselineTable(title, rows) {
-  return table(title,["Weeks","Count","Credits vs planner","Credits vs constant penalty","On-time pp vs planner","On-time pp vs constant penalty"],
-    rows.map(([name,g])=>[name,count(g.weeks),interval(g.comparisons.planner),interval(g.comparisons.flatRisk),
-      interval(g.comparisons.planner,true),interval(g.comparisons.flatRisk,true)]));
-}
+const absolutes=dispatcherTable(all,labels);
 const durations = baselineTable("Fresh weeks by completed repair duration",[
   ["Short · 1–3 half-days",fresh.durationGroups.short],["Long · 4–5 half-days",fresh.durationGroups.long],
 ]);
@@ -93,7 +69,7 @@ const summary = '<p class="finding"><strong>'+olderFinding+'</strong> On four- a
   section("Ordinary weeks and the original double-return result",byBank+'<p>On weeks without a closure, the released agent delegates every dispatch to the historical constant-penalty policy. The double-return comparison measures the earnings of that inherited behavior on fresh draws of the original schedule.</p>')+
   section("Four fresh freight schedules",bySchedule)+section("All five training fits",fits+'<p>Seed 13 was designated for release before evaluation. Intervals describe variation across weeks for each fixed fit.</p>');
 const sampleNote = "The evaluator replayed both moves for "+count(diagnostics.forked)+" disagreements on the release trajectory. Each example is nearest its group’s median earnings difference, grouped by the agent’s choice and whether it paid off. Each pair starts at the same board and follows the released agent through Friday.";
-const play = closurePlay(fresh.examples,{longRepair:true,sampleNote});
+const play = closurePlay(fresh.examples,{study:"longrepair",sampleNote});
 const panelMetric = (name,value) => '<div class="load-bin"><strong>'+name+'</strong><span>'+value+'</span></div>';
 const feature = '<article class="latest-study" id="longrepair" aria-labelledby="longrepair-title"><div><h2 id="longrepair-title">When should the fleet stick with the constant penalty?</h2><p>'+olderFinding+' '+earningsFinding()+' '+shortResult+'</p></div><figure class="load-distribution"><figcaption>Long-repair RL on '+count(all.weeks)+' fresh weeks</figcaption>'+
   panelMetric("Against the planner",signed(all.comparisons.planner.net,3)+" credits/week")+
@@ -104,11 +80,4 @@ const feature = '<article class="latest-study" id="longrepair" aria-labelledby="
 await writeSections("longrepair","longrepair.html",{play,results:summary});
 await writeSections("longrepair","studies.html",{feature});
 
-const bank = await readJSON("validation");
-const sample = {suite:result.suite,version:1,split:"validation",policy:"EvalSim long-repair RL",
-  cases:bank.cases.map(({family,seed,closure,rl})=>({family,seed,closure,...rl})),
-  summary:{...validation.summary,durationGroups:validation.durationGroups,byDuration:validation.byDuration}};
-const bytes = JSON.stringify(verifyLongRepairReport(sample,null,bank))+"\n";
-const sampleFile = new URL("sample-report.json",data);
-if (process.argv.includes("--check")) assert.equal(await readFile(sampleFile,"utf8"),bytes,"sample report differs from the verified release policy");
-else await writeFile(sampleFile,bytes);
+await writeSampleReport(data,result.suite,validation,"EvalSim long-repair RL",verifyLongRepairReport);
