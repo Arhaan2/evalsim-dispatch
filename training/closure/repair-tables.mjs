@@ -15,7 +15,7 @@ export function baselineTable(title, rows) {
       interval(g.comparisons.planner,true),interval(g.comparisons.flatRisk,true)]));
 }
 
-export function registeredTests(all, archive, goals) {
+export function registeredTests(all, archive, goals, recallTest=null) {
   const tests = [
     ["Fresh earnings vs rolling planner",all.comparisons.planner,false,goals.freshProfit],
     ["Fresh earnings vs constant penalty",all.comparisons.flatRisk,false,goals.freshFlatProfit],
@@ -27,12 +27,14 @@ export function registeredTests(all, archive, goals) {
     tests.unshift(["Fresh earnings vs short-trained default",all.comparisons.shortGate,false,goals.freshShortProfit],
       ["Fresh on-time service vs short-trained default",all.comparisons.shortGate,true,goals.freshShortService]);
   }
-  const registered = table(tests.length===7?"Seven registered tests":"Five registered tests",["Comparison","Agent difference [paired 95% interval]","Units","Test"],
-    tests.map(([name,c,service,passed])=>[name,interval(c,service),service?"percentage points":"credits/week",passed?"Met":"Missed"]));
+  const rows=tests.map(([name,c,service,passed])=>[name,interval(c,service),service?"percentage points":"credits/week",passed?"Met":"Missed"]);
+  if (recallTest) rows.unshift(["Fresh recall vs previous detector",recallTest,"percentage points",goals.recall?"Met":"Missed"]);
+  const captions={5:"Five registered tests",7:"Seven registered tests",8:"Eight registered tests"};
+  const registered=table(captions[rows.length],["Comparison","Agent difference [paired 95% interval]","Units","Test"],rows);
   return {tests,registered};
 }
 export function dispatcherTable(all, labels) {
-  return table("All six dispatchers on the fresh weeks",["Dispatcher","Net credits/week","Contracts on time","Empty miles/week"],
+  return table(Object.keys(labels).length===7?"All seven dispatchers on the fresh weeks":"All six dispatchers on the fresh weeks",["Dispatcher","Net credits/week","Contracts on time","Empty miles/week"],
     Object.entries(labels).map(([key,name])=>{
       const p=all.policies[key];
       return [name,digits(p.net),percentage(p.onTime),digits(p.emptyMiles)];

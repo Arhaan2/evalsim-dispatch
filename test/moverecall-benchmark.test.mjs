@@ -62,3 +62,25 @@ test("custom policies see only public bulletins; replay authenticates schedule, 
   altered.summary.durationGroups.long.comparisons.flatRisk.net++;
   assert.throws(()=>verifyMoveRecallReport(altered,null,bank),/comparison/);
 });
+
+test("paired recall counts rescued and lost wins and preserves correlated decisions in the interval",async()=>{
+  const {pairedRecall}=await import("../training/moverecall/paired-recall.mjs");
+  const {checkPairedRecall}=await import("../training/moverecall/audit-recall.mjs");
+  const rows=[[1,10,true,true],[1,7,false,true],[2,3,true,false],[2,5,false,false],
+    [3,-9,false,true],[4,0,false,true],[4,-4,true,false]].map(([seed,netGain,old,take])=>({
+    seed,family:"fixture",netGain,serviceGain:netGain>0 ? 1 : 0,previous:{switched:old},predictions:[{switched:take}],
+  }));
+  const result=pairedRecall(rows,0);
+  assert.deepEqual(result,checkPairedRecall(rows,0));
+  assert.deepEqual([result.profitable,result.bothCaught,result.recovered,result.newlyLost,result.missedByBoth],[4,1,1,1,1]);
+  assert.equal(result.recallDifference,0);
+  assert.equal(result.weeks,4);
+  assert.deepEqual(result.added,{n:3,wins:1,ties:1,costly:1,credits:-2,contracts:1});
+  assert.deepEqual(result.dropped,{n:2,wins:1,ties:0,costly:1,credits:-1,contracts:1});
+  const nonwins=pairedRecall(rows.filter(r=>r.netGain<=0),0);
+  assert.equal(nonwins.recall95,null);
+  assert.equal(nonwins.validRecall,0);
+  const empty=pairedRecall([],0);
+  assert.equal(empty.recallDifference,null);
+  assert.equal(empty.precision,null);
+});

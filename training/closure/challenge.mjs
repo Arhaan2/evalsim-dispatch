@@ -15,6 +15,7 @@ const studies = {
     moves:["constant-penalty move","earlier closure agent’s move"], journey:["Constant-penalty move first","Earlier agent’s move first"]},
   shortdefault: shortVsLong,
   longmove: shortVsLong,
+  moverecall: shortVsLong,
 };
 function challenge(e, study) {
   const {base:baseKey,proposal,names:dispatchers,moves,journey:headings}=studies[study];
@@ -63,10 +64,16 @@ function challenge(e, study) {
   const elapsed=dispatchers && incident.status==="closed" ? "Repairs began "+roundName(incident.start)+". " : "";
   const explanation=dispatchers ? ' The new agent chose the '+moves[selectedDefault?0:1]+'. This repair lasted '+e.duration+(e.duration===1?' half-day.':' half-days.')+' Both paths use the new agent on every later decision.</p>' : ' The constant-penalty dispatcher chose “'+names[0]+'”. RL chose “'+names[selectedDefault?0:1]+'”. The released RL agent handled all later decisions on both paths.</p>';
   let forecast="";
-  if (study==="longmove") {
+  if (study==="longmove" || study==="moverecall") {
     assert(Number.isFinite(e.winProbability) && e.winProbability>=0 && e.winProbability<=1 && Number.isFinite(e.expectedNet));
     forecast='<p>Before this choice, the detector gave the long-trained move a '+digits(100*e.winProbability,1)+
       '% chance of earning more and estimated '+signed(e.expectedNet,2)+' extra credits through Friday, using the short-trained policy on later boards.</p>';
+  }
+  if (study==="moverecall") {
+    assert([e.shortId,e.longId].includes(e.previousChoiceId));
+    assert(Number.isFinite(e.previousProbability) && e.previousProbability>=0 && e.previousProbability<=1);
+    forecast+='<p>From this same board the previous detector would have '+(e.previousChoiceId===e.longId?'switched to long':'kept short')+
+      '. Its estimated chance of a profitable switch was '+digits(e.previousProbability*100,1)+'%.</p>';
   }
   return '<article class="night-case" data-case="'+stamp(e)+'"><h3>'+roundName(t)+'</h3>'+
     '<div class="notice-board"><div><h4>'+affected+(incident.status==="warning"?" will close":" is closed")+'</h4><p>'+elapsed+update+chance+'</p></div>'+

@@ -1,6 +1,12 @@
 # EvalSim DISPATCH
 
-[Play the long-move challenge](https://arhaan2.github.io/evalsim-dispatch/longmove.html#play) · [Benchmark your dispatcher](https://arhaan2.github.io/evalsim-dispatch/longmove.html#own-agent) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+[Play a missed-move decision](https://arhaan2.github.io/evalsim-dispatch/moverecall.html#play) · [Benchmark your dispatcher](https://arhaan2.github.io/evalsim-dispatch/moverecall.html#own-agent) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+
+## Can the fleet recover the profitable moves it skips?
+
+On **32,768 fresh simulated weeks** across eight freight schedules, there were 151 profitable alternatives on the short dispatcher's route. The new agent caught **98**, up from **19** for the previous detector on those exact boards. Recall rose from 12.6% to 64.9%, a gain of 52.3 percentage points (paired 95% interval +44.3 to +60.4). The 160 extra switches produced 79 wins, 30 ties and 51 losses. Precision fell from 63.3% to 51.6%. The 67 historical misses stayed outside this experiment. [Explore the paired decisions](https://arhaan2.github.io/evalsim-dispatch/moverecall.html#detection)
+
+On its own route the release earned 916 more credits in total than always short, or +0.028 per week (−0.002 to +0.058). The differences were +0.035 per week against the constant penalty (−0.017 to +0.084) and −0.162 against the rolling planner (−0.358 to +0.050). All three earnings intervals include zero. On-time service improved against short and the constant penalty. The planner service comparison remained inconclusive. On 4,096 fresh double-return weeks the inherited dispatcher kept its +2.687 credits/week win over the planner (+1.869 to +3.450). Four of eight preregistered tests passed. [Weekly results](https://arhaan2.github.io/evalsim-dispatch/moverecall.html#results) · [Benchmark your agent](MOVERECALL.md)
 
 ## Can the fleet spot a profitable long-repair move?
 
