@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {MOVE_RECALL_CARD_VERSION,LONG_MOVE_CARD_VERSION,SHORT_DEFAULT_CARD_VERSION,scorecardBaselines,LONG_REPAIR_CARD_VERSION,makeCard,cardURL,parseCardHash,exportCard,cardMarkup,representativeWeeks} from "../docs/lib/closure-scorecard.js";
+import {SWITCH_COST_CARD_VERSION,MOVE_RECALL_CARD_VERSION,LONG_MOVE_CARD_VERSION,SHORT_DEFAULT_CARD_VERSION,scorecardBaselines,LONG_REPAIR_CARD_VERSION,makeCard,cardURL,parseCardHash,exportCard,cardMarkup,representativeWeeks} from "../docs/lib/closure-scorecard.js";
 import {createClosureWeek} from "../docs/lib/closure-world.js";
 import {replayWeek} from "../docs/lib/closure-view.js";
 
@@ -114,4 +114,21 @@ test("move-recall scorecard includes the previous detector in its own versioned 
   assert(html.includes("Previous detector · credits/week"));
   assert(html.includes("Move-recall RL"));
   assert.throws(()=>cardURL({...card,v:LONG_MOVE_CARD_VERSION}));
+});
+
+test("switch-cost scorecards compare with the move-recall release and keep their own weekly ledger",()=>{
+  const report=makeReport();
+  Object.assign(report.summary.all.comparisons,{shortGate:pair,previous:{...pair,net:-3}});
+  const row={...reference,shortGate:wait,previous:greedy};
+  const card=makeCard(report,{cases:[row]},digest,digest,SWITCH_COST_CARD_VERSION);
+  assert.equal(card.comparisons[3][0],-3);
+  const link=new URL(cardURL(card));
+  assert.equal(link.pathname,"/evalsim-dispatch/switchcost.html");
+  assert.deepEqual(parseCardHash(link.hash),card);
+  const week=replayWeek(row,card.examples[0].actions,scorecardBaselines(card.v));
+  const html=exportCard(card,[week]);
+  assert(html.includes("Move-recall RL · credits/week"));
+  assert(html.includes("Switch-cost RL"));
+  assert(html.includes("switchcost.html#own-agent"));
+  assert(!html.includes("<img"));
 });

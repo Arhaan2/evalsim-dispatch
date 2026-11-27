@@ -15,7 +15,7 @@ export function baselineTable(title, rows) {
       interval(g.comparisons.planner,true),interval(g.comparisons.flatRisk,true)]));
 }
 
-export function registeredTests(all, archive, goals, recallTest=null) {
+export function registeredTests(all, archive, goals, recallTest=null, detectionTests=[]) {
   const tests = [
     ["Fresh earnings vs rolling planner",all.comparisons.planner,false,goals.freshProfit],
     ["Fresh earnings vs constant penalty",all.comparisons.flatRisk,false,goals.freshFlatProfit],
@@ -29,12 +29,13 @@ export function registeredTests(all, archive, goals, recallTest=null) {
   }
   const rows=tests.map(([name,c,service,passed])=>[name,interval(c,service),service?"percentage points":"credits/week",passed?"Met":"Missed"]);
   if (recallTest) rows.unshift(["Fresh recall vs previous detector",recallTest,"percentage points",goals.recall?"Met":"Missed"]);
-  const captions={5:"Five registered tests",7:"Seven registered tests",8:"Eight registered tests"};
+  rows.unshift(...detectionTests);
+  const captions={9:"Nine registered tests",5:"Five registered tests",7:"Seven registered tests",8:"Eight registered tests"};
   const registered=table(captions[rows.length],["Comparison","Agent difference [paired 95% interval]","Units","Test"],rows);
   return {tests,registered};
 }
 export function dispatcherTable(all, labels) {
-  return table(Object.keys(labels).length===7?"All seven dispatchers on the fresh weeks":"All six dispatchers on the fresh weeks",["Dispatcher","Net credits/week","Contracts on time","Empty miles/week"],
+  return table(({6:"All six",7:"All seven",8:"All eight"})[Object.keys(labels).length]+" dispatchers on the fresh weeks",["Dispatcher","Net credits/week","Contracts on time","Empty miles/week"],
     Object.entries(labels).map(([key,name])=>{
       const p=all.policies[key];
       return [name,digits(p.net),percentage(p.onTime),digits(p.emptyMiles)];
