@@ -9,6 +9,7 @@ import {FIT_SEEDS, DECISION_MS, fleetLedger, pairedFleetComparison} from "../../
 import {artifact, hash, legacyCheckpoint} from "../fleetweek/score-helpers.mjs";
 
 import {pairedRecall} from "./paired-recall.mjs";
+import {representativeForks,decisionCounts} from "../fleetweek/repair-forks.mjs";
 import {detectorInterval,detectorStats} from "../longmove/detector.mjs";
 
 const mode = process.argv[2];
@@ -101,28 +102,6 @@ function scoreWeek(config) {
   return {row, forks, fitLedgers, incidentBoards};
 }
 
-function representativeForks(examples) {
-  const result = [];
-  for (const adopt of [true,false]) for (const sign of [1,-1,0]) {
-    const bucket = examples.filter(e => (e.chosenId === e.longId) === adopt && Math.sign(e.netGain) === sign);
-    if (!bucket.length) continue;
-    const values = bucket.map(e => e.netGain).sort((a,b) => a-b);
-    const median = (values[(values.length - 1) >> 1] + values[values.length >> 1]) / 2;
-    result.push(bucket.reduce((a,b) => Math.abs(a.netGain - median) <= Math.abs(b.netGain - median) ? a : b));
-  }
-  return result;
-}
-function decisionCounts(forks) {
-  const adopted = forks.filter(f => f.chosenId === f.longId), deferred = forks.filter(f => f.chosenId === f.shortId);
-  function outcomes(branches) {
-    const wins = branches.filter(f=>f.netGain>0).length, losses = branches.filter(f=>f.netGain<0).length;
-    return {wins, ties:branches.length - wins - losses, losses,
-      net:branches.length ? branches.reduce((s,f)=>s+f.netGain,0)/branches.length : null,
-      servicePP:branches.length ? 10*branches.reduce((s,f)=>s+f.serviceGain,0)/branches.length : null};
-  }
-  return {eligible:forks.length, switched:adopted.length, deferred:deferred.length,
-    outcomes:{adopted:outcomes(adopted), deferred:outcomes(deferred)}};
-}
 for (const split of MOVERECALL_SPLITS) {
   const cases = [], rows = [], allFits = [], forks = [];
   let changed = 0, incidentBoards = 0;
