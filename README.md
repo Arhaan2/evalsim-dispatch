@@ -1,6 +1,14 @@
 # EvalSim DISPATCH
 
-[Play a missed-move decision](https://arhaan2.github.io/evalsim-dispatch/moverecall.html#play) · [Benchmark your dispatcher](https://arhaan2.github.io/evalsim-dispatch/moverecall.html#own-agent) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+[Play a costly-switch decision](https://arhaan2.github.io/evalsim-dispatch/switchcost.html#play) · [Benchmark your dispatcher](https://arhaan2.github.io/evalsim-dispatch/switchcost.html#own-agent) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+
+## Can the fleet avoid costly switches and keep profitable ones?
+
+On **32,768 fresh simulated weeks**, the designated release took the same actions as the previous move-recall dispatcher. None of its alternative rules reduced losing choices on selection weeks while retaining as many profitable ones. On the fresh bank, both policies took **61 losing switches** and caught **83 of 128 profitable moves** (64.8% recall). The fitted model could rank risky moves among 247 decisions it was allowed to change (loss AUROC 0.618, 95% interval 0.544 to 0.686). Training selected a rule that made zero changes. [Registered tests and switch outcomes](https://arhaan2.github.io/evalsim-dispatch/switchcost.html#detection)
+
+One of the five fits, **seed 73**, qualified during training to veto and add moves. On the same boards it avoided 11 losses and introduced six, leaving 56. It gave up nine profitable moves and added 15, catching 89 of 128 (69.5%). The paired intervals for loss reduction (+1.81 percentage points, −0.73 to +4.73) and recall change (+4.69 points, −2.54 to +11.97) include zero. On its own routes it earned 324 extra credits and served six fewer contracts than the predecessor over all 32,768 weeks. Anyone can run this fit using `--policy fit-73`. [Benchmark the five trained agents](SWITCHCOST.md)
+
+The designated release earned +0.015 credits/week over always short, +0.021 over the constant penalty and −0.031 against the rolling planner. All three earnings intervals include zero. It improved on-time service against all three and kept the inherited double-return win of **+2.113 credits/week** over the planner (95% interval +1.385 to +2.892). It passed five of nine criteria. [Weekly results and replays](https://arhaan2.github.io/evalsim-dispatch/switchcost.html#results)
 
 ## Can the fleet recover the profitable moves it skips?
 

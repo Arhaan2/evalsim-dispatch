@@ -63,3 +63,27 @@ test("custom policies see only public bulletins; replay authenticates schedule, 
   altered.summary.durationGroups.long.comparisons.flatRisk.net++;
   assert.throws(()=>verifySwitchCostReport(altered,null,bank),/comparison/);
 });
+
+test("avoidable losses and missed wins use paired choices with separate denominators",async()=>{
+  const {pairedSwitchCost}=await import("../training/switchcost/paired-cost.mjs");
+  const {checkCostComparison}=await import("../training/switchcost/audit-cost.mjs");
+  const rows=[[1,-10,true,false],[1,4,true,false],[2,0,true,false],[2,2,true,true],
+    [3,-3,false,true],[3,6,false,true],[4,-20,true,false],[4,1,false,false]].map(([seed,netGain,before,now])=>({
+    family:"fixture",seed,netGain,serviceGain:0,previous:{switched:before},predictions:[{switched:now}],
+  }));
+  const result=pairedSwitchCost(rows,0);
+  assert.deepEqual(result,checkCostComparison(rows,0));
+  assert.deepEqual([result.n,result.oldLosses,result.newLosses,result.avoidedLosses,result.addedLosses],[8,2,1,2,1]);
+  assert.equal(result.lossReduction,1/8);
+  assert.equal(result.recallDifference,0);
+  assert.equal(result.profitable,4);
+  assert.equal(result.dropped.winningCredits,4);
+  assert.equal(result.dropped.losingCredits,-30);
+  assert.equal(result.added.winningCredits,6);
+  assert.equal(result.added.losingCredits,-3);
+  const noWins=pairedSwitchCost(rows.filter(r=>r.netGain<=0),0);
+  assert.equal(noWins.validLoss,2000);
+  assert.equal(noWins.validJoint,0);
+  assert.equal(noWins.recall95,null);
+  assert.deepEqual(pairedSwitchCost([],0),checkCostComparison([],0));
+});

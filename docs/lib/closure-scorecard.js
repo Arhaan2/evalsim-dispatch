@@ -8,17 +8,20 @@ export const LONG_REPAIR_CARD_VERSION = "longrepair-v1.0.0";
 export const SHORT_DEFAULT_CARD_VERSION = "shortdefault-v1.0.0";
 export const LONG_MOVE_CARD_VERSION = "longmove-v1.0.0";
 export const MOVE_RECALL_CARD_VERSION = "moverecall-v1.0.0";
+export const SWITCH_COST_CARD_VERSION = "switchcost-v1.0.0";
 const baselineLabels = {planner:"Rolling planner",flatRisk:"Constant penalty",shortGate:"Short-trained default",previous:"Previous detector"};
 const twoBaselines = Object.freeze(["planner","flatRisk"]);
 const threeBaselines = Object.freeze([...twoBaselines,"shortGate"]);
 const editions = new Map([
   [CARD_VERSION, {page:"closure", title:"Depot closure", reference:"Closure RL", baselines:twoBaselines}],
   [LONG_REPAIR_CARD_VERSION, {page:"longrepair", title:"Longer depot repairs", reference:"Long-repair RL", baselines:twoBaselines}],
+  [SWITCH_COST_CARD_VERSION, {page:"switchcost", title:"The cost of switching", reference:"Switch-cost RL", previousLabel:"Move-recall RL", baselines:Object.freeze([...threeBaselines,"previous"])}],
   [MOVE_RECALL_CARD_VERSION, {page:"moverecall", title:"Finding missed moves", reference:"Move-recall RL", baselines:Object.freeze([...threeBaselines,"previous"])}],
   [LONG_MOVE_CARD_VERSION, {page:"longmove", title:"Profitable long moves", reference:"Long-move RL", baselines:threeBaselines}],
   [SHORT_DEFAULT_CARD_VERSION, {page:"shortdefault", title:"Short-trained default", reference:"Short-default RL", baselines:threeBaselines}],
 ]);
 export const scorecardBaselines = version => editions.get(version).baselines;
+const baselineLabel = (version,key) => key==="previous" && editions.get(version).previousLabel ? editions.get(version).previousLabel : baselineLabels[key];
 const pageURL = version => "https://arhaan2.github.io/evalsim-dispatch/"+editions.get(version).page+".html";
 const metric = (n,places=3) => n.toLocaleString("en-US",{minimumFractionDigits:places,maximumFractionDigits:places});
 const delta = n => (n>0 ? "+" : "")+metric(n);
@@ -82,7 +85,7 @@ function table(caption, headings, rows) {
       rest.map(v=>el("td",v)).join("")+"</tr>").join("")+"</tbody></table></div>";
 }
 export function weekMarkup(week, version=CARD_VERSION) {
-  const pathNames=["Submitted agent",...scorecardBaselines(version).map(k=>baselineLabels[k]),editions.get(version).reference];
+  const pathNames=["Submitted agent",...scorecardBaselines(version).map(k=>baselineLabel(version,k)),editions.get(version).reference];
   return table("Friday ledgers",["Dispatcher","Net credits","On time","Empty miles"],
     week.ledgers.map((l,i)=>[pathNames[i],l.net,l.served+" / "+l.contracts,l.emptyMiles]))+
     '<details><summary>Dispatch log · all ten rounds</summary>'+table("Both trucks on each board",["Round","Depot notice",...pathNames],week.rounds)+"</details>";
@@ -101,7 +104,7 @@ export function cardMarkup(card, weeks, verified) {
     '<p>'+text(SPLIT_NAMES[c.split])+' · '+c.n.toLocaleString("en-US")+' public weeks · '+c.v+'</p>'+
     '<p class="score-totals"><strong>'+metric(c.net,2)+'</strong> net credits/week &nbsp; <strong>'+metric(c.onTime,2)+'%</strong> on time</p>'+
     table("Agent minus baseline · paired 95% intervals",["Comparison","Difference [95% interval]"],c.comparisons.flatMap((r,i)=>{
-      const label=baselineLabels[scorecardBaselines(c.v)[i]];
+      const label=baselineLabel(c.v,scorecardBaselines(c.v)[i]);
       return [[label+" · credits/week",pair(r[0],r.slice(1,3))],[label+" · on-time pp",pair(r[3],r.slice(4,6))]];
     }))+
     '<p>'+wins.toLocaleString("en-US")+' wins, '+ties.toLocaleString("en-US")+' ties, '+losses.toLocaleString("en-US")+' losses against the planner.</p>'+

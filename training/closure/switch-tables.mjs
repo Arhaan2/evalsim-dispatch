@@ -14,9 +14,9 @@ export function defaultTable(title, rows) {
     interval(g.comparisons.longGate),interval(g.comparisons.flatRisk),interval(g.comparisons.planner)]));
 }
 
-export function primaryTable({shortGate:short,planner,flatRisk:base,previous}) {
+export function primaryTable({shortGate:short,planner,flatRisk:base,previous}, previousName="Previous detector") {
   const rows=[["Short-trained default",short],["Rolling planner",planner],["Constant penalty",base]];
-  if (previous) rows.unshift(["Previous detector",previous]);
+  if (previous) rows.unshift([previousName,previous]);
   const primary=table("Fresh earnings and on-time service",["Release compared with","Earnings difference","Service difference"],
     rows.map(([name,c])=>
       [name,interval(c)+" credits/week<br><strong>"+verdict(c)+"</strong>",interval(c,true)+" pp"]),"default-comparisons");

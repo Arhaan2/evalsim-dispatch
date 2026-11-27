@@ -16,6 +16,7 @@ const studies = {
   shortdefault: shortVsLong,
   longmove: shortVsLong,
   moverecall: shortVsLong,
+  switchcost: shortVsLong,
 };
 function challenge(e, study) {
   const {base:baseKey,proposal,names:dispatchers,moves,journey:headings}=studies[study];
@@ -74,6 +75,17 @@ function challenge(e, study) {
     assert(Number.isFinite(e.previousProbability) && e.previousProbability>=0 && e.previousProbability<=1);
     forecast+='<p>From this same board the previous detector would have '+(e.previousChoiceId===e.longId?'switched to long':'kept short')+
       '. Its estimated chance of a profitable switch was '+digits(e.previousProbability*100,1)+'%.</p>';
+  }
+  if (study==="switchcost") {
+    const action={vetoed:"declined move-recall RL’s proposed switch",added:"added a switch that move-recall RL would skip",
+      keptLong:"kept move-recall RL’s long choice",keptShort:"kept move-recall RL’s short choice"};
+    assert(Object.hasOwn(action,e.change));
+    assert([e.shortId,e.longId].includes(e.previousChoiceId) && [e.shortId,e.longId].includes(e.originalChoiceId));
+    const protectedMove=e.originalChoiceId===e.longId;
+    forecast='<p>On this board the release '+action[e.change]+'. '+(protectedMove?
+      'The original detector also took long, so this switch was protected by the training protocol.':
+      'Before dispatch its estimated chance of losing credits by switching was '+digits(100*e.lossProbability,1)+'%. It estimated a '+digits(100*e.winProbability,1)+
+      '% chance of earning more, '+digits(e.expectedDownside,2)+' credits of downside and '+digits(e.expectedUpside,2)+' credits of upside. Its calculated decision score was '+signed(e.score,2)+'.')+'</p>';
   }
   return '<article class="night-case" data-case="'+stamp(e)+'"><h3>'+roundName(t)+'</h3>'+
     '<div class="notice-board"><div><h4>'+affected+(incident.status==="warning"?" will close":" is closed")+'</h4><p>'+elapsed+update+chance+'</p></div>'+

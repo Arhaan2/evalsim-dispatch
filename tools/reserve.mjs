@@ -282,6 +282,7 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
                           Fleetweek compares two trucks across five days; policies are rl, planner and greedy.
 --split NAME              test or validation. Turns, Closes, Trust, Rally, Survey and Booking also offer retention.
                           Switchcost offers validation, test, clean and archive with rl, planner, flatRisk, shortGate, longGate, flatGate, previous and original.
+                          Run an independently trained switchcost policy with --policy fit-13, fit-37, fit-73, fit-101 or fit-211.
                           Moverecall offers validation, test, clean and archive with rl, planner, flatRisk, shortGate, longGate, flatGate and previous.
                           Longmove offers validation, test, clean and archive with rl, planner, flatRisk, shortGate, longGate and flatGate.
                           Shortdefault offers validation, test, clean and archive with rl, planner, flatRisk, shortGate, longGate and flatGate.
@@ -502,6 +503,13 @@ async function main() {
   const weights = await loadWeights(lab);
   const policy = values.policy ?? "rl";
   const available = lab.references(weights);
+  if (lab === labs.switchcost && /^fit-\d+$/.test(policy)) {
+    const seed = Number(policy.slice(4));
+    const release = await loadRelease("switchcost");
+    if (!release.fitSeeds.includes(seed)) throw new Error("Choose a published fit: " + release.fitSeeds.join(", "));
+    const current = await releaseFleetModel("switchcost", seed, release.weightHashes[seed], "fit");
+    available[policy] = lab.references({...weights, current}).rl;
+  }
   if (lab === labs.turns) available.turns = available.rl;
   if (lab === labs.drift && policy === "turns" && !command.length) {
     const { weights: turnsWeights } = await loadCheckpoint("turns");
