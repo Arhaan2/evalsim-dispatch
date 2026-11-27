@@ -7,6 +7,7 @@ import { CLOSURE_PATTERNS } from "./closure-markets.js";
 import { LONGREPAIR_PATTERNS } from "./longrepair-markets.js";
 import { SHORTDEFAULT_PATTERNS } from "./shortdefault-markets.js";
 import { LONGMOVE_PATTERNS } from "./longmove-markets.js";
+import { MOVERECALL_PATTERNS } from "./moverecall-markets.js";
 export const FLEET_DEPOTS = Object.freeze(["Harbor", "Inland", "Junction"]);
 export const FLEET_WEEK_EPOCHS = 10;
 export const FLEET_MISS_PENALTY = 34;
@@ -29,7 +30,7 @@ export const FLEET_FAMILIES = Object.freeze({
   test: Object.freeze(["friday-switch", "split-week", "midweek-pivot", "double-return"]),
 });
 export const FLEET_PATTERNS = patterns;
-const allPatterns = Object.freeze({ ...patterns, ...OVERNIGHT_PATTERNS, ...OVERRIDE_PATTERNS, ...UNCERTAINTY_PATTERNS, ...LOSS_PATTERNS, ...CLOSURE_PATTERNS, ...LONGREPAIR_PATTERNS, ...SHORTDEFAULT_PATTERNS, ...LONGMOVE_PATTERNS });
+const allPatterns = Object.freeze({ ...patterns, ...OVERNIGHT_PATTERNS, ...OVERRIDE_PATTERNS, ...UNCERTAINTY_PATTERNS, ...LOSS_PATTERNS, ...CLOSURE_PATTERNS, ...LONGREPAIR_PATTERNS, ...SHORTDEFAULT_PATTERNS, ...LONGMOVE_PATTERNS, ...MOVERECALL_PATTERNS });
 
 function randomStream(seed) {
   let state = seed >>> 0;

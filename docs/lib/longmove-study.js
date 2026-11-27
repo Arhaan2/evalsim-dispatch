@@ -26,13 +26,13 @@ function compareShort(group) {
   group.matchesShortGateService = servicePP>=0 && service95[0]>=0;
   group.beatsShortGate = group.earnsMoreThanShortGate && group.matchesShortGateService;
 }
-export function summarizeLongMove(rows) {
-  const summary = summarizeLongRepair(rows, LONGMOVE_REFERENCES);
+export function summarizeLongMove(rows, references = LONGMOVE_REFERENCES) {
+  const summary = summarizeLongRepair(rows, references);
   for (const group of [summary.all,...Object.values(summary.byFamily)]) compareShort(group);
   return summary;
 }
-export function summarizeLongMoveDurations(rows) {
-  const summary = summarizeDurations(rows, LONGMOVE_REFERENCES);
+export function summarizeLongMoveDurations(rows, references = LONGMOVE_REFERENCES) {
+  const summary = summarizeDurations(rows, references);
   for (const group of [...Object.values(summary.durationGroups ?? {}),...Object.values(summary.byDuration ?? {})]) compareShort(group);
   return summary;
 }

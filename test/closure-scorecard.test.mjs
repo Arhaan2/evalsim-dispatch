@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {LONG_MOVE_CARD_VERSION,SHORT_DEFAULT_CARD_VERSION,scorecardBaselines,LONG_REPAIR_CARD_VERSION,makeCard,cardURL,parseCardHash,exportCard,cardMarkup,representativeWeeks} from "../docs/lib/closure-scorecard.js";
+import {MOVE_RECALL_CARD_VERSION,LONG_MOVE_CARD_VERSION,SHORT_DEFAULT_CARD_VERSION,scorecardBaselines,LONG_REPAIR_CARD_VERSION,makeCard,cardURL,parseCardHash,exportCard,cardMarkup,representativeWeeks} from "../docs/lib/closure-scorecard.js";
 import {createClosureWeek} from "../docs/lib/closure-world.js";
 import {replayWeek} from "../docs/lib/closure-view.js";
 
@@ -96,4 +96,22 @@ test("long-move links use their own release route, replay label and three refere
   assert(page.includes("Long-move RL"));
   assert(page.includes("Short-trained default · credits/week"));
   assert(page.includes("longmove.html#own-agent"));
+});
+
+test("move-recall scorecard includes the previous detector in its own versioned comparison and week replay",()=>{
+  const report=makeReport();
+  Object.assign(report.summary.all.comparisons,{shortGate:pair,previous:{...pair,net:-1}});
+  const row={...reference,shortGate:wait,previous:greedy}, ref={cases:[row]};
+  const card=makeCard(report,ref,digest,digest,MOVE_RECALL_CARD_VERSION);
+  assert.equal(card.comparisons.length,4);
+  assert.equal(card.comparisons[3][0],-1);
+  const url=new URL(cardURL(card));
+  assert.equal(url.pathname,"/evalsim-dispatch/moverecall.html");
+  assert.deepEqual(parseCardHash(url.hash),card);
+  const week=replayWeek(row,card.examples[0].actions,scorecardBaselines(card.v));
+  assert.deepEqual(week.ledgers,[greedy.ledger,wait.ledger,greedy.ledger,wait.ledger,greedy.ledger,greedy.ledger]);
+  const html=exportCard(card,[week]);
+  assert(html.includes("Previous detector · credits/week"));
+  assert(html.includes("Move-recall RL"));
+  assert.throws(()=>cardURL({...card,v:LONG_MOVE_CARD_VERSION}));
 });

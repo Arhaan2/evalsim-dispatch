@@ -7,12 +7,14 @@ export const SPLIT_NAMES = {validation:"Development closures",test:"Fresh closur
 export const LONG_REPAIR_CARD_VERSION = "longrepair-v1.0.0";
 export const SHORT_DEFAULT_CARD_VERSION = "shortdefault-v1.0.0";
 export const LONG_MOVE_CARD_VERSION = "longmove-v1.0.0";
-const baselineLabels = {planner:"Rolling planner",flatRisk:"Constant penalty",shortGate:"Short-trained default"};
+export const MOVE_RECALL_CARD_VERSION = "moverecall-v1.0.0";
+const baselineLabels = {planner:"Rolling planner",flatRisk:"Constant penalty",shortGate:"Short-trained default",previous:"Previous detector"};
 const twoBaselines = Object.freeze(["planner","flatRisk"]);
 const threeBaselines = Object.freeze([...twoBaselines,"shortGate"]);
 const editions = new Map([
   [CARD_VERSION, {page:"closure", title:"Depot closure", reference:"Closure RL", baselines:twoBaselines}],
   [LONG_REPAIR_CARD_VERSION, {page:"longrepair", title:"Longer depot repairs", reference:"Long-repair RL", baselines:twoBaselines}],
+  [MOVE_RECALL_CARD_VERSION, {page:"moverecall", title:"Finding missed moves", reference:"Move-recall RL", baselines:Object.freeze([...threeBaselines,"previous"])}],
   [LONG_MOVE_CARD_VERSION, {page:"longmove", title:"Profitable long moves", reference:"Long-move RL", baselines:threeBaselines}],
   [SHORT_DEFAULT_CARD_VERSION, {page:"shortdefault", title:"Short-trained default", reference:"Short-default RL", baselines:threeBaselines}],
 ]);
