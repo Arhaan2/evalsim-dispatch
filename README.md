@@ -1,6 +1,14 @@
 # EvalSim DISPATCH
 
-[Play a costly-switch decision](https://arhaan2.github.io/evalsim-dispatch/switchcost.html#play) · [Benchmark your dispatcher](https://arhaan2.github.io/evalsim-dispatch/switchcost.html#own-agent) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+[Play a fleet decision](https://arhaan2.github.io/evalsim-dispatch/addguard.html#play) · [Benchmark your dispatcher](https://arhaan2.github.io/evalsim-dispatch/addguard.html#own-agent) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+
+## Can fit 73 avoid the losses on its extra moves?
+
+Three models trained to veto an extra long-repair move when waiting with the short expert looked better. Every candidate that avoided losses on selection weeks also gave up profitable moves. All three fits kept the parent policy under the registered rule. They retained its 15 profitable additions and repeated all six losing additions on the historical replay. [Inspect the learned decision](https://arhaan2.github.io/evalsim-dispatch/addguard.html#play)
+
+On **65,536 fresh simulated weeks**, the parent and release made identical decisions. They caught **176 of 265 profitable moves** (66.4%), versus 165 (62.3%) for move-recall. The difference of +4.15 percentage points has a paired 95% interval of −1.81 to +10.42. The 85 additions included 38 wins, nine ties and 38 losses. The release earned **+0.438 credits per week over the rolling planner** (+0.293 to +0.587). Earnings comparisons with always short and the constant penalty were inconclusive. The release improved on-time service against all three and retained the original double-return win of **+2.355 credits per week** over the planner (+1.598 to +3.135). Six of nine registered tests passed. [Official results](https://arhaan2.github.io/evalsim-dispatch/addguard.html#results)
+
+A separate training candidate actually vetoed three fresh additions. One veto saved 43 credits on a loss, one gave up a 17-credit winner and one tied. It caught 175 of 265 profitable moves and made 26 extra credits over its parent across the full test bank. Run it with `--policy candidate-101`. [Explore the tradeoff](https://arhaan2.github.io/evalsim-dispatch/addguard.html#tradeoff) · [Benchmark your JavaScript or Python agent](ADDGUARD.md)
 
 ## Can the fleet avoid costly switches and keep profitable ones?
 
