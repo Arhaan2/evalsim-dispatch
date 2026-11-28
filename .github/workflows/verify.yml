@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        audit: ['audit:fleet-decisions', 'audit:depot-repairs', 'audit:longmove:study', 'audit:longmove:ledgers', 'audit:moverecall:study', 'audit:moverecall:ledgers', 'audit:switchcost:study', 'audit:switchcost:ledgers', 'audit:addguard:study', 'audit:addguard:ledgers']
+        audit: ['audit:fleet-decisions', 'audit:depot-repairs', 'audit:longmove:study', 'audit:longmove:ledgers', 'audit:moverecall:study', 'audit:moverecall:ledgers', 'audit:switchcost:study', 'audit:switchcost:ledgers', 'audit:addguard:study', 'audit:addguard:ledgers', 'audit:preposition', 'audit:preposition:fit', 'audit:preposition:ledgers']
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:

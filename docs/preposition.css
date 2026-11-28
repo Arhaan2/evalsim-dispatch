@@ -1,0 +1,23 @@
+.preposition .night-title h1 {max-width:20ch}
+.preposition .play-cta {background:var(--accent-ink);color:var(--white);padding:.35rem 1rem;text-decoration:none}
+.preposition .play-cta:hover {text-decoration:underline;text-underline-offset:.2em}
+.preposition .dispatch-board {display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:1.1rem 2.4rem;background:var(--accent-ink);color:var(--white);padding:clamp(1rem,3vw,2rem)}
+.preposition .dispatch-board h4 {font-size:clamp(1.2rem,2.7vw,1.8rem);font-weight:550;line-height:1.15;letter-spacing:-.035em;margin:0 0 .4rem}
+.preposition .dispatch-board p {margin:.25rem 0;max-width:44ch}
+.preposition .dispatch-board .truck-list {list-style:none;padding:0;margin:.6rem 0 0;display:flex;gap:.4rem 1rem;flex-wrap:wrap}
+.preposition .dispatch-board .truck-list strong {color:var(--lime)}
+.preposition .dispatch-board .forecast-heading {font-weight:550;margin:0 0 .35rem}
+.preposition .dispatch-board .forecast .track {background:#536e60}
+.preposition .dispatch-board .forecast .track i {background:var(--lime)}
+.preposition .shift-choice button {padding:.82rem .95rem}
+.preposition .shift-choice button strong {font-size:1.1rem;letter-spacing:-.025em}
+.preposition .shift-choice button .choice-cost {margin-top:.5rem}
+.preposition .call-row[hidden],.preposition [hidden]{display:none}
+.preposition .call-status:not(:empty) {padding:.8rem 1rem;background:var(--soft);font-size:1.05rem}
+.preposition .night-case .case-link {margin-top:.3rem}
+.preposition .contract-row {margin:.8rem 0 .4rem}
+.preposition .outcome .friday-row {background:var(--soft)}
+.preposition .test-totals,.preposition .delivery-counts {white-space:normal}
+.preposition .study-group h3 {margin-top:1.4rem}
+@media (max-width:680px) {.preposition .dispatch-board {grid-template-columns:1fr;gap:.7rem}.preposition .night-title h1{max-width:17ch}.preposition .table-frame{overscroll-behavior-inline:contain}}
+@media (prefers-contrast:more) {.preposition .dispatch-board .forecast .track{outline:1px solid currentColor}}
