@@ -58,12 +58,16 @@ import {benchmarkClosure, closureReferences, verifyClosureReport, CLOSURE_SUITE,
 
 import {benchmarkLongRepair, longRepairReferences, verifyLongRepairReport, LONGREPAIR_SUITE, LONGREPAIR_SPLITS, longRepairCases} from "../docs/lib/longrepair-benchmark.js";
 
+import {benchmarkAddGuard, addGuardReferences, verifyAddGuardReport, ADDGUARD_SUITE, ADDGUARD_SPLITS, addGuardCases} from "../docs/lib/addguard-benchmark.js";
+import {loadAddGuardBank} from "../docs/lib/addguard-study.js";
+import {selectionRunnerUp} from "../docs/lib/addguard-candidate.js";
 import {benchmarkSwitchCost, switchCostReferences, verifySwitchCostReport, SWITCHCOST_SUITE, SWITCHCOST_SPLITS, switchCostCases} from "../docs/lib/switchcost-benchmark.js";
 import {benchmarkMoveRecall, moveRecallReferences, verifyMoveRecallReport, MOVERECALL_SUITE, MOVERECALL_SPLITS, moveRecallCases} from "../docs/lib/moverecall-benchmark.js";
 import {benchmarkLongMove, longMoveReferences, verifyLongMoveReport, LONGMOVE_SUITE, LONGMOVE_SPLITS, longMoveCases} from "../docs/lib/longmove-benchmark.js";
 import {benchmarkShortDefault, shortDefaultReferences, verifyShortDefaultReport, SHORTDEFAULT_SUITE, SHORTDEFAULT_SPLITS, shortDefaultCases} from "../docs/lib/shortdefault-benchmark.js";
 
 const labs = {
+  addguard:{id:ADDGUARD_SUITE, cases:addGuardCases, references:addGuardReferences, benchmark:benchmarkAddGuard, verify:verifyAddGuardReport, splits:ADDGUARD_SPLITS},
   switchcost:{id:SWITCHCOST_SUITE, cases:switchCostCases, references:switchCostReferences, benchmark:benchmarkSwitchCost, verify:verifySwitchCostReport, splits:SWITCHCOST_SPLITS},
   moverecall:{id:MOVERECALL_SUITE, cases:moveRecallCases, references:moveRecallReferences, benchmark:benchmarkMoveRecall, verify:verifyMoveRecallReport, splits:MOVERECALL_SPLITS},
   longmove:{id:LONGMOVE_SUITE, cases:longMoveCases, references:longMoveReferences, benchmark:benchmarkLongMove, verify:verifyLongMoveReport, splits:LONGMOVE_SPLITS},
@@ -115,6 +119,7 @@ function pricedStudy(lab) {
 }
 
 function fleetStudy(lab) {
+  if (lab === labs.addguard) return "addguard";
   if (lab === labs.switchcost) return "switchcost";
   if (lab === labs.moverecall) return "moverecall";
   if (lab === labs.longmove) return "longmove";
@@ -134,9 +139,13 @@ async function loadPricedBank(lab,split) {
   if (!name) return undefined;
   if (!lab.splits.includes(split)) throw new Error("Unknown priced evaluation split.");
   const metadata=await loadRelease(name);
-  const raw=await readFile(new URL("../docs/data/"+name+"/"+split+".json",import.meta.url));
-  if(createHash("sha256").update(raw).digest("hex")!==metadata.banks[split]) throw new Error("The packaged reference bank differs from the release.");
-  return JSON.parse(raw);
+  async function readVerifiedJSON(file, expected) {
+    const raw = await readFile(new URL("../docs/data/" + name + "/" + file, import.meta.url));
+    if (createHash("sha256").update(raw).digest("hex") !== expected) throw new Error("The packaged reference bank differs from the release.");
+    return JSON.parse(raw);
+  }
+  if (lab === labs.addguard) return loadAddGuardBank(split, readVerifiedJSON, metadata.banks[split]);
+  return readVerifiedJSON(split + ".json", metadata.banks[split]);
 }
 
 async function releaseFleetModel(name, seed, digest, prefix = "model") {
@@ -149,7 +158,7 @@ async function loadWeights(lab) {
   if (fleetName) {
     const name = fleetName;
     const metadata = await loadRelease(name);
-    if ([labs.longrepair,labs.shortdefault,labs.longmove,labs.moverecall,labs.switchcost].includes(lab)) {
+    if ([labs.longrepair,labs.shortdefault,labs.longmove,labs.moverecall,labs.switchcost,labs.addguard].includes(lab)) {
       const [current, short, closure, override, uncertainty] = await Promise.all([
         releaseFleetModel(name, metadata.primarySeed, metadata.weightHashes[metadata.primarySeed], "fit"),
         releaseFleetModel("longrepair", 13, metadata.shortHash, "short"), releaseFleetModel("closure", 13, metadata.closureHash),
@@ -157,8 +166,9 @@ async function loadWeights(lab) {
       ]);
       const weights = {current, short, closure, override, uncertainty};
       if (lab !== labs.longrepair) weights.long = await releaseFleetModel("longrepair", 13, metadata.longHash, "fit");
-      if (lab === labs.moverecall || lab === labs.switchcost) weights.previous = await releaseFleetModel("longmove", 13, metadata.previousHash, "fit");
-      if (lab === labs.switchcost) weights.recall = await releaseFleetModel("moverecall",13,metadata.recallHash,"fit");
+      if ([labs.moverecall, labs.switchcost, labs.addguard].includes(lab)) weights.previous = await releaseFleetModel("longmove", 13, metadata.previousHash, "fit");
+      if (lab === labs.switchcost || lab === labs.addguard) weights.recall = await releaseFleetModel("moverecall",13,metadata.recallHash,"fit");
+      if (lab === labs.addguard) weights.parent = await releaseFleetModel("switchcost", 73, metadata.parentHash, "fit");
       return weights;
     }
     const current = await releaseFleetModel(name,metadata.primarySeed,metadata.weightHashes[metadata.primarySeed]);
@@ -224,6 +234,7 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --policy ./examples/reserve-agent.mjs --out my-result.json
   node tools/reserve.mjs --split validation --policy planner
   node tools/reserve.mjs --suite drift --policy ./examples/reserve-agent.mjs --out drift.json
+  node tools/reserve.mjs --suite addguard --split validation --policy ./examples/fleetweek-agent.mjs --out practice.json
   node tools/reserve.mjs --suite switchcost --split test --policy ./examples/fleetweek-agent.mjs --out switchcost.json
   node tools/reserve.mjs --suite moverecall --split test --policy ./examples/fleetweek-agent.mjs --out moverecall.json
   node tools/reserve.mjs --suite longmove --split test --policy ./examples/fleetweek-agent.mjs --out longmove.json
@@ -277,10 +288,13 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --manifest
   node tools/reserve.mjs --verify my-result.json
 
---suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff, lastslot, loadchoice, waitcost, fleetweek, overnight, override, uncertainty, loss, closure, longrepair, shortdefault, longmove, moverecall or switchcost.
+--suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff, lastslot, loadchoice, waitcost, fleetweek, overnight, override, uncertainty, loss, closure, longrepair, shortdefault, longmove, moverecall, switchcost or addguard.
                           Overnight adds fresh weeks and a double-return archive. Policies: rl, planner, previous, greedy, noEmpty.
                           Fleetweek compares two trucks across five days; policies are rl, planner and greedy.
 --split NAME              test or validation. Turns, Closes, Trust, Rally, Survey and Booking also offer retention.
+                          Addguard offers validation, test, clean and archive. Use rl for the released continuation, previous for the frozen parent fit 73,
+                          original for move-recall, or fit-73, fit-101 and fit-211 for the three continuations.
+                          Run the separately reported exploratory 20% veto rule with --policy candidate-101.
                           Switchcost offers validation, test, clean and archive with rl, planner, flatRisk, shortGate, longGate, flatGate, previous and original.
                           Run an independently trained switchcost policy with --policy fit-13, fit-37, fit-73, fit-101 or fit-211.
                           Moverecall offers validation, test, clean and archive with rl, planner, flatRisk, shortGate, longGate, flatGate and previous.
@@ -380,7 +394,7 @@ async function saveReport(path, report) {
 }
 
 function display(report) {
-  if ([FLEET_SUITE, OVERNIGHT_SUITE, OVERRIDE_SUITE, UNCERTAINTY_SUITE, LOSS_SUITE, CLOSURE_SUITE, LONGREPAIR_SUITE, SHORTDEFAULT_SUITE, LONGMOVE_SUITE, MOVERECALL_SUITE, SWITCHCOST_SUITE].includes(report.suite)) {
+  if ([FLEET_SUITE, OVERNIGHT_SUITE, OVERRIDE_SUITE, UNCERTAINTY_SUITE, LOSS_SUITE, CLOSURE_SUITE, LONGREPAIR_SUITE, SHORTDEFAULT_SUITE, LONGMOVE_SUITE, MOVERECALL_SUITE, SWITCHCOST_SUITE, ADDGUARD_SUITE].includes(report.suite)) {
     console.log(report.suite + " / " + report.split + " / " + report.policy + " / " + report.cases.length + " weeks");
     const all = report.summary.all;
     console.table(Object.entries(all.policies).map(([name,p]) => ({policy: name, netCredits: p.net.toFixed(2),
@@ -503,11 +517,17 @@ async function main() {
   const weights = await loadWeights(lab);
   const policy = values.policy ?? "rl";
   const available = lab.references(weights);
-  if (lab === labs.switchcost && /^fit-\d+$/.test(policy)) {
+  if (lab === labs.addguard && policy === "candidate-101") {
+    const release = await loadRelease("addguard");
+    const fitted = await releaseFleetModel("addguard", 101, release.weightHashes[101], "fit");
+    available[policy] = lab.references({...weights, current:selectionRunnerUp(fitted)}).rl;
+  }
+  if ((lab === labs.switchcost || lab === labs.addguard) && /^fit-\d+$/.test(policy)) {
     const seed = Number(policy.slice(4));
-    const release = await loadRelease("switchcost");
+    const name = fleetStudy(lab);
+    const release = await loadRelease(name);
     if (!release.fitSeeds.includes(seed)) throw new Error("Choose a published fit: " + release.fitSeeds.join(", "));
-    const current = await releaseFleetModel("switchcost", seed, release.weightHashes[seed], "fit");
+    const current = await releaseFleetModel(name, seed, release.weightHashes[seed], "fit");
     available[policy] = lab.references({...weights, current}).rl;
   }
   if (lab === labs.turns) available.turns = available.rl;

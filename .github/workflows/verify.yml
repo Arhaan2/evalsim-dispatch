@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        audit: ['audit:fleet-decisions', 'audit:depot-repairs', 'audit:longmove:study', 'audit:longmove:ledgers', 'audit:moverecall:study', 'audit:moverecall:ledgers', 'audit:switchcost:study', 'audit:switchcost:ledgers']
+        audit: ['audit:fleet-decisions', 'audit:depot-repairs', 'audit:longmove:study', 'audit:longmove:ledgers', 'audit:moverecall:study', 'audit:moverecall:ledgers', 'audit:switchcost:study', 'audit:switchcost:ledgers', 'audit:addguard:study', 'audit:addguard:ledgers']
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -40,6 +40,10 @@ jobs:
       matrix:
         study: [switchcost, longmove, moverecall]
         seed: [13, 37, 73, 101, 211]
+        include:
+          - { study: addguard, seed: 73 }
+          - { study: addguard, seed: 101 }
+          - { study: addguard, seed: 211 }
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:

@@ -17,6 +17,7 @@ const studies = {
   longmove: shortVsLong,
   moverecall: shortVsLong,
   switchcost: shortVsLong,
+  addguard: shortVsLong,
 };
 function challenge(e, study) {
   const {base:baseKey,proposal,names:dispatchers,moves,journey:headings}=studies[study];
@@ -63,7 +64,9 @@ function challenge(e, study) {
   const finding=difference===0 ? "Both choices earned the same net credits through Friday." :
     (moves?"The "+moves[1]+" earned ":"The alternative earned ")+Math.abs(difference)+(difference>0?" more":" fewer")+" net credits through Friday.";
   const elapsed=dispatchers && incident.status==="closed" ? "Repairs began "+roundName(incident.start)+". " : "";
-  const explanation=dispatchers ? ' The new agent chose the '+moves[selectedDefault?0:1]+'. This repair lasted '+e.duration+(e.duration===1?' half-day.':' half-days.')+' Both paths use the new agent on every later decision.</p>' : ' The constant-penalty dispatcher chose “'+names[0]+'”. RL chose “'+names[selectedDefault?0:1]+'”. The released RL agent handled all later decisions on both paths.</p>';
+  const explanation=study==="addguard" ?
+    " Frozen fit 73 would choose long here. The guard "+(selectedDefault?"declined that move":"kept it")+
+    ". The short-trained dispatcher handled every later round on both paths.</p>" : dispatchers ? ' The new agent chose the '+moves[selectedDefault?0:1]+'. This repair lasted '+e.duration+(e.duration===1?' half-day.':' half-days.')+' Both paths use the new agent on every later decision.</p>' : ' The constant-penalty dispatcher chose “'+names[0]+'”. RL chose “'+names[selectedDefault?0:1]+'”. The released RL agent handled all later decisions on both paths.</p>';
   let forecast="";
   if (study==="longmove" || study==="moverecall") {
     assert(Number.isFinite(e.winProbability) && e.winProbability>=0 && e.winProbability<=1 && Number.isFinite(e.expectedNet));
@@ -75,6 +78,13 @@ function challenge(e, study) {
     assert(Number.isFinite(e.previousProbability) && e.previousProbability>=0 && e.previousProbability<=1);
     forecast+='<p>From this same board the previous detector would have '+(e.previousChoiceId===e.longId?'switched to long':'kept short')+
       '. Its estimated chance of a profitable switch was '+digits(e.previousProbability*100,1)+'%.</p>';
+  }
+  if (study==="addguard") {
+    const estimates=e.guardEstimates;
+    assert(Number.isFinite(estimates.loss) && Number.isFinite(estimates.win));
+    forecast='<p>Before the move, the guard estimated a '+digits(100*estimates.loss,1)+'% chance of a loss and a '+
+      digits(100*estimates.win,1)+'% chance of a gain. Its expected downside was '+digits(estimates.downside,1)+
+      ' credits and its expected upside was '+digits(estimates.upside,1)+' credits.</p>';
   }
   if (study==="switchcost") {
     const action={vetoed:"declined move-recall RL’s proposed switch",added:"added a switch that move-recall RL would skip",
