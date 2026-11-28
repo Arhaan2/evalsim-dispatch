@@ -45,7 +45,7 @@ export async function writeSampleReport(data, suite, validation, policy, verify)
   const bank=JSON.parse(await readFile(new URL("validation.json",data),"utf8"));
   const sample = {suite,version:1,split:"validation",policy,
     cases:bank.cases.map(({family,seed,closure,rl})=>({family,seed,closure,...rl})),
-    summary:{...validation.summary,durationGroups:validation.durationGroups,byDuration:validation.byDuration}};
+    summary:validation.durationGroups ? {...validation.summary,durationGroups:validation.durationGroups,byDuration:validation.byDuration} : validation.summary};
   const bytes = JSON.stringify(verify(sample,null,bank))+"\n";
   const sampleFile = new URL("sample-report.json",data);
   if (process.argv.includes("--check")) assert.equal(await readFile(sampleFile,"utf8"),bytes,"sample report differs from the verified release policy");

@@ -9,14 +9,16 @@ export const SHORT_DEFAULT_CARD_VERSION = "shortdefault-v1.0.0";
 export const LONG_MOVE_CARD_VERSION = "longmove-v1.0.0";
 export const MOVE_RECALL_CARD_VERSION = "moverecall-v1.0.0";
 export const SWITCH_COST_CARD_VERSION = "switchcost-v1.0.0";
+export const FRIDAY_GUARD_CARD_VERSION = "fridayguard-v1.0.0";
 export const PREPOSITION_CARD_VERSION = "preposition-v1.0.0";
 export const ADD_GUARD_CARD_VERSION = "addguard-v1.0.0";
-const baselineLabels = {original:"Move-recall RL",planner:"Rolling planner",flatRisk:"Constant penalty",shortGate:"Short-trained default",previous:"Previous detector"};
+const baselineLabels = {fit211:"Frozen fit 211",frozen73:"Frozen fit 73",original:"Move-recall RL",planner:"Rolling planner",flatRisk:"Constant penalty",shortGate:"Short-trained default",previous:"Previous detector"};
 const twoBaselines = Object.freeze(["planner","flatRisk"]);
 const threeBaselines = Object.freeze([...twoBaselines,"shortGate"]);
 const editions = new Map([
   [CARD_VERSION, {page:"closure", title:"Depot closure", reference:"Closure RL", baselines:twoBaselines}],
   [LONG_REPAIR_CARD_VERSION, {page:"longrepair", title:"Longer depot repairs", reference:"Long-repair RL", baselines:twoBaselines}],
+  [FRIDAY_GUARD_CARD_VERSION, {page:"fridayguard", title:"Protecting Friday deliveries", reference:"Friday protection RL", previousLabel:"Frozen fit 101", baselines:Object.freeze(["planner","fit211","frozen73","previous"])}],
   [PREPOSITION_CARD_VERSION, {page:"preposition", title:"Friday delivery challenge", reference:"Preposition RL", previousLabel:"Frozen fit 73", baselines:Object.freeze([...threeBaselines,"previous"])}],
   [ADD_GUARD_CARD_VERSION, {page:"addguard", title:"Rechecking fit 73’s moves", reference:"Fit 73 with the learned guard", previousLabel:"Frozen fit 73", baselines:Object.freeze([...threeBaselines,"previous","original"])}],
   [SWITCH_COST_CARD_VERSION, {page:"switchcost", title:"The cost of switching", reference:"Switch-cost RL", previousLabel:"Move-recall RL", baselines:Object.freeze([...threeBaselines,"previous"])}],
@@ -52,7 +54,13 @@ export function makeCard(report, bank, bankHash, reportHash, version=CARD_VERSIO
     return [c.net,...c.net95,c.servicePP,...c.service95];
   });
   const c = all.comparisons.planner;
-  return {v:version,split:report.split,policy:report.policy,n:all.weeks,net:agent.net,onTime:agent.onTime,
+  const friday = version===FRIDAY_GUARD_CARD_VERSION ? {friday:{
+    total:all.friday.agentTotal, counts:scorecardBaselines(version).map(key=>{
+      const row=all.friday.comparisons[key];
+      return [row.saved,row.lost,...row.perWeek95];
+    }),
+  }} : {};
+  return {v:version,...friday,split:report.split,policy:report.policy,n:all.weeks,net:agent.net,onTime:agent.onTime,
     comparisons,counts:[c.wins,c.ties,c.losses],examples:representativeWeeks(report,bank),bankHash,reportHash};
 }
 export function validateCard(c) {
@@ -63,6 +71,17 @@ export function validateCard(c) {
   require(digest(c.bankHash) && digest(c.reportHash));
   require(Array.isArray(c.comparisons) && c.comparisons.length===scorecardBaselines(c.v).length && c.comparisons.every(row=>
     Array.isArray(row) && row.length===6 && row.every(Number.isFinite) && row[1]<=row[2] && row[4]<=row[5]));
+  if(c.v===FRIDAY_GUARD_CARD_VERSION) {
+    const f=c.friday, opportunities=2*c.n;
+    require(f && Number.isSafeInteger(f.total) && f.total>=0 && f.total<=opportunities);
+    require(Array.isArray(f.counts) && f.counts.length===scorecardBaselines(c.v).length && f.counts.every(row=>{
+      if(!Array.isArray(row) || row.length!==4) return false;
+      const [saved,lost,low,high]=row;
+      return Number.isSafeInteger(saved) && saved>=0 && saved<=f.total &&
+        Number.isSafeInteger(lost) && lost>=0 && lost<=opportunities-f.total &&
+        Number.isFinite(low) && Number.isFinite(high) && -2<=low && low<=high && high<=2;
+    }));
+  }
   require(Array.isArray(c.counts) && c.counts.length===3 && c.counts.every(n=>Number.isSafeInteger(n) && n>=0) &&
     c.counts.reduce((s,n)=>s+n,0)===c.n);
   const signs = [1,-1].filter((_,i)=>c.counts[i*2]>0);
@@ -90,8 +109,9 @@ function table(caption, headings, rows) {
 }
 export function weekMarkup(week, version=CARD_VERSION) {
   const pathNames=["Submitted agent",...scorecardBaselines(version).map(k=>baselineLabel(version,k)),editions.get(version).reference];
-  return table("Friday ledgers",["Dispatcher","Net credits","On time","Empty miles"],
-    week.ledgers.map((l,i)=>[pathNames[i],l.net,l.served+" / "+l.contracts,l.emptyMiles]))+
+  const friday=version===FRIDAY_GUARD_CARD_VERSION;
+  return table("Friday ledgers",["Dispatcher","Net credits","On time","Empty miles",...(friday?["Friday AM","Friday PM"]:[])],
+    week.ledgers.map((l,i)=>[pathNames[i],l.net,l.served+" / "+l.contracts,l.emptyMiles,...(friday?week.friday[i].map(v=>v?"Delivered":"Missed"):[])]))+
     '<details><summary>Dispatch log · all ten rounds</summary>'+table("Both trucks on each board",["Round","Depot notice",...pathNames],week.rounds)+"</details>";
 }
 export function cardMarkup(card, weeks, verified) {
@@ -111,6 +131,9 @@ export function cardMarkup(card, weeks, verified) {
       const label=baselineLabel(c.v,scorecardBaselines(c.v)[i]);
       return [[label+" · credits/week",pair(r[0],r.slice(1,3))],[label+" · on-time pp",pair(r[3],r.slice(4,6))]];
     }))+
+    (c.v===FRIDAY_GUARD_CARD_VERSION ? '<p><strong>'+c.friday.total.toLocaleString("en-US")+'</strong> of '+(2*c.n).toLocaleString("en-US")+' signed Friday loads delivered.</p>'+
+      table("Friday contracts served by only one dispatcher",["Against","Agent saved","Agent missed","Net deliveries/week [95% interval]"],c.friday.counts.map(([saved,lost,low,high],i)=>
+        [baselineLabel(c.v,scorecardBaselines(c.v)[i]),saved.toLocaleString("en-US"),lost.toLocaleString("en-US"),pair((saved-lost)/c.n,[low,high])])) : "")+
     '<p>'+wins.toLocaleString("en-US")+' wins, '+ties.toLocaleString("en-US")+' ties, '+losses.toLocaleString("en-US")+' losses against the planner.</p>'+
     '<p><strong>Self-benchmarked.</strong> '+proof+'</p>'+
     (examples ? '<h4>Representative week replays</h4><p>Each example is the week nearest the median earnings difference among wins or losses. Manifest order breaks ties.</p>'+examples : '<p>Every week tied the planner on earnings.</p>')+

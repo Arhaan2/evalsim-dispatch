@@ -1,6 +1,6 @@
 {
   "name": "evalsim-dispatch",
-  "version": "2.26.0",
+  "version": "2.27.0",
   "license": "MIT",
   "exports": {
     ".": "./docs/lib/lab.js",
@@ -30,6 +30,7 @@
     "./switchcost": "./docs/lib/switchcost-benchmark.js",
     "./addguard": "./docs/lib/addguard-benchmark.js",
     "./preposition": "./docs/lib/preposition-benchmark.js",
+    "./fridayguard": "./docs/lib/fridayguard-benchmark.js",
     "./*": "./*"
   },
   "private": true,
@@ -49,7 +50,7 @@
     "audit:closes": "node training/closes/run.mjs --check",
     "audit:trust": "node training/trust/run.mjs --check",
     "audit:rally": "node training/rally/run.mjs --check",
-    "audit:labs": "npm run audit:shifts && npm run audit:fleet-decisions && npm run audit:depot-repairs && npm run audit:longmove && npm run audit:longmove:ledgers && npm run audit:moverecall && npm run audit:moverecall:ledgers && npm run audit:switchcost && npm run audit:switchcost:ledgers && npm run audit:addguard && npm run audit:addguard:ledgers && npm run audit:preposition && npm run audit:preposition:ledgers",
+    "audit:labs": "npm run audit:shifts && npm run audit:fleet-decisions && npm run audit:depot-repairs && npm run audit:longmove && npm run audit:longmove:ledgers && npm run audit:moverecall && npm run audit:moverecall:ledgers && npm run audit:switchcost && npm run audit:switchcost:ledgers && npm run audit:addguard && npm run audit:addguard:ledgers && npm run audit:preposition && npm run audit:preposition:ledgers && npm run audit:fridayguard && npm run audit:fridayguard:ledgers",
     "test": "node --test test/*.test.mjs training/language-model/decision-credit/gradient.test.mjs",
     "audit:results": "node training/audit.mjs && node training/challenger/audit.mjs",
     "audit:models": "node training/language-model/audit.mjs && node training/language-model/audit.mjs docs/data/llm-curriculum && node training/language-model/decision-credit/audit.mjs",
@@ -106,6 +107,10 @@
     "audit:preposition:study": "node training/preposition/run.mjs --check && node training/preposition/fit-deliveries.mjs --check && node training/preposition/matched-controls.mjs --check && node training/preposition/render.mjs --check",
     "audit:preposition:fit": "node training/preposition/audit-fit.mjs",
     "audit:preposition:ledgers": "node training/preposition/audit.mjs",
-    "audit:preposition": "node training/preposition/fit.mjs --check && npm run audit:preposition:study"
+    "audit:preposition": "node training/preposition/fit.mjs --check && npm run audit:preposition:study",
+    "audit:fridayguard:fits": "node training/fridayguard/fit.mjs --check && node training/fridayguard/audit-fit.mjs",
+    "audit:fridayguard:study": "node training/fridayguard/run.mjs --check && node training/fridayguard/historical.mjs --check && node training/fridayguard/opportunities.mjs --check && node training/fridayguard/baselines.mjs --check && node training/fridayguard/render.mjs --check",
+    "audit:fridayguard:ledgers": "node training/fridayguard/audit.mjs",
+    "audit:fridayguard": "npm run audit:fridayguard:fits && npm run audit:fridayguard:study"
   }
 }

@@ -1,0 +1,16 @@
+.fridayguard .night-title h1 {max-width:22ch}
+.fridayguard .study-action {background:var(--accent-ink);color:var(--white);text-decoration:none;padding:.35rem 1rem}
+.fridayguard .study-action:hover {text-decoration:underline;text-underline-offset:.2em}
+.fridayguard .result-strip {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:1.1rem 0 1.4rem;gap:1.15rem;background:var(--accent-ink);color:var(--white);padding:clamp(1rem,3vw,1.7rem)}
+.fridayguard .result-strip div {display:flex;flex-direction:column;gap:.18rem}
+.fridayguard .result-strip dt {max-width:25ch;line-height:1.25}
+.fridayguard .result-strip dd {color:var(--lime);margin:0;font-size:clamp(1.55rem,3.2vw,2.5rem);font-weight:550;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+.fridayguard .week-trace summary {min-height:44px}
+.fridayguard .study-group h3 {margin-top:1.3rem}
+.fridayguard .table-frame {overscroll-behavior-inline:contain}
+.fridayguard .study-group {scroll-margin-top:.7rem}
+@media(max-width:680px) {
+  .fridayguard .result-strip {grid-template-columns:1fr;gap:.7rem}
+  .fridayguard .result-strip div {flex-direction:row;align-items:baseline;justify-content:space-between;gap:1rem}
+  .fridayguard .result-strip dd {font-size:1.45rem}
+}
