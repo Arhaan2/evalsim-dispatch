@@ -1,6 +1,14 @@
 # EvalSim DISPATCH
 
-[Play a fleet decision](https://arhaan2.github.io/evalsim-dispatch/addguard.html#play) · [Benchmark your dispatcher](https://arhaan2.github.io/evalsim-dispatch/addguard.html#own-agent) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+[Play “Can you save Friday’s delivery?”](https://arhaan2.github.io/evalsim-dispatch/preposition.html#play) · [Benchmark your dispatcher](https://arhaan2.github.io/evalsim-dispatch/preposition.html#own-agent) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+
+## Can moving a truck before a closure save Friday’s delivery?
+
+A depot gives half a day’s notice before it closes. Three agents learned to estimate where the trucks would be most valuable through Friday. Each got one chance per week to change frozen fit 73’s dispatch. In the challenge, choose between two plans using the same notice the agent received, then follow both routes through Friday. [Play the Thursday decision](https://arhaan2.github.io/evalsim-dispatch/preposition.html?case=1260000146-6-8#play)
+
+Across **32,768 fresh weeks** from eight unseen schedules, fit 101 delivered **76 more signed contracts** and earned **2,897 more net credits** than frozen fit 73. Fit 211 delivered **47 more** and earned **1,730 more credits**. All four of those paired 95% intervals cleared zero. The designated primary fit kept the parent's dispatch throughout. All three delivered more contracts than the rolling planner. Their earnings differences against the planner remained inconclusive. [Registered outcomes and independent fits](https://arhaan2.github.io/evalsim-dispatch/preposition.html#results)
+
+Friday alone told a different story. Relative to the parent, fit 101 saved 35 Friday contracts and lost 39, while fit 211 saved 12 and lost seven. The study publishes both kinds of replay and the complete case bank for JavaScript and Python dispatchers. [Explore the deliveries](https://arhaan2.github.io/evalsim-dispatch/preposition.html#deliveries) · [Benchmark guide](PREPOSITION.md)
 
 ## Can fit 73 avoid the losses on its extra moves?
 

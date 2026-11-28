@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {SWITCH_COST_CARD_VERSION,ADD_GUARD_CARD_VERSION,MOVE_RECALL_CARD_VERSION,LONG_MOVE_CARD_VERSION,SHORT_DEFAULT_CARD_VERSION,scorecardBaselines,LONG_REPAIR_CARD_VERSION,makeCard,cardURL,parseCardHash,exportCard,cardMarkup,representativeWeeks} from "../docs/lib/closure-scorecard.js";
+import {PREPOSITION_CARD_VERSION,SWITCH_COST_CARD_VERSION,ADD_GUARD_CARD_VERSION,MOVE_RECALL_CARD_VERSION,LONG_MOVE_CARD_VERSION,SHORT_DEFAULT_CARD_VERSION,scorecardBaselines,LONG_REPAIR_CARD_VERSION,makeCard,cardURL,parseCardHash,exportCard,cardMarkup,representativeWeeks} from "../docs/lib/closure-scorecard.js";
 import {createClosureWeek} from "../docs/lib/closure-world.js";
 import {replayWeek} from "../docs/lib/closure-view.js";
 
@@ -148,4 +148,19 @@ test("fit 73 guard scorecards preserve both predecessor comparisons in HTML and 
   assert(html.includes("Frozen fit 73 · credits/week") && html.includes("Move-recall RL · credits/week"));
   assert(html.includes("addguard.html#own-agent"));
   assert.throws(()=>cardURL({...card,v:SWITCH_COST_CARD_VERSION}));
+});
+
+test("Friday delivery scorecards share all four reference routes through their own study",()=>{
+  const report=makeReport();
+  Object.assign(report.summary.all.comparisons,{shortGate:pair,previous:{...pair,net:-3}});
+  const row={...reference,shortGate:wait,previous:greedy};
+  const card=makeCard(report,{cases:[row]},digest,digest,PREPOSITION_CARD_VERSION);
+  const link=new URL(cardURL(card));
+  assert.equal(link.pathname,"/evalsim-dispatch/preposition.html");
+  assert.deepEqual(parseCardHash(link.hash),card);
+  const week=replayWeek(row,card.examples[0].actions,scorecardBaselines(card.v));
+  assert.deepEqual(week.ledgers,[greedy.ledger,wait.ledger,greedy.ledger,wait.ledger,greedy.ledger,greedy.ledger]);
+  const html=exportCard(card,[week]);
+  assert(html.includes("Frozen fit 73 · credits/week") && html.includes("Preposition RL"));
+  assert(html.includes("preposition.html#own-agent"));
 });

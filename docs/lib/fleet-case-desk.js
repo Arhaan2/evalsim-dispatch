@@ -28,7 +28,7 @@ export function installCaseDesk() {
       const difference = net - Number(other.dataset.net);
       const comparison = difference === 0 ? "the same earnings as the other choice" :
         Math.abs(difference) + (difference > 0 ? " more" : " fewer") + " than the other choice";
-      item.querySelector(".call-status").textContent = "Your choice earned " + net + " net credits through Friday, " + comparison + ".";
+      item.querySelector(".call-status").textContent = choice.dataset.feedback ?? ("Your choice earned " + net + " net credits through Friday, " + comparison + ".");
       item.querySelector(".outcome").open = true;
     });
   }
