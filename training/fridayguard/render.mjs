@@ -38,9 +38,20 @@ const criterionRows=trials.map(([label,key,ref,measure])=>{
 });
 const tests=table("Six preregistered comparisons on fresh weeks",["Release criterion","Total difference","Difference/week [95% interval]","Unit","Verdict"],criterionRows,"friday-tests");
 const ff=all.friday.comparisons.fit211, plan=all.comparisons.planner;
-const lead='<p class="finding"><strong>The release fit passed '+passed(goals)+' of six registered tests on '+count(all.weeks)+' fresh closure weeks.</strong> The intervals for Friday deliveries against frozen fit 211 and weekly earnings against the rolling planner both included zero.</p>';
-const weekly='<p>Across all five days, the release delivered '+count(all.weeklyTotals.frozen73.netDeliveries)+' more contracts and earned '+count(all.weeklyTotals.frozen73.netCredits)+' more credits than original fit 73. Against frozen fit 101, it delivered '+count(all.weeklyTotals.previous.netDeliveries)+' more contracts and earned '+count(-all.weeklyTotals.previous.netCredits)+' fewer credits. The earnings difference was '+credit(all.comparisons.previous)+' credits/week.</p>';
-assert(!goals.fridayFit211 && !goals.profitPlanner && all.comparisons.previous.net95[1]<0);
+function outcome(bounds) {
+  if(bounds[0]>0)return "higher";
+  if(bounds[1]<0)return "lower";
+  return "inconclusive";
+}
+function relative(n,noun) {
+  if(!n)return "the same number of "+noun;
+  return count(Math.abs(n))+" "+(n>0?"more":"fewer")+" "+noun;
+}
+const lead='<p class="finding"><strong>The release fit passed '+passed(goals)+' of six registered tests on '+count(all.weeks)+' fresh closure weeks.</strong> '+
+  (outcome(ff.perWeek95)==="inconclusive" && outcome(plan.net95)==="inconclusive" ?
+    "The intervals for Friday deliveries against frozen fit 211 and weekly earnings against the rolling planner both included zero." :
+    "The Friday delivery comparison with frozen fit 211 was "+outcome(ff.perWeek95)+". The earnings comparison with the rolling planner was "+outcome(plan.net95)+".")+'</p>';
+const weekly='<p>Across all five days, the release delivered '+relative(all.weeklyTotals.frozen73.netDeliveries,"contracts")+' and earned '+relative(all.weeklyTotals.frozen73.netCredits,"credits")+' compared with original fit 73. Against frozen fit 101, it delivered '+relative(all.weeklyTotals.previous.netDeliveries,"contracts")+' and earned '+relative(all.weeklyTotals.previous.netCredits,"credits")+'. The earnings difference was '+credit(all.comparisons.previous)+' credits/week.</p>';
 const strip=(items)=>'<dl class="result-strip">'+items.map(([label,value])=>'<div><dt>'+label+'</dt><dd>'+value+'</dd></div>').join("")+'</dl>';
 const top=lead+strip([["Friday deliveries vs fit 211",int(ff.net)],["Net credits/week vs planner",signed(plan.net,3)],["Tests passed",passed(goals)+" / 6"]])+weekly+tests+
   '<p>Each new fit starts with frozen fit 101’s warning move. Four tests require a positive lower 95% bound. The two retention tests allow a lower bound of exactly zero. All six must pass for the combined claim.</p>';
