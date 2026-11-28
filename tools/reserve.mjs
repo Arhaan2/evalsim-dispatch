@@ -62,6 +62,8 @@ import {benchmarkAddGuard, addGuardReferences, verifyAddGuardReport, ADDGUARD_SU
 import {loadAddGuardBank} from "../docs/lib/addguard-study.js";
 import {benchmarkPreposition, prepositionReferences, verifyPrepositionReport, PREPOSITION_SUITE, PREPOSITION_SPLITS, prepositionCases} from "../docs/lib/preposition-benchmark.js";
 import {loadPrepositionBank} from "../docs/lib/preposition-study.js";
+import {benchmarkFridayGuard, fridayGuardReferences, verifyFridayGuardReport, FRIDAYGUARD_SUITE, FRIDAYGUARD_SPLITS, fridayGuardCases} from "../docs/lib/fridayguard-benchmark.js";
+import {loadFridayGuardBank} from "../docs/lib/fridayguard-study.js";
 import {selectionRunnerUp} from "../docs/lib/addguard-candidate.js";
 import {benchmarkSwitchCost, switchCostReferences, verifySwitchCostReport, SWITCHCOST_SUITE, SWITCHCOST_SPLITS, switchCostCases} from "../docs/lib/switchcost-benchmark.js";
 import {benchmarkMoveRecall, moveRecallReferences, verifyMoveRecallReport, MOVERECALL_SUITE, MOVERECALL_SPLITS, moveRecallCases} from "../docs/lib/moverecall-benchmark.js";
@@ -69,6 +71,7 @@ import {benchmarkLongMove, longMoveReferences, verifyLongMoveReport, LONGMOVE_SU
 import {benchmarkShortDefault, shortDefaultReferences, verifyShortDefaultReport, SHORTDEFAULT_SUITE, SHORTDEFAULT_SPLITS, shortDefaultCases} from "../docs/lib/shortdefault-benchmark.js";
 
 const labs = {
+  fridayguard:{id:FRIDAYGUARD_SUITE, cases:fridayGuardCases, references:fridayGuardReferences, benchmark:benchmarkFridayGuard, verify:verifyFridayGuardReport, splits:FRIDAYGUARD_SPLITS, loadBank:loadFridayGuardBank},
   preposition:{id:PREPOSITION_SUITE, cases:prepositionCases, references:prepositionReferences, benchmark:benchmarkPreposition, verify:verifyPrepositionReport, splits:PREPOSITION_SPLITS, loadBank:loadPrepositionBank},
   addguard:{id:ADDGUARD_SUITE, cases:addGuardCases, references:addGuardReferences, benchmark:benchmarkAddGuard, verify:verifyAddGuardReport, splits:ADDGUARD_SPLITS, loadBank:loadAddGuardBank},
   switchcost:{id:SWITCHCOST_SUITE, cases:switchCostCases, references:switchCostReferences, benchmark:benchmarkSwitchCost, verify:verifySwitchCostReport, splits:SWITCHCOST_SPLITS},
@@ -122,6 +125,7 @@ function pricedStudy(lab) {
 }
 
 function fleetStudy(lab) {
+  if (lab === labs.fridayguard) return "fridayguard";
   if (lab === labs.preposition) return "preposition";
   if (lab === labs.addguard) return "addguard";
   if (lab === labs.switchcost) return "switchcost";
@@ -162,7 +166,7 @@ async function loadWeights(lab) {
   if (fleetName) {
     const name = fleetName;
     const metadata = await loadRelease(name);
-    if ([labs.longrepair,labs.shortdefault,labs.longmove,labs.moverecall,labs.switchcost,labs.addguard,labs.preposition].includes(lab)) {
+    if ([labs.longrepair,labs.shortdefault,labs.longmove,labs.moverecall,labs.switchcost,labs.addguard,labs.preposition,labs.fridayguard].includes(lab)) {
       const [current, short, closure, override, uncertainty] = await Promise.all([
         releaseFleetModel(name, metadata.primarySeed, metadata.weightHashes[metadata.primarySeed], "fit"),
         releaseFleetModel("longrepair", 13, metadata.shortHash, "short"), releaseFleetModel("closure", 13, metadata.closureHash),
@@ -170,9 +174,13 @@ async function loadWeights(lab) {
       ]);
       const weights = {current, short, closure, override, uncertainty};
       if (lab !== labs.longrepair) weights.long = await releaseFleetModel("longrepair", 13, metadata.longHash, "fit");
-      if ([labs.moverecall, labs.switchcost, labs.addguard, labs.preposition].includes(lab)) weights.previous = await releaseFleetModel("longmove", 13, metadata.previousHash, "fit");
-      if ([labs.switchcost, labs.addguard, labs.preposition].includes(lab)) weights.recall = await releaseFleetModel("moverecall",13,metadata.recallHash,"fit");
-      if (lab === labs.addguard || lab === labs.preposition) weights.parent = await releaseFleetModel("switchcost", 73, metadata.parentHash, "fit");
+      if ([labs.moverecall, labs.switchcost, labs.addguard, labs.preposition, labs.fridayguard].includes(lab)) weights.previous = await releaseFleetModel("longmove", 13, metadata.previousHash, "fit");
+      if ([labs.switchcost, labs.addguard, labs.preposition, labs.fridayguard].includes(lab)) weights.recall = await releaseFleetModel("moverecall",13,metadata.recallHash,"fit");
+      if ([labs.addguard, labs.preposition, labs.fridayguard].includes(lab)) weights.parent = await releaseFleetModel("switchcost", 73, metadata.parentHash, "fit");
+      if (lab === labs.fridayguard) {
+        weights.preposition101 = await releaseFleetModel("preposition", 101, metadata.preposition101Hash, "fit");
+        weights.preposition211 = await releaseFleetModel("preposition", 211, metadata.preposition211Hash, "fit");
+      }
       return weights;
     }
     const current = await releaseFleetModel(name,metadata.primarySeed,metadata.weightHashes[metadata.primarySeed]);
@@ -240,6 +248,7 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --suite drift --policy ./examples/reserve-agent.mjs --out drift.json
   node tools/reserve.mjs --suite addguard --split validation --policy ./examples/fleetweek-agent.mjs --out practice.json
   node tools/reserve.mjs --suite preposition --split validation --policy ./examples/fleetweek-agent.mjs --out friday.json
+  node tools/reserve.mjs --suite fridayguard --split test --out my-fridays.json -- python3 examples/fleetweek_agent.py
   node tools/reserve.mjs --suite switchcost --split test --policy ./examples/fleetweek-agent.mjs --out switchcost.json
   node tools/reserve.mjs --suite moverecall --split test --policy ./examples/fleetweek-agent.mjs --out moverecall.json
   node tools/reserve.mjs --suite longmove --split test --policy ./examples/fleetweek-agent.mjs --out longmove.json
@@ -293,7 +302,7 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
   node tools/reserve.mjs --manifest
   node tools/reserve.mjs --verify my-result.json
 
---suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff, lastslot, loadchoice, waitcost, fleetweek, overnight, override, uncertainty, loss, closure, longrepair, shortdefault, longmove, moverecall, switchcost, addguard or preposition.
+--suite NAME              reserve (default), drift, turns, closes, trust, rally, survey, booking, paid, tariff, lastslot, loadchoice, waitcost, fleetweek, overnight, override, uncertainty, loss, closure, longrepair, shortdefault, longmove, moverecall, switchcost, addguard, preposition or fridayguard.
                           Overnight adds fresh weeks and a double-return archive. Policies: rl, planner, previous, greedy, noEmpty.
                           Fleetweek compares two trucks across five days; policies are rl, planner and greedy.
 --split NAME              test or validation. Turns, Closes, Trust, Rally, Survey and Booking also offer retention.
@@ -303,6 +312,9 @@ const usage = `Benchmark an agent on fixed DISPATCH freight shifts (Node.js 22+)
                           Preposition offers validation, test, clean and archive, with rl, previous (frozen fit 73), planner, flatRisk, shortGate,
                           warningPlanner (planner at the warning only) and untrained (same primary settings, fitted heads removed).
                           Run a trained warning-time policy with --policy fit-73, fit-101 or fit-211.
+                          Fridayguard compares Friday deliveries and full-week earnings on validation, test, clean and archive.
+                          Its fixed baselines are previous (positioning fit 101), fit211 (positioning fit 211), frozen73 and planner.
+                          Use rl for the primary or fit-73, fit-101 and fit-211 for the three newly trained policies.
                           Switchcost offers validation, test, clean and archive with rl, planner, flatRisk, shortGate, longGate, flatGate, previous and original.
                           Run an independently trained switchcost policy with --policy fit-13, fit-37, fit-73, fit-101 or fit-211.
                           Moverecall offers validation, test, clean and archive with rl, planner, flatRisk, shortGate, longGate, flatGate and previous.
@@ -402,13 +414,20 @@ async function saveReport(path, report) {
 }
 
 function display(report) {
-  if ([FLEET_SUITE, OVERNIGHT_SUITE, OVERRIDE_SUITE, UNCERTAINTY_SUITE, LOSS_SUITE, CLOSURE_SUITE, LONGREPAIR_SUITE, SHORTDEFAULT_SUITE, LONGMOVE_SUITE, MOVERECALL_SUITE, SWITCHCOST_SUITE, ADDGUARD_SUITE, PREPOSITION_SUITE].includes(report.suite)) {
+  if ([FLEET_SUITE, OVERNIGHT_SUITE, OVERRIDE_SUITE, UNCERTAINTY_SUITE, LOSS_SUITE, CLOSURE_SUITE, LONGREPAIR_SUITE, SHORTDEFAULT_SUITE, LONGMOVE_SUITE, MOVERECALL_SUITE, SWITCHCOST_SUITE, ADDGUARD_SUITE, PREPOSITION_SUITE, FRIDAYGUARD_SUITE].includes(report.suite)) {
     console.log(report.suite + " / " + report.split + " / " + report.policy + " / " + report.cases.length + " weeks");
     const all = report.summary.all;
     console.table(Object.entries(all.policies).map(([name,p]) => ({policy: name, netCredits: p.net.toFixed(2),
       onTimePct: p.onTime.toFixed(2), emptyMiles: p.emptyMiles.toFixed(2), weeksMeetingTarget: p.targetWeeks})));
     for (const [name, c] of Object.entries(all.comparisons)) {
       console.log("Agent minus " + name + " in weekly credits: " + c.net.toFixed(2) + " [" + c.net95.map(n => n.toFixed(2)).join(", ") + "]; on-time difference " + c.servicePP.toFixed(3) + " pp [" + c.service95.map(n => n.toFixed(3)).join(", ") + "].");
+    }
+    if (report.suite === FRIDAYGUARD_SUITE) {
+      console.log("Friday signed deliveries served across the bank: " + all.friday.agentTotal);
+      console.table(Object.entries(all.friday.comparisons).map(([policy, c]) => ({
+        baseline:policy, saved:c.saved, missed:c.lost, netDeliveries:c.net,
+        perWeek:c.perWeek.toFixed(5), paired95:c.perWeek95.map(n => n.toFixed(5)).join(" to "),
+      })));
     }
     return;
   }
@@ -530,7 +549,7 @@ async function main() {
     const fitted = await releaseFleetModel("addguard", 101, release.weightHashes[101], "fit");
     available[policy] = lab.references({...weights, current:selectionRunnerUp(fitted)}).rl;
   }
-  if ([labs.switchcost, labs.addguard, labs.preposition].includes(lab) && /^fit-\d+$/.test(policy)) {
+  if ([labs.switchcost, labs.addguard, labs.preposition, labs.fridayguard].includes(lab) && /^fit-\d+$/.test(policy)) {
     const seed = Number(policy.slice(4));
     const name = fleetStudy(lab);
     const release = await loadRelease(name);

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {PREPOSITION_CARD_VERSION,SWITCH_COST_CARD_VERSION,ADD_GUARD_CARD_VERSION,MOVE_RECALL_CARD_VERSION,LONG_MOVE_CARD_VERSION,SHORT_DEFAULT_CARD_VERSION,scorecardBaselines,LONG_REPAIR_CARD_VERSION,makeCard,cardURL,parseCardHash,exportCard,cardMarkup,representativeWeeks} from "../docs/lib/closure-scorecard.js";
+import {FRIDAY_GUARD_CARD_VERSION,PREPOSITION_CARD_VERSION,SWITCH_COST_CARD_VERSION,ADD_GUARD_CARD_VERSION,MOVE_RECALL_CARD_VERSION,LONG_MOVE_CARD_VERSION,SHORT_DEFAULT_CARD_VERSION,scorecardBaselines,LONG_REPAIR_CARD_VERSION,makeCard,cardURL,parseCardHash,exportCard,cardMarkup,representativeWeeks} from "../docs/lib/closure-scorecard.js";
 import {createClosureWeek} from "../docs/lib/closure-world.js";
 import {replayWeek} from "../docs/lib/closure-view.js";
 
@@ -163,4 +163,24 @@ test("Friday delivery scorecards share all four reference routes through their o
   const html=exportCard(card,[week]);
   assert(html.includes("Frozen fit 73 · credits/week") && html.includes("Preposition RL"));
   assert(html.includes("preposition.html#own-agent"));
+});
+
+test("Friday protection scorecards carry exact Friday counts and reproduce both signed loads",()=>{
+  const report=makeReport(), comparisons=report.summary.all.comparisons;
+  Object.assign(comparisons,{fit211:pair,frozen73:pair,previous:{...pair,net:-3}});
+  const baselineKeys=scorecardBaselines(FRIDAY_GUARD_CARD_VERSION);
+  report.summary.all.friday={agentTotal:1,comparisons:Object.fromEntries(baselineKeys.map(k=>[k,{saved:1,lost:0,perWeek:1,perWeek95:[1,1]}]))};
+  const row={...reference,fit211:wait,frozen73:greedy,previous:wait};
+  const card=makeCard(report,{cases:[row]},digest,digest,FRIDAY_GUARD_CARD_VERSION);
+  const link=new URL(cardURL(card));
+  assert.equal(link.pathname,"/evalsim-dispatch/fridayguard.html");
+  assert.deepEqual(parseCardHash(link.hash),card);
+  const week=replayWeek(row,card.examples[0].actions,baselineKeys);
+  assert.equal(week.friday.length,6);
+  assert(week.friday.every(friday=>friday.length===2));
+  const html=exportCard(card,[week]);
+  assert(html.includes("Friday AM") && html.includes("Friday PM") && html.includes("Frozen fit 211") && html.includes("Frozen fit 101"));
+  assert(html.includes("fridayguard.html#own-agent") && html.includes("Friday contracts served by only one dispatcher"));
+  assert.throws(()=>cardURL({...card,friday:{...card.friday,total:0}}));
+  assert.throws(()=>cardURL({...card,friday:{total:1,counts:[]}}));
 });

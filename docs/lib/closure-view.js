@@ -23,6 +23,7 @@ export function traceClosure(config, actions) {
 export function replayWeek(row, actions, baselineKeys=["planner","flatRisk"]) {
   const paths = [actions, ...baselineKeys.map(k=>row[k].actions), row.rl.actions].map(ids=>traceClosure(row,ids));
   return {family:row.family, seed:row.seed, ledgers:paths.map(path=>path.ledger),
+    friday:paths.map(path=>path.trace.slice(8).map(frame=>frame.action.served)),
     rounds:paths[0].trace.map(({observation},t)=>[roundName(t),incidentText(observation.incident),
       ...paths.map(run=>dispatchText(run.trace[t]) + " · " + run.trace[t].action.net + " net")])};
 }

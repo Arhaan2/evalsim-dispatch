@@ -1,6 +1,12 @@
 # EvalSim DISPATCH
 
-[Play “Can you save Friday’s delivery?”](https://arhaan2.github.io/evalsim-dispatch/preposition.html#play) · [Benchmark your dispatcher](https://arhaan2.github.io/evalsim-dispatch/preposition.html#own-agent) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+[Read the Friday protection study](https://arhaan2.github.io/evalsim-dispatch/fridayguard.html#results) · [Benchmark your dispatcher](https://arhaan2.github.io/evalsim-dispatch/fridayguard.html#own-agent) · [Play “Can you save Friday’s delivery?”](https://arhaan2.github.io/evalsim-dispatch/preposition.html#play) · [Browse DISPATCH studies](https://arhaan2.github.io/evalsim-dispatch/studies.html) · [Try the take-or-wait challenge](https://arhaan2.github.io/evalsim-site/#take-or-wait)
+
+## Can the fleet protect Friday deliveries and keep fit 101’s weekly gains?
+
+On **32,768 fresh simulated weeks**, the primary agent changed 197 closure-warning decisions. Comparing the same Friday contracts, it recovered five of the 22 that positioning fit 101 missed relative to original fit 73, and gave up three of fit 101’s 23 saves. Against positioning fit 211 it served 14 Friday contracts that fit 211 missed and missed 12 that fit 211 served. The two-delivery lead was inconclusive. Its **+0.218 net credits/week** over the rolling planner had a paired 95% interval of **−0.001 to +0.430**. [Read the six registered results](https://arhaan2.github.io/evalsim-dispatch/fridayguard.html#results)
+
+The agent delivered **89 more contracts and earned 1,111 fewer credits** than fit 101 over the fresh weeks. Both differences cleared zero. It retained a delivery and earnings advantage over original fit 73, passing three of six tests. One secondary fit beat the planner on earnings at +0.236 credits/week. Frozen fit 101 already beat that planner at +0.252 credits/week. All three new fits earned less than fit 101. In the historical replay, the primary recovered 13 of the original 39 Friday misses and retained 28 of 35 earlier saves. [Compare all fits](https://arhaan2.github.io/evalsim-dispatch/fridayguard.html#fits) · [Inspect the 39 historical misses](https://arhaan2.github.io/evalsim-dispatch/fridayguard.html#historical) · [Benchmark your own JavaScript or Python agent](FRIDAYGUARD.md)
 
 ## Can moving a truck before a closure save Friday’s delivery?
 
