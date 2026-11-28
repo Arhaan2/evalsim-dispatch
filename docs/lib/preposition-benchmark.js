@@ -9,10 +9,16 @@ import {PREPOSITION_SUITE, PREPOSITION_REFERENCES, prepositionCases, summarizePr
 
 export {PREPOSITION_SUITE, PREPOSITION_SPLITS, prepositionCases, loadPrepositionBank} from "./preposition-study.js";
 export {createClosureWeek, closureActions} from "./closure-world.js";
+export function zeroPrepositionHeads(model) {
+  return {...model,net:model.net.map(()=>0),service:model.service.map(()=>0)};
+}
 export function prepositionReferences(weights) {
+  const parent=makeSwitchCostPolicy(weights.parent,weights);
   return {
     rl:makePrepositionPolicy(weights.current,weights), planner:chooseClosurePlanner, flatRisk:makeClosureFlatRisk(weights),
-    shortGate:makeLongRepairPolicy(weights.short,weights), previous:makeSwitchCostPolicy(weights.parent,weights),
+    shortGate:makeLongRepairPolicy(weights.short,weights), previous:parent,
+    warningPlanner:(obs,menu)=>obs.incident.status==="warning" ? chooseClosurePlanner(obs,menu) : parent(obs,menu),
+    untrained:makePrepositionPolicy(zeroPrepositionHeads(weights.primary ?? weights.current),weights),
   };
 }
 const suite = {id:PREPOSITION_SUITE, cases:prepositionCases, references:PREPOSITION_REFERENCES,

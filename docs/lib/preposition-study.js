@@ -4,7 +4,7 @@ import {PREPOSITION_PATTERNS} from "./preposition-markets.js";
 
 export const PREPOSITION_SUITE = "dispatch-preposition-v1";
 export const PREPOSITION_SPLITS = Object.freeze(["validation", "test", "clean", "archive"]);
-export const PREPOSITION_REFERENCES = Object.freeze(["rl", "planner", "flatRisk", "shortGate", "previous"]);
+export const PREPOSITION_REFERENCES = Object.freeze(["rl", "planner", "flatRisk", "shortGate", "previous", "warningPlanner", "untrained"]);
 const families = Object.keys(PREPOSITION_PATTERNS);
 const banks = {
   validation:{families:families.slice(0,2), count:128, start:1250000000, starts:[2,4,6], durations:[1,2,3,4,5]},
